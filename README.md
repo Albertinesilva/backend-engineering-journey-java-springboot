@@ -34,7 +34,7 @@
 
 <p align="justify">
 <em>
-Este capítulo apresenta a construção de uma estratégia profissional de testes automatizados aplicada ao projeto <strong>DSCatalog</strong>, utilizando <code>Java</code>, <code>Spring Boot 3</code>, <code>JUnit 5</code>, <code>Mockito</code>, <code>MockMvc</code> e princípios sólidos de engenharia de software para garantir qualidade, previsibilidade, segurança evolutiva e manutenção sustentável.
+Este capítulo apresenta a construção de uma estratégia profissional de testes automatizados aplicada ao projeto <strong>ASJCatalog</strong>, utilizando <code>Java</code>, <code>Spring Boot 3</code>, <code>JUnit 5</code>, <code>Mockito</code>, <code>MockMvc</code> e princípios sólidos de engenharia de software para garantir qualidade, previsibilidade, segurança evolutiva e manutenção sustentável.
 </em>
 </p>
 
