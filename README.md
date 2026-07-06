@@ -48,7 +48,7 @@ This chapter focuses on designing a robust domain model, implementing real busin
 
 <p align="justify">
 <em>
-Neste capítulo, o projeto <strong>ASJ Catalog</strong> evolui significativamente além dos cenários tradicionais de CRUD, incorporando fluxos de negócio completos encontrados em aplicações corporativas reais.
+Neste capítulo, o projeto <strong>ASJCatalog</strong> evolui significativamente além dos cenários tradicionais de CRUD, incorporando fluxos de negócio completos encontrados em aplicações corporativas reais.
 
 Foram implementados casos de uso relacionados ao ciclo de vida da conta do usuário, incluindo cadastro, ativação de conta, recuperação de senha, redefinição de credenciais e obtenção do usuário autenticado, utilizando uma arquitetura baseada em regras de negócio explícitas, entidades ricas e serviços especializados.
 
@@ -62,7 +62,7 @@ O capítulo também introduz integração com serviços externos através do env
 
 ## 📚 Contexto do Capítulo
 
-Após a implementação da infraestrutura de autenticação e autorização utilizando Spring Security, OAuth2 e JWT, o projeto ASJ Catalog evolui para uma camada mais próxima dos requisitos encontrados em aplicações corporativas reais.
+Após a implementação da infraestrutura de autenticação e autorização utilizando Spring Security, OAuth2 e JWT, o projeto ASJCatalog evolui para uma camada mais próxima dos requisitos encontrados em aplicações corporativas reais.
 Neste capítulo foram implementados casos de uso completos relacionados ao ciclo de vida da conta do usuário, além da evolução da camada de persistência utilizando JPA/Hibernate, consultas otimizadas e integração com serviços de e-mail.
 O foco principal foi construir fluxos de negócio completos, desacoplados e alinhados com boas práticas de arquitetura backend.
 
@@ -88,7 +88,7 @@ Este capítulo possui os seguintes objetivos:
 
 ## 📂 Organização dos Packages
 
-A evolução do DSCatalog exigiu uma reorganização estrutural da aplicação para suportar novos requisitos de negócio, mecanismos de segurança, integrações externas e estratégias avançadas de persistência.
+A evolução do ASJCatalog exigiu uma reorganização estrutural da aplicação para suportar novos requisitos de negócio, mecanismos de segurança, integrações externas e estratégias avançadas de persistência.
 
 A arquitetura foi organizada seguindo princípios de separação de responsabilidades, alta coesão e baixo acoplamento, permitindo que cada módulo possua uma responsabilidade clara dentro do sistema.
 
