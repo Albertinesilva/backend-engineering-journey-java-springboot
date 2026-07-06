@@ -292,11 +292,7 @@ Cada capítulo está isolado em uma branch específica, representando a evoluç�
 
 | Projeto | Descrição | Status |
 |--------|-----------|--------|
-| DSCatalog | API de catálogo de produtos | ✅ Concluído |
-| DSLearn | Plataforma educacional | 🔄 Em evolução |
-| MovieFlix | Catálogo de filmes | 🔄 Em evolução |
-| EventCity | Sistema de eventos | 🔄 Em evolução |
-| DSSales | Dashboard analítico | 🔄 Em evolução |
+| ASJ Catalog | API de catálogo de produtos | 🔄 Em evolução  |
 
 ---
 
