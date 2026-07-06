@@ -48,7 +48,7 @@ This chapter focuses on designing a robust domain model, implementing real busin
 
 <p align="justify">
 <em>
-Neste capítulo, o projeto <strong>DSCatalog</strong> evolui significativamente além dos cenários tradicionais de CRUD, incorporando fluxos de negócio completos encontrados em aplicações corporativas reais.
+Neste capítulo, o projeto <strong>ASJ Catalog</strong> evolui significativamente além dos cenários tradicionais de CRUD, incorporando fluxos de negócio completos encontrados em aplicações corporativas reais.
 
 Foram implementados casos de uso relacionados ao ciclo de vida da conta do usuário, incluindo cadastro, ativação de conta, recuperação de senha, redefinição de credenciais e obtenção do usuário autenticado, utilizando uma arquitetura baseada em regras de negócio explícitas, entidades ricas e serviços especializados.
 
@@ -62,7 +62,7 @@ O capítulo também introduz integração com serviços externos através do env
 
 ## 📚 Contexto do Capítulo
 
-Após a implementação da infraestrutura de autenticação e autorização utilizando Spring Security, OAuth2 e JWT, o projeto DSCatalog evolui para uma camada mais próxima dos requisitos encontrados em aplicações corporativas reais.
+Após a implementação da infraestrutura de autenticação e autorização utilizando Spring Security, OAuth2 e JWT, o projeto ASJ Catalog evolui para uma camada mais próxima dos requisitos encontrados em aplicações corporativas reais.
 Neste capítulo foram implementados casos de uso completos relacionados ao ciclo de vida da conta do usuário, além da evolução da camada de persistência utilizando JPA/Hibernate, consultas otimizadas e integração com serviços de e-mail.
 O foco principal foi construir fluxos de negócio completos, desacoplados e alinhados com boas práticas de arquitetura backend.
 
@@ -105,7 +105,7 @@ A estrutura abaixo apresenta a organização completa dos principais módulos do
 Cada package possui uma responsabilidade específica dentro da arquitetura, reduzindo dependências indevidas e favorecendo a evolução independente dos componentes.
 
 ```text
-📦 com.albertsilva.dev.dscatalog
+📦 com.albertsilva.dev.asjcatalog
 ┃
 ┣ 📄 DscatalogApplication.java
 ┃
