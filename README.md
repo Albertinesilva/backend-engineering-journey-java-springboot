@@ -30,7 +30,7 @@
 
 </p>
 
-O projeto **DSCatalog** foi estruturado seguindo boas práticas de desenvolvimento, adotando **arquitetura em camadas** e separação clara de responsabilidades. Além das operações básicas de CRUD, foram implementados conceitos importantes como:
+O projeto **ASJ Catalog** foi estruturado seguindo boas práticas de desenvolvimento, adotando **arquitetura em camadas** e separação clara de responsabilidades. Além das operações básicas de CRUD, foram implementados conceitos importantes como:
 
 - Uso de **DTOs** para comunicação entre camadas, utilizando **records do Java** para estruturas imutáveis de dados;
 - Mapeamento com classes dedicadas (**Mapper**);
@@ -86,7 +86,7 @@ A aplicação contempla a organização em camadas: `controller`, `service` e `r
 
 ## 📦 Estrutura do Projeto `DSCatalog`
 
-📦 `com.albertsilva.dev.dscatalog`  
+📦 `com.albertsilva.dev.asjcatalog`  
 ┣ 📂 `config`  
 ┃ ┗ 📄 `SpringDocOpenApiConfig.java`  
 ┣ 📂 `dto`  
@@ -150,7 +150,7 @@ A aplicação contempla a organização em camadas: `controller`, `service` e `r
 
 ## 🧱 Arquitetura em Camadas
 
-A aplicação **DSCatalog** segue a arquitetura tradicional **Controller → Service → Repository**, organizada em camadas bem definidas para garantir **manutenção mais fácil, testabilidade e escalabilidade**.
+A aplicação **ASJCatalog** segue a arquitetura tradicional **Controller → Service → Repository**, organizada em camadas bem definidas para garantir **manutenção mais fácil, testabilidade e escalabilidade**.
 
 <img src="https://raw.githubusercontent.com/Albertinesilva/devsuperior-java-springboot-bootcamp/chapter-01-crud/docs/assets/imgs/padrao-camadas.png" width="100%">
 
