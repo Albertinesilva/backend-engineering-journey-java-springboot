@@ -36,7 +36,7 @@ This chapter focuses on building secure, production-ready backend APIs using <st
 
 <p align="justify">
 <em>
-Neste capítulo, o projeto <strong>DSCatalog</strong> evolui para um cenário muito mais próximo de aplicações corporativas reais, incorporando mecanismos robustos de autenticação, autorização e validação de dados utilizando o ecossistema moderno do <strong>Spring Security 6</strong>.
+Neste capítulo, o projeto <strong>ASJCatalog</strong> evolui para um cenário muito mais próximo de aplicações corporativas reais, incorporando mecanismos robustos de autenticação, autorização e validação de dados utilizando o ecossistema moderno do <strong>Spring Security 6</strong>.
 
 Além da proteção de endpoints REST, foram aplicados conceitos fundamentais de segurança backend moderna, incluindo <strong>OAuth2 Authorization Server</strong>, <strong>Resource Server</strong>, autenticação stateless com <strong>JWT</strong>, controle de acesso baseado em roles, tratamento global de erros de validação e integração segura com Swagger/OpenAPI.
 </em>
@@ -791,7 +791,7 @@ O objetivo foi estruturar cada responsabilidade de segurança de forma isolada e
 ## 🖼️ Organização da Camada de Segurança
 
 ```text
-📦 com.albertsilva.dev.dscatalog
+📦 com.albertsilva.dev.asjcatalog
 ┣ 📂 config
 ┃ ┗ 📄 SpringDocOpenApiConfig.java
 ┃
@@ -1176,7 +1176,7 @@ A aplicação evolui também em termos de testes automatizados de autenticação
 
 ## 🚀 Evolução Arquitetural do Projeto
 
-Com este capítulo, o projeto DSCatalog deixa de representar apenas uma API CRUD tradicional e evolui para uma arquitetura backend mais próxima de cenários reais de mercado, incorporando fundamentos essenciais para construção de APIs escaláveis, sistemas seguros e aplicações robustas.
+Com este capítulo, o projeto ASJCatalog deixa de representar apenas uma API CRUD tradicional e evolui para uma arquitetura backend mais próxima de cenários reais de mercado, incorporando fundamentos essenciais para construção de APIs escaláveis, sistemas seguros e aplicações robustas.
 
 ### 📌 Principais evoluções arquiteturais
 
@@ -1300,7 +1300,7 @@ Este capítulo consolida competências importantes relacionadas ao desenvolvimen
 
 ## 🎓 Conclusão
 
-Este capítulo marca uma evolução significativa na maturidade arquitetural do projeto DSCatalog.
+Este capítulo marca uma evolução significativa na maturidade arquitetural do projeto ASJCatalog.
 
 Mais do que apenas proteger endpoints, a aplicação passa a incorporar conceitos fundamentais utilizados em sistemas corporativos modernos:
 
