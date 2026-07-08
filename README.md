@@ -499,7 +499,6 @@ A tabela abaixo apresenta as principais tecnologias utilizadas durante a impleme
 | **JUnit 5**                                | Starter Test | Testes automatizados               | Base para criação dos testes da aplicação.                                                                |
 | **Spring Security Test**                   | Starter Test | Testes de segurança                | Suporte para testes envolvendo autenticação e autorização.                                                |
 
----
 ### ⚙️ Recursos da Plataforma Utilizados
 
 Além dos frameworks principais, este capítulo incorporou diversos recursos da plataforma Spring para tornar a aplicação mais robusta e preparada para diferentes ambientes de execução.
