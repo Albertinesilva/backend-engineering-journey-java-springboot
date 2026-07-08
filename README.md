@@ -98,7 +98,7 @@ Essa organização facilita a manutenção, evolução e testabilidade da aplica
 
 ---
 
-## 🏛️ Estrutura Arquitetural da Aplicação
+## 🏗️ Estrutura Arquitetural da Aplicação
 
 A estrutura abaixo apresenta a organização completa dos principais módulos do backend, evidenciando a separação entre domínio, aplicação, infraestrutura, segurança e exposição dos recursos REST.
 
@@ -355,7 +355,7 @@ Cada package possui uma responsabilidade específica dentro da arquitetura, redu
 <p>A adoção dessa estrutura permite que novas funcionalidades sejam adicionadas sem impactar diretamente os demais módulos, favorecendo escalabilidade e manutenibilidade a longo prazo.</p>
 
 ---
-## 🏛️ Organização da Camada de Domínio
+## 🧩 Organização da Camada de Domínio
 
 Uma das principais evoluções arquiteturais deste capítulo foi a transformação da antiga camada baseada apenas em entidades persistentes para uma camada efetivamente orientada ao domínio.
 
@@ -432,6 +432,114 @@ Esse módulo concentra os conceitos utilizados nos processos de:
 
 A criação desse módulo permitiu encapsular responsabilidades específicas de recuperação de acesso sem sobrecarregar as entidades relacionadas aos usuários.
 
+---
+## 🧠 Conceitos Fundamentais Trabalhados
+
+Durante o desenvolvimento deste capítulo, foram aplicados diversos conceitos fundamentais de arquitetura backend, persistência de dados e modelagem de domínio. Mais do que utilizar recursos do Spring Boot, a implementação buscou aproximar o projeto das práticas adotadas em aplicações corporativas, com foco em organização arquitetural, separação de responsabilidades, desempenho e manutenção.
+
+A tabela a seguir resume os principais conceitos explorados e a forma como cada um foi aplicado no ASJCatalog.
+
+| 🧩 Conceito                         | 📖 Aplicação no DSCatalog                                                                                                                                                   | 🎯 Objetivo                                                                    |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **Domain Modeling**                 | Organização do domínio em módulos (`catalog`, `user` e `recovery`) contendo entidades que representam conceitos do negócio.                                                 | Tornar o modelo mais expressivo e alinhado às regras de negócio.               |
+| **Domain-Driven Design (DDD)**      | Evolução da antiga camada `entity` para `domain`, aproximando a estrutura da linguagem do domínio e separando responsabilidades por subdomínios.                            | Melhorar organização arquitetural, legibilidade e escalabilidade.              |
+| **ORM (Object-Relational Mapping)** | Mapeamento entre objetos Java e tabelas do PostgreSQL utilizando JPA e Hibernate.                                                                                           | Eliminar SQL manual para operações de persistência.                            |
+| **Spring Data JPA**                 | Implementação dos repositórios utilizando interfaces derivadas de `JpaRepository` e consultas customizadas.                                                                 | Simplificar operações de acesso aos dados.                                     |
+| **Hibernate**                       | Responsável pela implementação da JPA, gerenciamento do ciclo de vida das entidades e carregamento de relacionamentos.                                                      | Automatizar a persistência orientada a objetos.                                |
+| **Relacionamentos JPA**             | Utilização de associações como `@ManyToMany`, `@OneToMany` e `@ManyToOne` entre usuários, papéis, produtos, categorias e tokens.                                            | Representar corretamente as relações existentes no domínio.                    |
+| **JPQL**                            | Consultas orientadas às entidades para recuperação de dados utilizando a linguagem de consultas da JPA.                                                                     | Escrever consultas independentes do banco de dados.                            |
+| **Native SQL**                      | Consulta nativa utilizada na paginação de produtos com filtros por categorias, reduzindo custo das consultas complexas.                                                     | Obter melhor desempenho em cenários específicos.                               |
+| **Projection Pattern**              | Interfaces como `ProductProjection` e `UserDetailsProjection` retornam apenas os atributos necessários das consultas.                                                       | Reduzir transferência de dados e aumentar eficiência.                          |
+| **Paginação**                       | Utilização de `Pageable` e `Page` para retorno paginado de produtos e usuários.                                                                                             | Melhorar escalabilidade em consultas com grandes volumes de dados.             |
+| **Filtros Dinâmicos**               | Busca por nome e categorias utilizando parâmetros opcionais nas consultas.                                                                                                  | Permitir consultas flexíveis sem duplicação de código.                         |
+| **Fetch Join**                      | Estratégia utilizada para carregar categorias juntamente com produtos em uma única consulta.                                                                                | Eliminar consultas adicionais provocadas pelo carregamento lazy.               |
+| **Problema N+1 Select**             | Solucionado através da combinação entre consultas nativas, projeções e `JOIN FETCH`.                                                                                        | Reduzir drasticamente o número de consultas executadas pelo Hibernate.         |
+| **Service Layer**                   | Serviços especializados (`AccountService`, `UserService`, `ProductService`, `CategoryService`, `TokenService`, `EmailService`) concentram a implementação dos casos de uso. | Centralizar regras de negócio e desacoplar controllers da persistência.        |
+| **Repository Pattern**              | Repositórios responsáveis exclusivamente pelo acesso aos dados, abstraindo detalhes da persistência.                                                                        | Separar regras de negócio das operações de banco de dados.                     |
+| **DTO Pattern**                     | Utilização de objetos específicos para entrada e saída de dados da API.                                                                                                     | Evitar exposição direta das entidades do domínio.                              |
+| **Mapper Pattern**                  | Conversão entre entidades e DTOs através de classes dedicadas de mapeamento.                                                                                                | Reduzir acoplamento entre domínio e camada de apresentação.                    |
+| **Transactional Management**        | Métodos anotados com `@Transactional` garantem consistência durante operações de escrita e leitura.                                                                         | Assegurar integridade das transações e controle do contexto de persistência.   |
+| **Business Use Cases**              | Implementação completa dos fluxos de cadastro, ativação de conta, recuperação de senha, redefinição de senha e obtenção do usuário autenticado.                             | Aproximar a aplicação de cenários reais encontrados em sistemas corporativos.  |
+| **Business Tokens**                 | A entidade `Token` encapsula criação, validação, expiração e invalidação de tokens para ativação de conta e recuperação de senha.                                           | Garantir segurança e encapsular regras do domínio diretamente na entidade.     |
+| **Factory Methods**                 | Métodos estáticos como `activationToken()` e `passwordRecoveryToken()` criam tokens de negócio com regras padronizadas.                                                     | Padronizar a criação de objetos complexos e evitar duplicação de lógica.       |
+| **Transactional Email**             | Integração entre `EmailService`, templates HTML e Spring Mail para envio de e-mails de ativação e recuperação de senha.                                                     | Automatizar comunicações transacionais com usuários.                           |
+| **Authentication Context**          | Serviço `AuthenticatedUserService` centraliza a recuperação do usuário autenticado a partir do JWT presente no `SecurityContext`.                                           | Desacoplar a infraestrutura de segurança das regras de negócio.                |
+| **Spring Security Integration**     | Implementação de `UserDetailsService`, `GrantedAuthority` e consultas personalizadas para autenticação baseada em OAuth2 e JWT.                                             | Integrar autenticação e autorização ao modelo de domínio da aplicação.         |
+| **Exception Handling**              | Exceções específicas, como `InvalidTokenException`, `ResourceNotFoundException` e `AuthenticatedUserNotFoundException`, representam erros de negócio de forma explícita.    | Padronizar o tratamento de erros e melhorar a legibilidade da aplicação.       |
+
+---
+
+## 🛠️ Tecnologias e Frameworks Utilizados
+
+Ao longo deste capítulo, o ASJCatalog evoluiu para uma aplicação backend mais próxima dos padrões encontrados em sistemas corporativos. Para suportar os novos requisitos de negócio, autenticação, persistência, comunicação por e-mail e documentação da API, foram integradas diversas tecnologias do ecossistema Java e Spring.
+
+Cada ferramenta foi adotada com um propósito específico, contribuindo para aspectos como produtividade, organização arquitetural, segurança, desempenho, manutenibilidade e escalabilidade.
+
+A tabela abaixo apresenta as principais tecnologias utilizadas durante a implementação deste capítulo.
+
+| 🛠️ Tecnologia                             | 📦 Versão    | 📖 Utilização no Projeto           | 🎯 Objetivo                                                                                               |
+| ------------------------------------------ | ------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Java**                                   | 17 LTS       | Linguagem principal da aplicação   | Base da implementação utilizando recursos modernos da linguagem.                                          |
+| **Spring Boot**                            | 3.5.x        | Framework principal do backend     | Simplificar configuração, inicialização e desenvolvimento da aplicação.                                   |
+| **Spring Web (Spring MVC)**                | Starter      | Implementação da API REST          | Exposição dos endpoints HTTP da aplicação.                                                                |
+| **Spring Data JPA**                        | Starter      | Camada de persistência             | Abstração do acesso ao banco de dados através de repositórios.                                            |
+| **Hibernate ORM**                          | 6.x          | Implementação da especificação JPA | Gerenciamento do ciclo de vida das entidades e mapeamento objeto-relacional.                              |
+| **PostgreSQL**                             | Runtime      | Banco de dados principal           | Persistência dos dados em ambiente de desenvolvimento e produção.                                         |
+| **H2 Database**                            | Runtime      | Banco em memória                   | Execução de testes rápidos sem dependência de infraestrutura externa.                                     |
+| **Flyway**                                 | Starter      | Versionamento do banco de dados    | Controle evolutivo do schema e dos dados iniciais através de migrations.                                  |
+| **Spring Validation (Jakarta Validation)** | Starter      | Validação de dados                 | Garantir consistência dos dados recebidos pela API utilizando Bean Validation e validadores customizados. |
+| **Spring Security**                        | Starter      | Segurança da aplicação             | Implementação de autenticação, autorização e proteção dos recursos REST.                                  |
+| **Spring Authorization Server**            | Atual        | Servidor OAuth2                    | Emissão e gerenciamento de tokens de acesso seguindo o protocolo OAuth2.                                  |
+| **OAuth2 Resource Server**                 | Starter      | Validação de JWT                   | Proteção dos endpoints utilizando tokens JWT assinados.                                                   |
+| **JWT (JSON Web Token)**                   | OAuth2       | Autenticação stateless             | Transporte seguro das credenciais entre cliente e servidor.                                               |
+| **Spring Mail**                            | Starter      | Envio de e-mails                   | Disparo de e-mails transacionais para ativação de conta e recuperação de senha.                           |
+| **Thymeleaf**                              | Starter      | Templates HTML                     | Geração dinâmica dos templates de e-mail enviados aos usuários.                                           |
+| **SpringDoc OpenAPI**                      | 2.8.x        | Documentação automática            | Geração da especificação OpenAPI e interface Swagger UI.                                                  |
+| **Maven**                                  | Build Tool   | Gerenciamento do projeto           | Gerenciamento de dependências, plugins e ciclo de build da aplicação.                                     |
+| **JUnit 5**                                | Starter Test | Testes automatizados               | Base para criação dos testes da aplicação.                                                                |
+| **Spring Security Test**                   | Starter Test | Testes de segurança                | Suporte para testes envolvendo autenticação e autorização.                                                |
+
+---
+### ⚙️ Recursos da Plataforma Utilizados
+
+Além dos frameworks principais, este capítulo incorporou diversos recursos da plataforma Spring para tornar a aplicação mais robusta e preparada para diferentes ambientes de execução.
+
+| ⚙️ Recurso                                            | 📖 Aplicação                                                                                             |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Profiles (`application-dev` e `application-test`)** | Separação de configurações por ambiente.                                                                 |
+| **Externalização de Configurações**                   | Utilização de variáveis de ambiente para credenciais, URLs e configurações sensíveis.                    |
+| **Logging Configurável**                              | Configuração de níveis de log para aplicação, Spring, Hibernate e Flyway, incluindo rotação de arquivos. |
+| **Open Session in View Desabilitado**                 | Evita consultas inesperadas fora da camada de serviço (`spring.jpa.open-in-view=false`).                 |
+| **Migrations Versionadas**                            | Organização dos scripts Flyway em módulos distintos (`schema` e `data`).                                 |
+| **Validação Internacionalizada**                      | Centralização das mensagens de validação no arquivo `ValidationMessages.properties`.                     |
+| **Swagger Customizado**                               | Documentação disponível em endpoints personalizados para OpenAPI e Swagger UI.                           |
+| **Configuração de CORS**                              | Controle dos domínios autorizados a consumir a API.                                                      |
+| **SMTP Configurável**                                 | Configuração parametrizada do serviço de envio de e-mails.                                               |
+| **Controle de Expiração de Tokens**                   | Configuração externa para tempo de validade dos tokens de ativação e recuperação de senha.               |
+
+### 🏗️ Organização Tecnológica
+
+```java
+                  Backend Stack
+
+                    Java 17
+                       │
+               Spring Boot 3.5
+                       │
+ ┌───────────────┬───────────────┬────────────────┐
+ │               │               │                │
+Spring Web   Spring Data JPA  Spring Security  Spring Mail
+ │               │               │                │
+ │          Hibernate ORM     OAuth2 + JWT    Thymeleaf
+ │               │               │                │
+ └───────────────┴───────┬───────┴────────────────┘
+                         │
+                     PostgreSQL
+                         │
+                      Flyway
+```
+
+---
 ## 👨‍💻 Autor
 
 **Albert Silva de Jesus**  
