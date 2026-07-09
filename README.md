@@ -661,6 +661,66 @@ Resposta da API
 Essa estratégia elimina o problema clássico de **N+1 Select**, mantendo a paginação eficiente e garantindo o carregamento completo das categorias associadas aos produtos com um número reduzido de consultas ao banco de dados.
 
 ---
+
+## 🎯 Casos de Uso
+
+Mais do que disponibilizar operações CRUD, o ASJCatalog implementa casos de uso que representam fluxos completos de negócio encontrados em aplicações corporativas. Cada caso de uso é encapsulado na camada de serviços (Service Layer), responsável por aplicar validações, regras de negócio, persistência, integrações externas e controle transacional, enquanto os controllers permanecem responsáveis apenas pela exposição dos endpoints REST.
+
+| Caso de Uso                         | Descrição                                                                                                                                                            |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 👤 **Gerenciamento de Usuários**    | Cadastro, consulta, atualização, ativação, desativação e remoção de usuários, com validações de negócio, criptografia de senhas e gerenciamento de perfis de acesso. |
+| 🛍️ **Gerenciamento de Produtos**   | CRUD completo de produtos, associação com categorias, paginação, filtros, atualização parcial e controle de status (ativo/inativo).                                  |
+| 🗂️ **Gerenciamento de Categorias** | Cadastro, consulta, atualização e remoção de categorias utilizadas na organização do catálogo de produtos.                                                           |
+| 🔐 **Registro de Conta**            | Criação de novas contas com atribuição automática de permissões, geração de token de ativação e envio de e-mail de confirmação.                                      |
+| ✉️ **Ativação de Conta**            | Validação do token de ativação, habilitação da conta e invalidação dos tokens utilizados.                                                                            |
+| 🔄 **Reenvio de Ativação**          | Geração de um novo token de ativação para usuários que ainda não confirmaram o cadastro.                                                                             |
+| 🔑 **Recuperação de Senha**         | Solicitação de redefinição de senha mediante geração de token temporário e envio de e-mail transacional.                                                             |
+| 🔒 **Redefinição de Senha**         | Validação do token de recuperação, atualização segura da senha e invalidação dos tokens utilizados.                                                                  |
+| 👤 **Usuário Autenticado**          | Recuperação dos dados do usuário autenticado diretamente a partir do contexto de segurança do Spring Security.                                                       |
+| 🔑 **Autenticação**                 | Integração com OAuth2 Authorization Server e JWT para autenticação e autorização baseada em papéis (RBAC).                                                           |
+
+### Fluxo Geral dos Casos de Uso
+```java
+Cliente
+    │
+    ▼
+Controller (REST API)
+    │
+    ▼
+Service Layer
+    │
+    ├── Validações
+    ├── Regras de negócio
+    ├── Controle transacional
+    ├── Integração com outros serviços
+    ▼
+Repositories
+    │
+    ▼
+Banco de Dados
+
+           │
+           ├────────► TokenService
+           │
+           ├────────► EmailService
+           │
+           └────────► AuthenticatedUserService
+```
+
+### Organização por Responsabilidade
+
+| Serviço                    | Responsabilidade Principal                                                                            |
+| -------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `ProductService`           | Gerencia produtos, categorias associadas, paginação, filtros e otimizações de consulta.               |
+| `CategoryService`          | Centraliza as operações relacionadas às categorias do catálogo.                                       |
+| `UserService`              | Gerencia usuários, perfis de acesso, autenticação, CRUD e regras administrativas.                     |
+| `AccountService`           | Implementa o ciclo completo de vida da conta: registro, ativação, recuperação e redefinição de senha. |
+| `TokenService`             | Cria, valida, expira e invalida tokens de ativação e recuperação de senha.                            |
+| `EmailService`             | Gera e envia e-mails transacionais utilizando templates HTML.                                         |
+| `AuthenticatedUserService` | Recupera o usuário autenticado a partir do `SecurityContext`.                                         |
+
+>💡 Observação: Os casos de uso foram implementados seguindo uma arquitetura em camadas (Controller → Service → Repository), onde os controllers recebem as requisições HTTP e delegam o processamento aos > services. Essa abordagem centraliza regras de negócio, validações, transações e integrações (e-mail, tokens e autenticação), reduz o acoplamento entre as camadas e torna a aplicação mais organizada, testável e alinhada às práticas de desenvolvimento de sistemas corporativos.
+---
 ## 👨‍💻 Autor
 
 **Albert Silva de Jesus**  
