@@ -499,6 +499,7 @@ A tabela abaixo apresenta as principais tecnologias utilizadas durante a impleme
 | **JUnit 5**                                | Starter Test | Testes automatizados               | Base para criação dos testes da aplicação.                                                                |
 | **Spring Security Test**                   | Starter Test | Testes de segurança                | Suporte para testes envolvendo autenticação e autorização.                                                |
 
+---
 ### ⚙️ Recursos da Plataforma Utilizados
 
 Além dos frameworks principais, este capítulo incorporou diversos recursos da plataforma Spring para tornar a aplicação mais robusta e preparada para diferentes ambientes de execução.
@@ -537,6 +538,127 @@ Spring Web   Spring Data JPA  Spring Security  Spring Mail
                          │
                       Flyway
 ```
+
+---
+
+## 🗄️ Modelagem ORM
+
+A camada de persistência do **ASJCatalog** foi construída utilizando **JPA (Jakarta Persistence API)** com implementação provida pelo **Hibernate**, permitindo mapear objetos Java para tabelas relacionais do PostgreSQL.
+
+A modelagem foi organizada para representar o domínio da aplicação de forma expressiva, utilizando entidades, relacionamentos, consultas especializadas e estratégias de otimização de acesso aos dados.
+
+---
+
+### 📦 Modelo de Domínio
+
+O domínio da aplicação foi dividido em módulos independentes, cada um responsável por um conjunto específico de regras de negócio.
+
+| Entidade | Responsabilidade |
+|----------|------------------|
+| **Product** | Representa os produtos disponíveis no catálogo. |
+| **Category** | Organiza os produtos em categorias. |
+| **User** | Representa os usuários autenticados da aplicação. |
+| **Role** | Define os perfis de acesso utilizados pelo Spring Security (RBAC). |
+| **Token** | Gerencia tokens de ativação de conta e recuperação de senha. |
+| **Email** | Registra o envio de e-mails transacionais da aplicação. |
+
+Essa organização favorece alta coesão, separação de responsabilidades e evolução independente de cada módulo do domínio.
+
+---
+
+### 🔄 Relacionamentos entre Entidades
+
+A modelagem utiliza os principais tipos de relacionamentos disponibilizados pela JPA.
+
+```text
+                   Many-to-Many
++-----------+ <----------------------> +------------+
+| Category  |                          |  Product   |
++-----------+                          +------------+
+
+                   Many-to-Many
++---------+ <------------------------> +---------+
+|  Role   |                            |  User   |
++---------+                            +---------+
+
+                   One-to-Many
++---------+ -------------------------> +---------+
+|  User   |                            | Token   |
++---------+ <------------------------- +---------+
+                    Many-to-One
+
+                   One-to-Many
++---------+ -------------------------> +---------+
+|  User   |                            | Email   |
++---------+ <------------------------- +---------+
+                    Many-to-One
+```
+
+#### Principais associações
+
+| Relacionamento | Objetivo |
+|---------------|----------|
+| `Product ↔ Category` | Permite que um produto pertença a várias categorias e uma categoria possua vários produtos. |
+| `User ↔ Role` | Implementa o controle de acesso baseado em papéis (RBAC). |
+| `User → Token` | Gerencia tokens utilizados em ativação de conta e recuperação de senha. |
+| `User → Email` | Mantém o histórico de e-mails enviados ao usuário. |
+
+---
+
+### 🔍 Consultas ao Banco de Dados
+
+A camada de persistência utiliza diferentes estratégias de consulta de acordo com a complexidade da operação.
+
+| Estratégia | Aplicação |
+|------------|-----------|
+| **Query Methods** | Consultas derivadas automaticamente pelo Spring Data JPA, como `findByNameContainingIgnoreCase()`. |
+| **JPQL** | Consultas orientadas às entidades, como o carregamento de produtos utilizando `JOIN FETCH`. |
+| **Native SQL** | Consulta otimizada para paginação e filtragem por categorias em relacionamentos muitos-para-muitos. |
+| **Repositories** | Centralizam toda a comunicação com o banco de dados através do padrão Repository. |
+
+Essa combinação permite utilizar consultas simples quando possível e consultas especializadas quando maior desempenho é necessário.
+
+---
+
+### 🚀 Estratégias de Otimização
+
+Além da modelagem ORM, foram aplicadas técnicas para reduzir o custo das consultas e melhorar o desempenho da aplicação.
+
+| Técnica | Como foi aplicada | Benefício |
+|----------|-------------------|-----------|
+| **Projection** | `ProductProjection` retorna apenas os campos necessários durante a paginação. | Reduz transferência de dados e consumo de memória. |
+| **Native Query** | Primeira consulta recupera apenas os IDs dos produtos filtrados. | Paginação eficiente em relacionamentos muitos-para-muitos. |
+| **Fetch Join** | Segunda consulta utiliza `JOIN FETCH` para carregar produtos e categorias em uma única operação. | Evita consultas adicionais para carregamento das categorias. |
+| **Reordenação dos Resultados** | `IdentifiableUtils.reorderByReference()` preserva a ordem retornada pela consulta paginada. | Mantém consistência entre paginação e carregamento das entidades. |
+| **Eliminação do N+1 Select** | Combinação entre Projection, Native SQL e Fetch Join para carregar produtos e categorias em apenas duas consultas controladas. | Elimina dezenas ou centenas de consultas extras em cenários paginados. |
+
+#### Fluxo da otimização
+
+```text
+Cliente
+    │
+    ▼
+Native SQL + Projection
+(busca apenas IDs paginados)
+    │
+    ▼
+Lista de IDs
+    │
+    ▼
+JPQL + JOIN FETCH
+(carrega produtos + categorias)
+    │
+    ▼
+Reordenação da lista
+    │
+    ▼
+Mapper → DTO
+    │
+    ▼
+Resposta da API
+```
+
+Essa estratégia elimina o problema clássico de **N+1 Select**, mantendo a paginação eficiente e garantindo o carregamento completo das categorias associadas aos produtos com um número reduzido de consultas ao banco de dados.
 
 ---
 ## 👨‍💻 Autor
