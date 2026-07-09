@@ -932,6 +932,72 @@ A adoção de práticas como arquitetura em camadas, Domain-Driven Design, Sprin
 Com essa base consolidada, o projeto passa a oferecer uma infraestrutura robusta para suportar novos requisitos funcionais, mantendo alto nível de organização, desempenho e facilidade de manutenção.
 
 ---
+
+## 📚 Referências Técnicas
+
+### 🔹 Spring Boot
+
+- https://docs.spring.io/spring-boot/documentation.html
+- https://spring.io/projects/spring-boot
+
+---
+
+### 🔹 Spring Data JPA e Persistência
+
+- https://spring.io/projects/spring-data-jpa
+- https://docs.spring.io/spring-data/jpa/reference/
+- https://jakarta.ee/specifications/persistence/
+- https://hibernate.org/orm/documentation/
+
+---
+
+### 🔹 Hibernate ORM
+
+- https://hibernate.org/orm/
+- https://docs.jboss.org/hibernate/orm/current/userguide/html_single/Hibernate_User_Guide.html
+
+---
+
+### 🔹 PostgreSQL
+
+- https://www.postgresql.org/docs/
+
+---
+
+### 🔹 Flyway
+
+- https://flywaydb.org/documentation/
+- https://documentation.red-gate.com/flyway
+
+---
+
+### 🔹 Spring Mail e Thymeleaf
+
+- https://docs.spring.io/spring-framework/reference/integration/email.html
+- https://www.thymeleaf.org/documentation.html
+
+---
+
+### 🔹 OpenAPI e Swagger
+
+- https://swagger.io/specification/
+- https://springdoc.org/
+
+---
+
+### 🔹 Domain-Driven Design (DDD)
+
+- https://martinfowler.com/tags/domain%20driven%20design.html
+- Eric Evans — *Domain-Driven Design: Tackling Complexity in the Heart of Software*
+
+---
+
+### 🔹 Arquitetura e Padrões
+
+- Martin Fowler — *Patterns of Enterprise Application Architecture*
+- https://martinfowler.com/eaaCatalog/
+
+---
 ## 👨‍💻 Autor
 
 **Albert Silva de Jesus**  
