@@ -721,6 +721,217 @@ Banco de Dados
 
 >💡 Observação: Os casos de uso foram implementados seguindo uma arquitetura em camadas (Controller → Service → Repository), onde os controllers recebem as requisições HTTP e delegam o processamento aos > services. Essa abordagem centraliza regras de negócio, validações, transações e integrações (e-mail, tokens e autenticação), reduz o acoplamento entre as camadas e torna a aplicação mais organizada, testável e alinhada às práticas de desenvolvimento de sistemas corporativos.
 ---
+
+---
+
+# 🔍 Consultas ao Banco
+
+A camada de persistência do **ASJCatalog** foi construída utilizando **Spring Data JPA**, combinando consultas derivadas, **JPQL**, **Native SQL** e **Projections** para atender diferentes cenários de negócio com desempenho e flexibilidade.
+
+Enquanto as consultas derivadas simplificam operações comuns, consultas personalizadas foram empregadas para implementar filtros avançados, paginação e otimizações específicas relacionadas ao relacionamento muitos-para-muitos entre produtos e categorias.
+
+## Estratégias utilizadas
+
+| Estratégia | Aplicação no ASJCatalog | Benefício |
+|------------|-------------------------|-----------|
+| **Query Methods** | Métodos derivados como `findByNameContainingIgnoreCase()` e `existsByNameIgnoreCase()` | Reduz código boilerplate utilizando convenções do Spring Data JPA. |
+| **JPQL** | Consulta com `JOIN FETCH` para carregar produtos juntamente com suas categorias. | Evita carregamentos adicionais e melhora o desempenho. |
+| **Native SQL** | Consulta personalizada para busca paginada com filtros por nome e categorias. | Permite consultas mais eficientes em cenários complexos. |
+| **Projection** | Interface `ProductProjection` retorna apenas os campos necessários para paginação inicial. | Reduz transferência de dados e consumo de memória. |
+| **Paginação** | Utilização de `Page`, `Pageable` e `PageImpl`. | Permite consultas escaláveis para grandes volumes de dados. |
+| **Filtros Dinâmicos** | Busca por nome e múltiplas categorias utilizando parâmetros opcionais. | Oferece maior flexibilidade sem duplicação de consultas. |
+
+> 💡 **Observação:** A combinação entre consultas derivadas, JPQL e Native SQL permitiu utilizar a estratégia mais adequada para cada cenário, equilibrando simplicidade de desenvolvimento, legibilidade e desempenho.
+
+---
+
+# 🚀 Otimizações de Persistência
+
+Além da modelagem do domínio, este capítulo dedicou atenção especial ao desempenho das consultas realizadas pelo Hibernate.
+
+O principal desafio encontrado foi o carregamento do relacionamento **muitos-para-muitos** entre produtos e categorias, que poderia gerar o conhecido problema **N+1 Select**.
+
+## Estratégias adotadas
+
+| Otimização | Como foi aplicada | Benefício |
+|------------|-------------------|-----------|
+| **Projection Pattern** | A consulta inicial retorna apenas o identificador e o nome dos produtos através da interface `ProductProjection`. | Reduz o volume de dados recuperados do banco. |
+| **Native SQL** | Consulta otimizada para paginação e filtragem antes do carregamento das entidades completas. | Melhora a eficiência em consultas complexas. |
+| **Fetch Join** | Utilização de `JOIN FETCH` para carregar produtos e categorias em uma única consulta. | Evita consultas adicionais provocadas pelo carregamento lazy. |
+| **Reordenação dos Resultados** | Utilização do `IdentifiableUtils.reorderByReference()` para preservar a ordem original da paginação após o `JOIN FETCH`. | Mantém consistência dos resultados apresentados ao usuário. |
+| **Eliminação do N+1 Select** | Combinação entre Projection, Native SQL e Fetch Join durante o fluxo de busca paginada. | Reduz significativamente a quantidade de consultas executadas pelo Hibernate. |
+
+### Fluxo da otimização
+
+```text
+Native SQL
+      │
+      ▼
+ProductProjection
+      │
+      ▼
+Lista de IDs
+      │
+      ▼
+JPQL + JOIN FETCH
+      │
+      ▼
+Produtos + Categorias carregados
+      │
+      ▼
+Reordenação (IdentifiableUtils)
+      │
+      ▼
+DTO de resposta
+```
+
+> 🚀 Essa estratégia mantém a paginação eficiente sem abrir mão do carregamento completo das categorias, solucionando um dos problemas clássicos de performance em aplicações que utilizam JPA/Hibernate.
+
+---
+
+# 📧 Integração com E-mail
+
+O ASJCatalog implementa comunicação por e-mail para apoiar os fluxos de ativação de conta e recuperação de senha, aproximando a aplicação de cenários encontrados em sistemas corporativos.
+
+A implementação utiliza **Spring Mail**, **JavaMailSender** e **Thymeleaf**, permitindo gerar mensagens HTML personalizadas e enviá-las de forma assíncrona.
+
+## Fluxo de envio
+
+```text
+Controller
+      │
+      ▼
+Service
+      │
+      ▼
+TokenService
+      │
+      ▼
+EmailService
+      │
+      ▼
+Template Thymeleaf
+      │
+      ▼
+Servidor SMTP
+      │
+      ▼
+Usuário
+```
+
+## Recursos implementados
+
+| Recurso | Aplicação |
+|----------|-----------|
+| **Spring Mail** | Envio de e-mails transacionais. |
+| **JavaMailSender** | Comunicação com servidor SMTP. |
+| **Thymeleaf** | Geração de templates HTML personalizados. |
+| **@Async** | Envio assíncrono dos e-mails sem bloquear a requisição HTTP. |
+| **TokenService** | Geração, validação e invalidação de tokens de ativação e recuperação de senha. |
+| **Factory Methods** | Criação padronizada de tokens através de métodos estáticos da entidade `Token`. |
+| **Persistência de Logs** | Registro dos e-mails enviados na entidade `Email` para auditoria e rastreabilidade. |
+| **Externalização de Configurações** | URLs, SMTP e tempo de expiração configurados via propriedades da aplicação. |
+
+> 💡 A entidade `Token` encapsula parte importante das regras de negócio, sendo responsável por validar expiração, tipo do token, estado de utilização e criação padronizada através de Factory Methods.
+
+---
+
+## 🧱 Boas Práticas Aplicadas
+
+Durante o desenvolvimento deste capítulo foram adotadas diversas práticas utilizadas em aplicações corporativas construídas com Spring Boot.
+
+| Boa prática | Aplicação no projeto |
+|-------------|----------------------|
+| **Arquitetura em Camadas** | Separação entre Controller, Service, Repository e Domain. |
+| **Separação por Domínio** | Organização dos módulos `catalog`, `user` e `recovery`. |
+| **DTO Pattern** | Evita exposição direta das entidades. |
+| **Mapper Pattern** | Conversão centralizada entre entidades e DTOs. |
+| **Repository Pattern** | Isolamento da camada de persistência. |
+| **Service Layer** | Centralização das regras de negócio. |
+| **Bean Validation** | Validações declarativas através de anotações customizadas. |
+| **Tratamento Global de Exceções** | Padronização das respostas de erro utilizando `ControllerExceptionHandler`. |
+| **Transações** | Utilização de `@Transactional` para garantir consistência dos dados. |
+| **Configuração Externalizada** | Uso de arquivos `.properties` e variáveis de ambiente. |
+| **Migração de Banco** | Versionamento do schema utilizando Flyway. |
+| **Documentação da API** | Integração com OpenAPI/Swagger. |
+| **Princípio da Responsabilidade Única** | Cada classe possui uma responsabilidade bem definida. |
+
+---
+
+## 📈 Evolução Arquitetural
+
+Este capítulo representa uma importante evolução arquitetural do ASJCatalog.
+
+A aplicação deixou de possuir uma estrutura focada apenas em entidades persistentes para adotar uma organização orientada ao domínio, aproximando-se dos princípios encontrados em arquiteturas corporativas.
+
+Entre as principais evoluções destacam-se:
+
+- Migração da antiga camada `entity` para `domain`.
+- Organização do domínio em módulos (`catalog`, `user` e `recovery`).
+- Introdução de serviços especializados para autenticação, tokens e envio de e-mails.
+- Implementação de casos de uso completos relacionados ao ciclo de vida das contas.
+- Separação mais clara entre infraestrutura, domínio e exposição da API.
+- Evolução da camada de persistência com consultas otimizadas e estratégias de desempenho.
+- Fortalecimento da arquitetura baseada em responsabilidades bem definidas.
+
+> 📈 Essa evolução tornou a aplicação mais organizada, extensível e preparada para receber novas funcionalidades sem comprometer sua estrutura.
+
+---
+
+## 🎓 Aprendizados
+
+O desenvolvimento deste capítulo consolidou conhecimentos importantes sobre construção de aplicações backend utilizando Spring Boot e JPA.
+
+Os principais aprendizados incluem:
+
+- Modelagem de domínios mais expressivos.
+- Utilização avançada do Spring Data JPA.
+- Construção de consultas otimizadas.
+- Resolução do problema N+1 Select.
+- Implementação de relacionamentos complexos com Hibernate.
+- Aplicação de boas práticas de arquitetura em camadas.
+- Desenvolvimento de casos de uso completos.
+- Integração com serviços externos utilizando SMTP.
+- Gerenciamento seguro de tokens de negócio.
+- Organização de aplicações inspiradas em Domain-Driven Design.
+
+---
+
+## 💼 Competências Desenvolvidas
+
+Ao concluir este capítulo foram desenvolvidas competências relacionadas à construção de aplicações backend corporativas.
+
+| Competência | Nível de aplicação |
+|-------------|-------------------|
+| Modelagem ORM com JPA/Hibernate | ✔️ |
+| Spring Data JPA | ✔️ |
+| JPQL e Native SQL | ✔️ |
+| Paginação e filtros dinâmicos | ✔️ |
+| Relacionamentos complexos | ✔️ |
+| Otimização de consultas | ✔️ |
+| Fetch Join e Projection | ✔️ |
+| Resolução de N+1 Select | ✔️ |
+| Domain-Driven Design (conceitos) | ✔️ |
+| Service Layer Pattern | ✔️ |
+| Repository Pattern | ✔️ |
+| DTO e Mapper Pattern | ✔️ |
+| Bean Validation | ✔️ |
+| Spring Mail + Thymeleaf | ✔️ |
+| OAuth2 + JWT | ✔️ |
+| Flyway | ✔️ |
+| OpenAPI/Swagger | ✔️ |
+
+---
+
+## 🏁 Conclusão
+
+Este capítulo marcou a transição do ASJCatalog para um backend mais próximo dos padrões utilizados em aplicações corporativas. Além da evolução da modelagem de domínio e da camada de persistência, foram implementados fluxos completos de negócio, mecanismos de recuperação de acesso, integração com serviços de e-mail e estratégias avançadas de otimização de consultas.
+
+A adoção de práticas como arquitetura em camadas, Domain-Driven Design, Spring Data JPA, consultas otimizadas, tratamento centralizado de exceções e versionamento do banco de dados contribuiu para tornar a aplicação mais organizada, escalável e preparada para futuras evoluções.
+
+Com essa base consolidada, o projeto passa a oferecer uma infraestrutura robusta para suportar novos requisitos funcionais, mantendo alto nível de organização, desempenho e facilidade de manutenção.
+
+---
 ## 👨‍💻 Autor
 
 **Albert Silva de Jesus**  
