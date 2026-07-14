@@ -29,6 +29,35 @@ This documentation explores the internationalization (i18n) infrastructure of AS
 
 </p>
 
+---
+## 📑 Sumário
+
+> Navegação da documentação de Internacionalização (i18n).
+
+---
+
+| 🧩 Módulo                                                                   | ⚡ Descrição                                                  |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [📖 Visão Geral](#-visão-geral)                                             | Introdução à arquitetura de internacionalização               |
+| [🎯 Objetivos](#-objetivos)                                                 | Metas e princípios adotados na implementação do i18n          |
+| [🏗 Arquitetura](#-arquitetura)                                             | Fluxo de resolução de mensagens com componentes do Spring     |
+| [⚙️ Configuração](#️-configuração)                                          | Configuração do MessageSource e do LocaleResolver             |
+| [📂 Organização dos Arquivos](#-organização-dos-arquivos)                   | Estrutura dos arquivos de mensagens por idioma                |
+| [🧩 Estrutura das Mensagens](#-estrutura-das-mensagens)                     | Organização das chaves de tradução por domínio                |
+| [🌐 Recursos Internacionalizados](#-recursos-internacionalizados)           | Validações, exceções e respostas localizadas da API           |
+| [📦 ProblemDetails](#-problemdetails)                                       | Padronização das respostas de erro multilíngues               |
+| [🔄 Fluxo da Internacionalização](#-fluxo-da-internacionalização)           | Ciclo de resolução de mensagens durante a requisição          |
+| [🚀 Benefícios](#-benefícios)                                               | Vantagens da arquitetura adotada                              |
+| [📈 Evolução da Implementação](#-evolução-da-implementação)                 | Evolução da validação para uma infraestrutura completa de i18n |
+| [🎯 Boas Práticas Aplicadas](#-boas-práticas-aplicadas)                     | Boas práticas de internacionalização com Spring Framework     |
+| [🎓 Aprendizados](#-aprendizados)                                           | Conceitos consolidados durante a implementação                |
+| [💼 Competências Desenvolvidas](#-competências-desenvolvidas)               | Competências técnicas demonstradas                            |
+| [🏁 Conclusão](#-conclusão)                                                 | Considerações finais sobre a implementação                    |
+| [📚 Referências](#-referências)                                             | Documentações oficiais e materiais de apoio                   |
+| [👨‍💻 Autor](#-autor)                                                      | Informações sobre o autor                                     |
+| [📎 Contato](#-contato)                                                     | Canais de contato profissional                                |
+
+---
 ## 📖 Visão Geral
 
 O ASJCatalog implementa um mecanismo completo de internacionalização (Internationalization — **i18n**) baseado na infraestrutura nativa do Spring Framework, permitindo que todas as mensagens retornadas pela API sejam apresentadas no idioma solicitado pelo cliente.
