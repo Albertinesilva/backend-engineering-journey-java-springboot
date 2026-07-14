@@ -57,7 +57,7 @@ public @interface UserCreateValid {
    *
    * @return mensagem padrão da validação
    */
-  String message() default "Validation error";
+  String message() default "{user.create.validation}";
 
   /**
    * Define grupos de validação associados

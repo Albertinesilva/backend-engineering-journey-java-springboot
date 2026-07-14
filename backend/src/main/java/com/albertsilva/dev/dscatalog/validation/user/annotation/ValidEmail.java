@@ -52,7 +52,7 @@ public @interface ValidEmail {
      *
      * @return mensagem padrão da validação
      */
-    String message() default "Favor informar um email válido";
+    String message() default "{user.email.invalid}";
 
     /**
      * Define grupos de validação associados

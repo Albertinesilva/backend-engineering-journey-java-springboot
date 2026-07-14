@@ -183,7 +183,7 @@ class UserControllerTest {
 
       // Arrange
       when(userService.findById(NON_EXISTING_ID))
-          .thenThrow(new ResourceNotFoundException("Entity not found id: " + NON_EXISTING_ID));
+          .thenThrow(new ResourceNotFoundException("error.user.notFound"));
 
       // Act
       ResultActions resultActions = mockMvc
@@ -240,7 +240,7 @@ class UserControllerTest {
       when(roleRepository.existsById(anyLong())).thenReturn(true);
 
       when(userService.update(eq(NON_EXISTING_ID), any(UserUpdateRequest.class)))
-          .thenThrow(new ResourceNotFoundException("Entity not found id: " + NON_EXISTING_ID));
+          .thenThrow(new ResourceNotFoundException("error.user.notFound"));
 
       // Act
       ResultActions resultActions = mockMvc.perform(put(BASE_URL + "/{id}", NON_EXISTING_ID)
@@ -279,7 +279,7 @@ class UserControllerTest {
     void shouldReturn404WhenActivatingNonExistingUser() throws Exception {
 
       // Arrange
-      doThrow(new ResourceNotFoundException("Entity not found id: " + NON_EXISTING_ID)).when(userService)
+      doThrow(new ResourceNotFoundException("error.user.notFound")).when(userService)
           .activate(NON_EXISTING_ID);
 
       // Act
@@ -318,7 +318,7 @@ class UserControllerTest {
     void shouldReturn404WhenDeactivatingNonExistingUser() throws Exception {
 
       // Arrange
-      doThrow(new ResourceNotFoundException("Entity not found id: " + NON_EXISTING_ID)).when(userService)
+      doThrow(new ResourceNotFoundException("error.user.notFound")).when(userService)
           .deactivate(NON_EXISTING_ID);
 
       // Act
@@ -356,7 +356,7 @@ class UserControllerTest {
     void shouldReturn404WhenDeletingNonExistingUser() throws Exception {
 
       // Arrange
-      doThrow(new ResourceNotFoundException("Entity not found id: " + NON_EXISTING_ID)).when(userService)
+      doThrow(new ResourceNotFoundException("error.user.notFound")).when(userService)
           .delete(NON_EXISTING_ID);
 
       // Act

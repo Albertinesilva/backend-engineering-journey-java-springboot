@@ -147,7 +147,7 @@ class UserServiceTest {
       ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
           () -> service.findById(nonExistingId));
 
-      Assertions.assertEquals("Entity not found id: " + nonExistingId, exception.getMessage());
+      Assertions.assertEquals("error.user.notFound", exception.getMessage());
       verify(repository, times(1)).findById(nonExistingId);
     }
   }
@@ -244,7 +244,7 @@ class UserServiceTest {
       ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
           () -> service.update(nonExistingId, request));
 
-      Assertions.assertEquals("Entity not found id: " + nonExistingId, exception.getMessage());
+      Assertions.assertEquals("error.user.notFound", exception.getMessage());
     }
   }
 
@@ -281,7 +281,7 @@ class UserServiceTest {
       ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
           () -> service.delete(nonExistingId));
 
-      Assertions.assertEquals("Entity not found id: " + nonExistingId, exception.getMessage());
+      Assertions.assertEquals("error.user.notFound", exception.getMessage());
     }
   }
 
@@ -319,7 +319,7 @@ class UserServiceTest {
       ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
           () -> service.activate(nonExistingId));
 
-      Assertions.assertEquals("Entity not found id: " + nonExistingId, exception.getMessage());
+      Assertions.assertEquals("error.user.notFound", exception.getMessage());
     }
   }
 
@@ -357,7 +357,7 @@ class UserServiceTest {
       ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
           () -> service.deactivate(nonExistingId));
 
-      Assertions.assertEquals("Entity not found id: " + nonExistingId, exception.getMessage());
+      Assertions.assertEquals("error.user.notFound", exception.getMessage());
     }
   }
 

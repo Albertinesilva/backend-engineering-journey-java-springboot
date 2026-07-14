@@ -14,32 +14,33 @@ import jakarta.validation.ConstraintValidatorContext;
  * Este validator verifica se o endereço de email fornecido
  * é único no banco de dados e não está registrado por
  * outro usuário da aplicação.
+ * </p>
  *
  * <p>
  * O validator realiza uma consulta no repositório de usuários
- * utilizando a operação case-insensitive para garantir que
+ * utilizando operação case-insensitive para garantir que
  * emails com variações de maiúsculas/minúsculas sejam
  * considerados iguais.
+ * </p>
  *
  * <p>
- * Caso o email seja {@code null} ou vazio, a validação
- * será considerada válida, permitindo que a obrigatoriedade
- * seja tratada por outras annotations como {@code @NotBlank}.
+ * As mensagens de validação são registradas através de chaves
+ * do {@code MessageSource}, permitindo internacionalização
+ * automática conforme o header {@code Accept-Language}.
+ * </p>
  */
 public class UniqueEmailValidator implements ConstraintValidator<UniqueEmail, String> {
 
     /**
      * Repositório utilizado para consultar dados
-     * de usuários no banco de dados.
+     * de usuários.
      */
     private final UserRepository repository;
 
     /**
-     * Construtor que recebe o repositório de usuários
-     * por injeção de dependência.
+     * Construtor.
      *
-     * @param repository repositório responsável pelas
-     *                   operações de busca no banco de dados
+     * @param repository repositório de usuários
      */
     public UniqueEmailValidator(UserRepository repository) {
         this.repository = repository;
@@ -48,18 +49,10 @@ public class UniqueEmailValidator implements ConstraintValidator<UniqueEmail, St
     /**
      * Executa a validação de unicidade do endereço de email.
      *
-     * <p>
-     * O método normaliza o email para minúsculas e remove
-     * espaços em branco antes de consultar o banco de dados.
-     * A verificação no repositório é case-insensitive,
-     * garantindo que variações de maiúsculas/minúsculas
-     * não resultem em duplicatas.
-     *
-     * @param value   endereço de email a ser validado
-     * @param context contexto utilizado pelo Bean Validation
-     *                para registrar erros personalizados
-     * @return {@code true} se o email é único ou está vazio;
-     *         {@code false} se o email já existe no banco
+     * @param value   endereço de email informado
+     * @param context contexto do Bean Validation
+     * @return {@code true} caso o email seja válido;
+     *         {@code false} caso já exista
      */
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
@@ -70,6 +63,16 @@ public class UniqueEmailValidator implements ConstraintValidator<UniqueEmail, St
 
         String normalizedEmail = value.trim().toLowerCase();
 
-        return !repository.existsByEmailIgnoreCase(normalizedEmail);
+        boolean emailAlreadyExists = repository.existsByEmailIgnoreCase(normalizedEmail);
+
+        if (!emailAlreadyExists) {
+            return true;
+        }
+
+        context.disableDefaultConstraintViolation();
+
+        context.buildConstraintViolationWithTemplate("{user.email.unique}").addConstraintViolation();
+
+        return false;
     }
 }

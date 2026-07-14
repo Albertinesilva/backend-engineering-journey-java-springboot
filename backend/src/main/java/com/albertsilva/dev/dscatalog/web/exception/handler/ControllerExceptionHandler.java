@@ -1,9 +1,12 @@
 package com.albertsilva.dev.dscatalog.web.exception.handler;
 
 import java.time.Instant;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +21,7 @@ import com.albertsilva.dev.dscatalog.service.exception.AuthenticatedUserNotFound
 import com.albertsilva.dev.dscatalog.service.exception.DatabaseException;
 import com.albertsilva.dev.dscatalog.service.exception.InvalidTokenException;
 import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
-import com.albertsilva.dev.dscatalog.web.exception.enums.ErrorType;
+import com.albertsilva.dev.dscatalog.web.exception.enums.ApiErrorCode;
 import com.albertsilva.dev.dscatalog.web.exception.response.ProblemDetails;
 import com.albertsilva.dev.dscatalog.web.exception.response.ValidationError;
 
@@ -26,298 +29,148 @@ import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Classe responsável pelo tratamento global de exceções da API.
- *
- * <p>
- * Utiliza a anotação {@link RestControllerAdvice} para interceptar exceções
- * lançadas em qualquer camada da aplicação (principalmente Service) e
- * convertê-las em respostas HTTP padronizadas.
- * </p>
- *
- * <p>
- * <b>Objetivo:</b>
- * </p>
- * <ul>
- * <li>Centralizar o tratamento de erros</li>
- * <li>Evitar duplicação de código nos controllers</li>
- * <li>Padronizar o retorno de erro da API</li>
- * </ul>
- *
- * <p>
- * <b>Formato de resposta:</b>
- * </p>
- * 
- * <pre>
- * {
- *   "timestamp": "...",
- *   "status": 404,
- *   "error": "Resource not found",
- *   "message": "...",
- *   "path": "/endpoint"
- * }
- * </pre>
  */
 @RestControllerAdvice
 public class ControllerExceptionHandler {
 
   private static final Logger logger = LoggerFactory.getLogger(ControllerExceptionHandler.class);
 
-  /**
-   * Trata exceções do tipo {@link ResourceNotFoundException}.
-   *
-   * <p>
-   * Essa exceção ocorre quando um recurso não é encontrado no sistema,
-   * como por exemplo:
-   * </p>
-   * <ul>
-   * <li>Buscar um ID inexistente</li>
-   * <li>Atualizar um recurso que não existe</li>
-   * <li>Deletar um recurso inexistente</li>
-   * </ul>
-   *
-   * <p>
-   * Retorna um erro HTTP 404 (Not Found).
-   * </p>
-   *
-   * @param e       exceção lançada
-   * @param request requisição HTTP atual
-   * @return resposta padronizada contendo detalhes do erro
-   */
+  private final MessageSource messageSource;
+
+  public ControllerExceptionHandler(MessageSource messageSource) {
+    this.messageSource = messageSource;
+  }
+
   @ExceptionHandler(ResourceNotFoundException.class)
   public ResponseEntity<ProblemDetails> handleResourceNotFound(ResourceNotFoundException e,
-      HttpServletRequest request) {
+      HttpServletRequest request, Locale locale) {
     HttpStatus status = HttpStatus.NOT_FOUND;
     logger.warn("ResourceNotFoundException - path: {}, message: {}", request.getRequestURI(), e.getMessage());
-    ProblemDetails err = new ProblemDetails(Instant.now(), status.value(), ErrorType.RESOURCE_NOT_FOUND.getMessage(),
-        e.getMessage(),
-        request.getRequestURI());
+    ProblemDetails err = buildProblemDetails(status, ApiErrorCode.RESOURCE_NOT_FOUND,
+        "error.resource.title", e.getMessage(), "error.resource.message", request.getRequestURI(), locale);
     return ResponseEntity.status(status).body(err);
   }
 
-  /**
-   * Trata exceções do tipo {@link DatabaseException}.
-   *
-   * <p>
-   * Essa exceção representa erros relacionados ao banco de dados,
-   * como por exemplo:
-   * </p>
-   * <ul>
-   * <li>Violação de integridade referencial</li>
-   * <li>Tentativa de deletar entidade com relacionamento</li>
-   * </ul>
-   *
-   * <p>
-   * Retorna um erro HTTP 400 (Bad Request).
-   * </p>
-   *
-   * <p>
-   * <b>Observação:</b>
-   * </p>
-   * O log inclui o stack trace completo para facilitar debugging.
-   *
-   * @param e       exceção lançada
-   * @param request requisição HTTP atual
-   * @return resposta padronizada contendo detalhes do erro
-   */
   @ExceptionHandler(DatabaseException.class)
-  public ResponseEntity<ProblemDetails> handleDatabase(DatabaseException e, HttpServletRequest request) {
+  public ResponseEntity<ProblemDetails> handleDatabase(DatabaseException e, HttpServletRequest request, Locale locale) {
     HttpStatus status = HttpStatus.BAD_REQUEST;
     logger.error("DatabaseException - path: {}, message: {}", request.getRequestURI(), e.getMessage(), e);
-    ProblemDetails err = new ProblemDetails(Instant.now(), status.value(), ErrorType.DATABASE_ERROR.getMessage(),
-        e.getMessage(),
-        request.getRequestURI());
+    ProblemDetails err = buildProblemDetails(status, ApiErrorCode.DATABASE_ERROR,
+        "error.database.title", e.getMessage(), "error.database.message", request.getRequestURI(), locale);
     return ResponseEntity.status(status).body(err);
   }
 
-  /**
-   * Trata exceções do tipo {@link DataIntegrityViolationException}.
-   *
-   * <p>
-   * Essa exceção ocorre quando há violação de integridade dos dados,
-   * como por exemplo:
-   * </p>
-   * <ul>
-   * <li>Tentar deletar um recurso que possui relacionamentos dependentes</li>
-   * <li>Tentar inserir um registro com chave duplicada</li>
-   * <li>Tentar atualizar um registro com valor inválido</li>
-   * </ul>
-   *
-   * <p>
-   * Retorna um erro HTTP 400 (Bad Request).
-   * </p>
-   *
-   * @param e       exceção lançada
-   * @param request requisição HTTP atual
-   * @return resposta padronizada contendo detalhes do erro
-   */
   @ExceptionHandler(DataIntegrityViolationException.class)
   public ResponseEntity<ProblemDetails> handleDataIntegrity(DataIntegrityViolationException e,
-      HttpServletRequest request) {
+      HttpServletRequest request, Locale locale) {
     HttpStatus status = HttpStatus.CONFLICT;
     logger.error("DataIntegrityViolationException - path: {}, message: {}", request.getRequestURI(), e.getMessage(), e);
-    ProblemDetails err = new ProblemDetails(Instant.now(), status.value(), ErrorType.CONFLIT.getMessage(),
-        "Cannot delete resource because it has related entities",
-        request.getRequestURI());
+    ProblemDetails err = buildProblemDetails(status, ApiErrorCode.CONFLICT,
+        "error.conflict.title", "error.conflict.message", request.getRequestURI(), locale);
     return ResponseEntity.status(status).body(err);
   }
 
-  /**
-   * Trata exceções do tipo {@link NoResourceFoundException}.
-   *
-   * <p>
-   * Essa exceção ocorre quando um recurso estático solicitado não é encontrado
-   * pela aplicação, como por exemplo:
-   * </p>
-   * <ul>
-   * <li>Requisição automática para <code>/favicon.ico</code></li>
-   * <li>Arquivos CSS inexistentes</li>
-   * <li>Arquivos JavaScript ausentes</li>
-   * <li>Imagens ou assets não encontrados no diretório static/public</li>
-   * </ul>
-   *
-   * <p>
-   * Esse tratamento evita que recursos inexistentes sejam interpretados como
-   * erro interno da aplicação.
-   * </p>
-   *
-   * <p>
-   * Retorna um erro HTTP 404 (Not Found).
-   * </p>
-   *
-   * <p>
-   * <b>Observação:</b>
-   * </p>
-   * O log é registrado em nível WARN, pois se trata de uma condição esperada
-   * em alguns cenários de navegação.
-   *
-   * @param e       exceção lançada
-   * @param request requisição HTTP atual
-   * @return resposta padronizada contendo detalhes do erro
-   */
   @ExceptionHandler(NoResourceFoundException.class)
-  public ResponseEntity<ProblemDetails> handleNoResourceFound(NoResourceFoundException e, HttpServletRequest request) {
+  public ResponseEntity<ProblemDetails> handleNoResourceFound(NoResourceFoundException e, HttpServletRequest request,
+      Locale locale) {
     HttpStatus status = HttpStatus.NOT_FOUND;
     logger.debug("Static resource not found - path: {}", request.getRequestURI());
-    ProblemDetails err = new ProblemDetails(Instant.now(), status.value(),
-        "Resource not found",
-        "Static resource not found", request.getRequestURI());
+    ProblemDetails err = buildProblemDetails(status, ApiErrorCode.RESOURCE_NOT_FOUND,
+        "error.resource.title", "error.resource.message", request.getRequestURI(), locale);
     return ResponseEntity.status(status).body(err);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<ProblemDetails> validation(MethodArgumentNotValidException e, HttpServletRequest request) {
+  public ResponseEntity<ProblemDetails> validation(MethodArgumentNotValidException e, HttpServletRequest request,
+      Locale locale) {
     HttpStatus status = HttpStatus.UNPROCESSABLE_ENTITY;
-    ValidationError err = new ValidationError(Instant.now(), status.value(), "Validation Error",
-        "One or more fields are invalid", request.getRequestURI());
+    ValidationError err = buildValidationError(status, ApiErrorCode.VALIDATION_ERROR,
+        "error.validation.title", "error.validation.message", request.getRequestURI(), locale);
     e.getBindingResult().getFieldErrors().forEach(f -> err.addError(f.getField(), f.getDefaultMessage()));
     return ResponseEntity.status(status).body(err);
   }
 
-  /**
-   * Trata exceções de acesso negado do Spring Security.
-   *
-   * <p>
-   * Essa exceção ocorre quando um usuário autenticado tenta acessar
-   * um recurso sem possuir as permissões necessárias.
-   * </p>
-   *
-   * <p>
-   * Exemplos:
-   * </p>
-   * <ul>
-   * <li>Usuário comum acessando endpoint ADMIN</li>
-   * <li>Falha em regras do @PreAuthorize</li>
-   * <li>Permissões insuficientes para operação</li>
-   * </ul>
-   *
-   * <p>
-   * Retorna HTTP 403 (Forbidden).
-   * </p>
-   *
-   * @param e       exceção lançada
-   * @param request requisição HTTP atual
-   * @return resposta padronizada contendo detalhes do erro
-   */
   @ExceptionHandler(AccessDeniedException.class)
-  public ResponseEntity<ProblemDetails> handleAccessDenied(AccessDeniedException e, HttpServletRequest request) {
+  public ResponseEntity<ProblemDetails> handleAccessDenied(AccessDeniedException e, HttpServletRequest request,
+      Locale locale) {
     HttpStatus status = HttpStatus.FORBIDDEN;
     logger.warn("AccessDeniedException - path: {}, message: {}", request.getRequestURI(), e.getMessage());
-    ProblemDetails err = new ProblemDetails(Instant.now(), status.value(), "Access denied",
-        "Você não possui permissão para acessar este recurso", request.getRequestURI());
+    ProblemDetails err = buildProblemDetails(status, ApiErrorCode.ACCESS_DENIED,
+        "error.access.title", "error.access.message", request.getRequestURI(), locale);
     return ResponseEntity.status(status).body(err);
   }
 
-  /**
-   * Trata exceções do tipo {@link InvalidTokenException}.
-   *
-   * <p>
-   * Essa exceção ocorre quando um token de ativação é inválido ou expirado
-   * durante o processo de ativação de conta.
-   * </p>
-   *
-   * <p>
-   * Retorna HTTP 400 (Bad Request).
-   * </p>
-   *
-   * @param e       exceção lançada
-   * @param request requisição HTTP atual
-   * @return resposta padronizada contendo detalhes do erro
-   */
   @ExceptionHandler(InvalidTokenException.class)
-  public ResponseEntity<ProblemDetails> handleInvalidToken(InvalidTokenException e, HttpServletRequest request) {
+  public ResponseEntity<ProblemDetails> handleInvalidToken(InvalidTokenException e, HttpServletRequest request,
+      Locale locale) {
     HttpStatus status = HttpStatus.BAD_REQUEST;
     logger.warn("InvalidTokenException - path: {}, message: {}", request.getRequestURI(), e.getMessage());
-    ProblemDetails err = new ProblemDetails(Instant.now(), status.value(), ErrorType.INVALID_TOKEN.getMessage(),
-        e.getMessage(), request.getRequestURI());
+    ProblemDetails err = buildProblemDetails(status, ApiErrorCode.INVALID_TOKEN,
+        "error.invalid.token.title", e.getMessage(), "error.invalid.token.message", request.getRequestURI(), locale);
     return ResponseEntity.status(status).body(err);
   }
 
   @ExceptionHandler(AuthenticatedUserNotFoundException.class)
   public ResponseEntity<ProblemDetails> handleAuthenticatedUserNotFound(AuthenticatedUserNotFoundException e,
-      HttpServletRequest request) {
+      HttpServletRequest request, Locale locale) {
     HttpStatus status = HttpStatus.UNAUTHORIZED;
     logger.warn("AuthenticatedUserNotFoundException - path: {}, message: {}", request.getRequestURI(), e.getMessage());
-    ProblemDetails err = new ProblemDetails(Instant.now(), status.value(), "User not authenticated",
-        "Usuário não autenticado. Faça login para acessar este recurso.", request.getRequestURI());
+    ProblemDetails err = buildProblemDetails(status, ApiErrorCode.AUTHENTICATION_REQUIRED,
+        "error.authentication.title", e.getMessage(), "error.authentication.message", request.getRequestURI(), locale);
 
     return ResponseEntity.status(status).body(err);
   }
 
   @ExceptionHandler(DisabledException.class)
-  public ResponseEntity<ProblemDetails> handleDisabledException(DisabledException e, HttpServletRequest request) {
+  public ResponseEntity<ProblemDetails> handleDisabledException(DisabledException e, HttpServletRequest request,
+      Locale locale) {
     HttpStatus status = HttpStatus.FORBIDDEN;
-    ProblemDetails err = new ProblemDetails(Instant.now(), status.value(), "Account disabled",
-        "Sua conta ainda não foi ativada. Verifique seu e-mail.", request.getRequestURI());
+    ProblemDetails err = buildProblemDetails(status, ApiErrorCode.ACCESS_DISABLED,
+        "error.account.disabled.title", "error.account.disabled.message", request.getRequestURI(), locale);
     return ResponseEntity.status(status).body(err);
   }
 
-  /**
-   * Trata exceções genéricas (qualquer outra exceção não tratada
-   * especificamente).
-   *
-   * <p>
-   * Essa é uma camada de segurança para garantir que erros inesperados
-   * sejam capturados e retornem uma resposta consistente, ao invés de
-   * expor detalhes sensíveis ou deixar a aplicação falhar sem controle.
-   * </p>
-   *
-   * <p>
-   * Retorna um erro HTTP 500 (Internal Server Error).
-   * </p>
-   *
-   * <p>
-   * O log inclui o stack trace completo para facilitar debugging.
-   * </p>
-   *
-   * @param e       exceção lançada
-   * @param request requisição HTTP atual
-   * @return resposta padronizada contendo detalhes do erro
-   */
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<ProblemDetails> handleGeneric(Exception e, HttpServletRequest request) {
+  public ResponseEntity<ProblemDetails> handleGeneric(Exception e, HttpServletRequest request, Locale locale) {
     HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
     logger.error("Unexpected error - path: {}", request.getRequestURI(), e);
-    ProblemDetails err = new ProblemDetails(Instant.now(), status.value(), ErrorType.INTERNAL_SERVER_ERROR.getMessage(),
-        ErrorType.UNEXPECTED_ERROR_OCCURRED.getMessage(), request.getRequestURI());
+    ProblemDetails err = buildProblemDetails(status, ApiErrorCode.INTERNAL_SERVER_ERROR,
+        "error.internal.title", "error.internal.message", request.getRequestURI(), locale);
     return ResponseEntity.status(status).body(err);
+  }
+
+  private ProblemDetails buildProblemDetails(HttpStatus status, ApiErrorCode code, String titleKey, String messageKey,
+      String path, Locale locale) {
+    return new ProblemDetails(Instant.now(), status.value(), code,
+        getMessage(titleKey, locale), getMessage(messageKey, locale), path);
+  }
+
+  private ProblemDetails buildProblemDetails(HttpStatus status, ApiErrorCode code, String titleKey,
+      String detailCodeOrMessage, String fallbackMessageKey, String path, Locale locale) {
+    return new ProblemDetails(Instant.now(), status.value(), code,
+        getMessage(titleKey, locale), resolveMessage(detailCodeOrMessage, fallbackMessageKey, locale), path);
+  }
+
+  private ValidationError buildValidationError(HttpStatus status, ApiErrorCode code, String titleKey, String messageKey,
+      String path, Locale locale) {
+    return new ValidationError(Instant.now(), status.value(), code,
+        getMessage(titleKey, locale), getMessage(messageKey, locale), path);
+  }
+
+  private String resolveMessage(String codeOrMessage, String fallbackKey, Locale locale) {
+    if (codeOrMessage == null) {
+      return getMessage(fallbackKey, locale);
+    }
+
+    try {
+      String message = messageSource.getMessage(codeOrMessage, null, locale);
+      return message != null ? message : getMessage(fallbackKey, locale);
+    } catch (NoSuchMessageException e) {
+      return getMessage(fallbackKey, locale);
+    }
+  }
+
+  private String getMessage(String key, Locale locale) {
+    return messageSource.getMessage(key, null, key, locale);
   }
 }

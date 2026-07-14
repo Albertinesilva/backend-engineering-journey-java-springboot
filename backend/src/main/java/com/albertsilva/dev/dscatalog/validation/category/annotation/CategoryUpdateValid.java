@@ -46,7 +46,7 @@ public @interface CategoryUpdateValid {
      *
      * @return mensagem padrão da validação
      */
-    String message() default "Validation error";
+    String message() default "{error.validation.message}";
 
     /**
      * Define grupos de validação associados

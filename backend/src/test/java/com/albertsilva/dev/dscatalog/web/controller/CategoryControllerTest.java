@@ -223,7 +223,7 @@ class CategoryControllerTest {
 
       // Arrange
       when(categoryService.findById(NON_EXISTING_ID))
-          .thenThrow(new ResourceNotFoundException("Entity not found id: " + NON_EXISTING_ID));
+          .thenThrow(new ResourceNotFoundException("error.category.notFound"));
 
       // Act
       ResultActions resultActions = mockMvc.perform(get(BASE_URL + "/{id}", NON_EXISTING_ID));
@@ -275,7 +275,7 @@ class CategoryControllerTest {
       String jsonRequest = asJson(request);
 
       when(categoryService.update(eq(NON_EXISTING_ID), any(CategoryUpdateRequest.class)))
-          .thenThrow(new ResourceNotFoundException("Entity not found id: " + NON_EXISTING_ID));
+          .thenThrow(new ResourceNotFoundException("error.category.notFound"));
 
       // Act
       ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}", NON_EXISTING_ID)
@@ -315,7 +315,7 @@ class CategoryControllerTest {
     void deleteShouldReturnNotFoundWhenIdDoesNotExist() throws Exception {
 
       // Arrange
-      doThrow(new ResourceNotFoundException("Entity not found id: " + NON_EXISTING_ID)).when(categoryService)
+      doThrow(new ResourceNotFoundException("error.category.notFound")).when(categoryService)
           .delete(NON_EXISTING_ID);
 
       // Act

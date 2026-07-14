@@ -26,47 +26,22 @@ import com.albertsilva.dev.dscatalog.dto.product.response.ProductDetailsResponse
 import com.albertsilva.dev.dscatalog.dto.product.response.ProductResponse;
 import com.albertsilva.dev.dscatalog.service.ProductService;
 import com.albertsilva.dev.dscatalog.web.exception.response.ProblemDetails;
+import com.albertsilva.dev.dscatalog.web.exception.response.ValidationError;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 /**
- * Controller responsável por expor os endpoints REST da entidade Product.
- *
- * <p>
- * Essa classe recebe requisições HTTP relacionadas a produtos e delega
- * o processamento para {@link ProductService}.
- * </p>
- *
- * <p>
- * <b>Base URL:</b> /api/v1/products
- * </p>
- *
- * <p>
- * <b>Responsabilidades:</b>
- * </p>
- * <ul>
- * <li>Gerenciar requisições de CRUD de produtos</li>
- * <li>Trabalhar com paginação</li>
- * <li>Controlar o fluxo HTTP (status codes)</li>
- * </ul>
- *
- * <p>
- * <b>Ponto crítico para iniciantes:</b>
- * </p>
- * <ul>
- * <li>O relacionamento com Category NÃO é enviado como objeto</li>
- * <li>O request envia apenas IDs (categoryIds)</li>
- * <li>O backend resolve o relacionamento</li>
- * </ul>
+ * Controller responsável pelas operações de catálogo de produtos da API.
  */
-@Tag(name = "Produtos", description = "Contém todas as operações aos recursos para cadastro, edição e leitura de um produto.")
+@Tag(name = "Produtos", description = "Operações para consulta, cadastro e gestão de produtos do catálogo.")
 @RestController
 @RequestMapping("/api/v1/products")
 public class ProductController {
@@ -75,59 +50,19 @@ public class ProductController {
 
   private final ProductService productService;
 
-  /**
-   * Construtor para injeção de dependência do serviço de produtos.
-   *
-   * @param productService serviço responsável pelas regras de negócio
-   */
   public ProductController(ProductService productService) {
     this.productService = productService;
   }
 
-  /**
-   * Endpoint para criação de um novo produto.
-   *
-   * <p>
-   * Recebe um JSON contendo os dados do produto, incluindo
-   * a lista de IDs de categorias ({@code categoryIds}).
-   * </p>
-   *
-   * <p>
-   * <b>Exemplo de request:</b>
-   * </p>
-   * 
-   * <pre>
-   * {
-   *   "name": "Produto X",
-   *   "description": "Descrição",
-   *   "price": 100.0,
-   *   "categoryIds": [1, 2]
-   * }
-   * </pre>
-   *
-   * <p>
-   * <b>Importante:</b>
-   * </p>
-   * <ul>
-   * <li>Não enviar objetos de categoria</li>
-   * <li>Apenas IDs</li>
-   * </ul>
-   *
-   * <p>
-   * <b>Resposta:</b>
-   * </p>
-   * <ul>
-   * <li>HTTP 201 (Created)</li>
-   * <li>Header Location com URI do recurso</li>
-   * </ul>
-   *
-   * @param productCreateRequest dados do produto
-   * @return produto criado
-   */
-  @Operation(summary = "Cria um novo produto", description = "Exige Bearer Token. Acesso restrito a ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Cria um novo produto", description = "Cria um novo produto no catálogo e retorna o recurso criado. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Produto criado com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductResponse.class))),
-      @ApiResponse(responseCode = "400", description = "Dados inválidos ou campos obrigatórios ausentes", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
-      @ApiResponse(responseCode = "409", description = "Produto já existente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "409", description = "Conflito de dados", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "422", description = "Erro de validação", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationError.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @PostMapping
   @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
@@ -143,33 +78,12 @@ public class ProductController {
     return ResponseEntity.created(uri).body(productResponse);
   }
 
-  /**
-   * Endpoint para listar produtos de forma paginada.
-   *
-   * <p>
-   * Utiliza {@link Pageable}, permitindo paginação automática via parâmetros:
-   * </p>
-   *
-   * <ul>
-   * <li>page → número da página</li>
-   * <li>size → quantidade por página</li>
-   * <li>sort → ordenação (ex: name,asc)</li>
-   * </ul>
-   *
-   * <p>
-   * <b>Exemplo:</b>
-   * </p>
-   * 
-   * <pre>
-   * GET /api/v1/products?page=0&size=10&sort=name,asc
-   * </pre>
-   *
-   * @param pageable configuração de paginação automática
-   * @return lista paginada de produtos
-   */
-  @Operation(summary = "Lista todos os produtos com paginação e filtragem", description = "Exige Bearer Token. Acesso restrito a ADMIN.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Lista produtos com paginação", description = "Retorna uma página de produtos filtrados por nome e categorias. Requer autenticação com Bearer Token.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Lista paginada de produtos", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ProductResponse.class)))),
-      @ApiResponse(responseCode = "403", description = "Usuário sem permissão para acessar este recurso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @GetMapping
   public ResponseEntity<Page<ProductResponse>> findAll(
@@ -189,27 +103,13 @@ public class ProductController {
     return ResponseEntity.ok(response);
   }
 
-  /**
-   * Endpoint para buscar um produto pelo ID.
-   *
-   * <p>
-   * Retorna os detalhes completos do produto, incluindo suas categorias.
-   * </p>
-   *
-   * <p>
-   * <b>Resposta:</b>
-   * </p>
-   * <ul>
-   * <li>HTTP 200 → sucesso</li>
-   * <li>HTTP 404 → não encontrado</li>
-   * </ul>
-   *
-   * @param id identificador do produto
-   * @return detalhes do produto
-   */
-  @Operation(summary = "Busca um produto pelo ID", description = "Exige Bearer Token. Acesso restrito a ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Busca um produto pelo ID", description = "Retorna os detalhes completos de um produto existente. Requer autenticação com Bearer Token.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Produto encontrado com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDetailsResponse.class))),
-      @ApiResponse(responseCode = "404", description = "Produto não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "404", description = "Recurso não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @GetMapping(value = "/{id}")
   public ResponseEntity<ProductDetailsResponse> findById(@PathVariable Long id) {
@@ -221,40 +121,15 @@ public class ProductController {
     return ResponseEntity.ok(response);
   }
 
-  /**
-   * Endpoint para atualização parcial de um produto.
-   *
-   * <p>
-   * Permite atualizar tanto os dados do produto quanto suas categorias.
-   * </p>
-   *
-   * <p>
-   * <b>Comportamento:</b>
-   * </p>
-   * <ul>
-   * <li>Campos nulos NÃO são atualizados</li>
-   * <li>Se categoryIds for informado → substitui categorias</li>
-   * </ul>
-   *
-   * <p>
-   * <b>Exemplo:</b>
-   * </p>
-   * 
-   * <pre>
-   * {
-   *   "name": "Novo nome",
-   *   "categoryIds": [2, 3]
-   * }
-   * </pre>
-   *
-   * @param id                   identificador do produto
-   * @param productUpdateRequest dados para atualização
-   * @return produto atualizado
-   */
-  @Operation(summary = "Atualiza um produto", description = "Exige Bearer Token. Acesso restrito a ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Atualiza um produto", description = "Atualiza os dados de um produto existente. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Produto atualizado com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductResponse.class))),
-      @ApiResponse(responseCode = "404", description = "Produto não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
-      @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "404", description = "Recurso não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "422", description = "Erro de validação", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationError.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @PutMapping(value = "/{id}")
   @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
@@ -269,33 +144,17 @@ public class ProductController {
     return ResponseEntity.ok(response);
   }
 
-  /**
-   * Endpoint para ativação de um produto.
-   *
-   * <p>
-   * Altera o status do produto para ativo, permitindo sua exibição
-   * e comercialização no sistema.
-   * </p>
-   *
-   * <p>
-   * <b>Respostas possíveis:</b>
-   * </p>
-   * <ul>
-   * <li>204 → produto ativado com sucesso</li>
-   * <li>404 → produto não encontrado</li>
-   * </ul>
-   *
-   * @param id identificador do produto
-   * @return resposta sem conteúdo
-   */
-  @Operation(summary = "Ativa um produto", description = "Exige Bearer Token. Acesso restrito a ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Ativa um produto", description = "Ativa um produto existente no catálogo. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Produto ativado com sucesso"),
-      @ApiResponse(responseCode = "404", description = "Produto não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "404", description = "Recurso não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @PatchMapping("/{id}/activate")
   @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
   public ResponseEntity<Void> activate(@PathVariable Long id) {
-
     logger.debug("Ativando produto id={}", id);
 
     productService.activate(id);
@@ -305,33 +164,17 @@ public class ProductController {
     return ResponseEntity.noContent().build();
   }
 
-  /**
-   * Endpoint para desativação de um produto.
-   *
-   * <p>
-   * Altera o status do produto para inativo, ocultando-o das listagens
-   * e impedindo sua comercialização no sistema.
-   * </p>
-   *
-   * <p>
-   * <b>Respostas possíveis:</b>
-   * </p>
-   * <ul>
-   * <li>204 → produto desativado com sucesso</li>
-   * <li>404 → produto não encontrado</li>
-   * </ul>
-   *
-   * @param id identificador do produto
-   * @return resposta sem conteúdo
-   */
-  @Operation(summary = "Desativa um produto", description = "Exige Bearer Token. Acesso restrito a ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Desativa um produto", description = "Desativa um produto existente no catálogo. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Produto desativado com sucesso"),
-      @ApiResponse(responseCode = "404", description = "Produto não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "404", description = "Recurso não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @PatchMapping("/{id}/deactivate")
   @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
   public ResponseEntity<Void> deactivate(@PathVariable Long id) {
-
     logger.debug("Desativando produto id={}", id);
 
     productService.deactivate(id);
@@ -341,25 +184,14 @@ public class ProductController {
     return ResponseEntity.noContent().build();
   }
 
-  /**
-   * Endpoint para remoção de um produto.
-   *
-   * <p>
-   * <b>Respostas possíveis:</b>
-   * </p>
-   * <ul>
-   * <li>204 → removido com sucesso</li>
-   * <li>404 → produto não encontrado</li>
-   * <li>400 → erro de integridade</li>
-   * </ul>
-   *
-   * @param id identificador do produto
-   * @return resposta sem conteúdo
-   */
-  @Operation(summary = "Remove um produto", description = "Exige Bearer Token. Acesso restrito a ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Remove um produto", description = "Remove um produto existente do catálogo. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Produto deletado com sucesso"),
-      @ApiResponse(responseCode = "404", description = "Produto não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
-      @ApiResponse(responseCode = "400", description = "Violação de integridade - existem entidades relacionadas", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "404", description = "Recurso não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "409", description = "Conflito de dados", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @DeleteMapping(value = "/{id}")
   @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")

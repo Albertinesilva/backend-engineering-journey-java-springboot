@@ -6,11 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 
 public record PasswordResetRequest(
 
-  @NotBlank(message = "O token de redefinição de senha é obrigatório")
-  String token,
+    @NotBlank(message = "{user.password.resetToken.notBlank}") String token,
 
-  @NotBlank(message = "A nova senha é obrigatória")
-  @StrongPassword
-  String password) {
+    @NotBlank(message = "{user.password.newPassword.notBlank}") @StrongPassword String password) {
 
 }

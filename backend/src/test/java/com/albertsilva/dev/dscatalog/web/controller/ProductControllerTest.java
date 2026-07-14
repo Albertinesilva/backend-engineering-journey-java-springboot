@@ -196,7 +196,7 @@ class ProductControllerTest {
     void findByIdShouldReturnNotFoundWhenIdDoesNotExist() throws Exception {
 
       when(productService.findById(NON_EXISTING_ID))
-          .thenThrow(new ResourceNotFoundException("Entity not found id: " + NON_EXISTING_ID));
+          .thenThrow(new ResourceNotFoundException("error.product.notFound"));
 
       ResultActions resultActions = mockMvc
           .perform(get(BASE_URL + "/{id}", NON_EXISTING_ID).accept(MediaType.APPLICATION_JSON));
@@ -247,7 +247,7 @@ class ProductControllerTest {
       ProductUpdateRequest request = ProductFactory.createProductUpdateRequest();
 
       when(productService.update(eq(NON_EXISTING_ID), any(ProductUpdateRequest.class)))
-          .thenThrow(new ResourceNotFoundException("Entity not found id: " + NON_EXISTING_ID));
+          .thenThrow(new ResourceNotFoundException("error.product.notFound"));
 
       ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}", NON_EXISTING_ID)
           .with(csrf())
@@ -284,7 +284,7 @@ class ProductControllerTest {
     @WithMockUser(roles = { "ADMIN", "OPERATOR" })
     void deleteShouldReturnNotFoundWhenIdDoesNotExist() throws Exception {
 
-      doThrow(new ResourceNotFoundException("Entity not found id: " + NON_EXISTING_ID)).when(productService)
+      doThrow(new ResourceNotFoundException("error.product.notFound")).when(productService)
           .delete(NON_EXISTING_ID);
 
       ResultActions resultActions = mockMvc.perform(delete(BASE_URL + "/{id}", NON_EXISTING_ID).with(csrf()));

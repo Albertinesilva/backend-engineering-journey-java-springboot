@@ -53,7 +53,7 @@ public class TokenService {
   public Token findAndValidateToken(String tokenValue, TokenType type) {
 
     Token token = tokenRepository.findByToken(tokenValue)
-        .orElseThrow(() -> new ResourceNotFoundException("Token não encontrado"));
+        .orElseThrow(() -> new ResourceNotFoundException("error.token.notFound"));
     token.validate(type);
     return token;
   }

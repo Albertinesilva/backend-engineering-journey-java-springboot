@@ -23,11 +23,11 @@ public class AuthenticatedUserService {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     if (authentication == null) {
-      throw new AuthenticatedUserNotFoundException("Authentication not found");
+      throw new AuthenticatedUserNotFoundException("error.auth.authentication.notFound");
     }
 
     if (!(authentication.getPrincipal() instanceof Jwt)) {
-      throw new AuthenticatedUserNotFoundException("Invalid authentication principal");
+      throw new AuthenticatedUserNotFoundException("error.auth.invalid.principal");
     }
 
     Jwt jwt = (Jwt) authentication.getPrincipal();
@@ -35,10 +35,10 @@ public class AuthenticatedUserService {
     String username = jwt.getClaimAsString("username");
 
     if (username == null || username.isBlank()) {
-      throw new AuthenticatedUserNotFoundException("Username claim not found");
+      throw new AuthenticatedUserNotFoundException("error.auth.username.claim.notFound");
     }
 
     return userRepository.findByEmail(username)
-        .orElseThrow(() -> new AuthenticatedUserNotFoundException("Authenticated user not found"));
+        .orElseThrow(() -> new AuthenticatedUserNotFoundException("error.auth.user.notFound"));
   }
 }

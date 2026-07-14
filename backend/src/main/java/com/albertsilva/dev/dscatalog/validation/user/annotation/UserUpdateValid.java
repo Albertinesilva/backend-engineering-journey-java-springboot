@@ -55,13 +55,13 @@ import jakarta.validation.Payload;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface UserUpdateValid {
-  
+
   /**
    * Mensagem padrão retornada quando a validação falha.
    *
    * @return mensagem padrão da validação
    */
-  String message() default "Validation error";
+  String message() default "{user.update.validation}";
 
   /**
    * Define grupos de validação associados

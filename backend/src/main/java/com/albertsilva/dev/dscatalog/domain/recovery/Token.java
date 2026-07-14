@@ -87,15 +87,15 @@ public class Token implements Serializable {
   public void validate(TokenType expectedType) {
 
     if (type != expectedType) {
-      throw new InvalidTokenException("Tipo de token inválido");
+      throw new InvalidTokenException("error.token.type.invalid");
     }
 
     if (disabled) {
-      throw new InvalidTokenException("Token desabilitado");
+      throw new InvalidTokenException("error.token.disabled");
     }
 
     if (isExpired()) {
-      throw new InvalidTokenException("Token expirado");
+      throw new InvalidTokenException("error.token.expired");
     }
   }
 

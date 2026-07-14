@@ -138,7 +138,7 @@ class ProductServiceTest {
           () -> service.findById(nonExistingId));
 
       // Assert
-      Assertions.assertEquals("Entity not found id: " + nonExistingId, exception.getMessage());
+      Assertions.assertEquals("error.product.notFound", exception.getMessage());
 
       // Verify
       Mockito.verify(repository).findById(nonExistingId);
@@ -267,7 +267,7 @@ class ProductServiceTest {
           () -> service.update(nonExistingId, request));
 
       // Assert
-      Assertions.assertEquals("Entity not found id: " + nonExistingId, exception.getMessage());
+      Assertions.assertEquals("error.product.notFound", exception.getMessage());
 
       // Verify
       Mockito.verify(repository).getReferenceById(nonExistingId);
@@ -313,7 +313,7 @@ class ProductServiceTest {
           () -> service.activate(nonExistingId));
 
       // Assert
-      Assertions.assertEquals("Entity not found id: " + nonExistingId, exception.getMessage());
+      Assertions.assertEquals("error.product.notFound", exception.getMessage());
 
       // Verify
       Mockito.verify(repository).findById(nonExistingId);
@@ -357,7 +357,7 @@ class ProductServiceTest {
           () -> service.deactivate(nonExistingId));
 
       // Assert
-      Assertions.assertEquals("Entity not found id: " + nonExistingId, exception.getMessage());
+      Assertions.assertEquals("error.product.notFound", exception.getMessage());
 
       // Verify
       Mockito.verify(repository).findById(nonExistingId);
@@ -398,7 +398,7 @@ class ProductServiceTest {
           () -> service.delete(nonExistingId));
 
       // Assert
-      Assertions.assertEquals("Entity not found id: " + nonExistingId, exception.getMessage());
+      Assertions.assertEquals("error.product.notFound", exception.getMessage());
 
       // Verify
       Mockito.verify(repository).findById(nonExistingId);
@@ -421,8 +421,7 @@ class ProductServiceTest {
       DatabaseException exception = Assertions.assertThrows(DatabaseException.class, () -> service.delete(dependentId));
 
       // Assert
-      Assertions.assertEquals("Integrity violation: cannot delete product with related entities",
-          exception.getMessage());
+      Assertions.assertEquals("error.database.product.relatedEntities", exception.getMessage());
 
       // Verify
       Mockito.verify(repository).findById(dependentId);

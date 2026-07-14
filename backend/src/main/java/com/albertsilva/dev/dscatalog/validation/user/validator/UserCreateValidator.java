@@ -16,44 +16,24 @@ import jakarta.validation.ConstraintValidatorContext;
  *
  * <p>
  * Este validator verifica se os dados fornecidos para
- * a criação de um novo usuário atendem aos critérios
- * de segurança definidos pela aplicação.
+ * criação de usuários atendem aos critérios de segurança
+ * definidos pela aplicação.
+ * </p>
  *
  * <p>
- * As validações realizadas incluem:
- * <ul>
- * <li>Verifica se a senha não contém o primeiro nome do usuário</li>
- * <li>Verifica se a senha não contém o sobrenome do usuário</li>
- * <li>Verifica se a senha não contém a parte local do email (antes do @)</li>
- * </ul>
- *
- * <p>
- * As mensagens de erro são adicionadas manualmente
- * ao contexto de validação utilizando
- * {@link ConstraintValidatorContext}.
+ * As mensagens de validação são registradas através de
+ * chaves do {@code MessageSource}, permitindo
+ * internacionalização automática.
+ * </p>
  */
 public class UserCreateValidator implements ConstraintValidator<UserCreateValid, UserCreateRequest> {
 
     /**
-     * Tamanho mínimo que um token (nome/sobrenome/email prefix)
-     * deve ter para ser considerado na validação da senha.
+     * Tamanho mínimo de um token considerado
+     * durante a validação.
      */
     private static final int MIN_TOKEN_LENGTH = 3;
 
-    /**
-     * Executa a validação completa dos dados de criação de usuário.
-     *
-     * <p>
-     * O método valida se os dados fornecidos no DTO de criação
-     * atendem aos critérios de segurança, particularmente verificando
-     * se a senha não contém informações pessoais do usuário.
-     *
-     * @param dto     objeto contendo os dados de criação do usuário
-     * @param context contexto utilizado pelo Bean Validation
-     *                para registrar erros personalizados
-     * @return {@code true} se todos os dados são válidos;
-     *         {@code false} caso existam erros de validação
-     */
     @Override
     public boolean isValid(UserCreateRequest dto, ConstraintValidatorContext context) {
 
@@ -67,17 +47,7 @@ public class UserCreateValidator implements ConstraintValidator<UserCreateValid,
     }
 
     /**
-     * Valida se a senha não contém dados pessoais do usuário
-     * como nome, sobrenome ou parte local do email.
-     *
-     * <p>
-     * Caso a senha seja {@code null}, a validação é ignorada,
-     * permitindo que a obrigatoriedade seja tratada por outras
-     * annotations como {@code @NotBlank}.
-     *
-     * @param dto    objeto contendo os dados de criação do usuário
-     * @param errors lista responsável por armazenar
-     *               os erros encontrados
+     * Valida se a senha não contém dados pessoais.
      */
     private void validatePasswordDoesNotContainPersonalData(UserCreateRequest dto, List<FieldMessage> errors) {
 
@@ -99,22 +69,8 @@ public class UserCreateValidator implements ConstraintValidator<UserCreateValid,
     }
 
     /**
-     * Valida se a senha contém um token específico (nome, sobrenome ou
-     * parte local do email) de forma case-insensitive.
-     *
-     * <p>
-     * O token é considerado válido apenas se possuir um tamanho
-     * mínimo definido por {@link #MIN_TOKEN_LENGTH}. Caso contrário,
-     * a validação é ignorada.
-     *
-     * <p>
-     * Se a senha contiver o token normalizado, um erro é adicionado
-     * à lista de erros, evitando duplicatas.
-     *
-     * @param password senha normalizada em minúsculas
-     * @param value    valor do token a ser verificado (nome, sobrenome, etc)
-     * @param errors   lista responsável por armazenar
-     *                 os erros encontrados
+     * Valida um token (nome, sobrenome ou prefixo do email)
+     * contra a senha informada.
      */
     private void validateToken(String password, String value, List<FieldMessage> errors) {
 
@@ -128,27 +84,22 @@ public class UserCreateValidator implements ConstraintValidator<UserCreateValid,
             return;
         }
 
-        boolean alreadyExists = errors.stream().anyMatch(error -> error.fieldName().equals("password")
-                && error.message().equals("Senha não pode conter dados pessoais"));
+        boolean alreadyExists = errors.stream().anyMatch(
+                error -> error.fieldName().equals("password") && error.message().equals("{user.password.personalData}"));
 
         if (password.contains(normalized) && !alreadyExists) {
-            errors.add(new FieldMessage("password", "Senha não pode conter dados pessoais"));
+            errors.add(new FieldMessage("password", "{user.password.personalData}"));
         }
     }
 
     /**
-     * Adiciona ao contexto de validação todos os erros
-     * encontrados durante o processo de validação.
+     * Adiciona ao contexto do Bean Validation
+     * todas as violações encontradas.
      *
      * <p>
-     * O método desabilita a mensagem padrão do Bean Validation
-     * para permitir o registro de mensagens customizadas e
-     * associar cada erro ao campo específico via
-     * {@link ConstraintValidatorContext#buildConstraintViolationWithTemplate(String)}.
-     *
-     * @param errors  lista contendo os erros encontrados
-     * @param context contexto utilizado para registrar
-     *                as violações de validação
+     * As mensagens registradas correspondem às chaves
+     * definidas no {@code MessageSource}.
+     * </p>
      */
     private void addErrors(List<FieldMessage> errors, ConstraintValidatorContext context) {
 

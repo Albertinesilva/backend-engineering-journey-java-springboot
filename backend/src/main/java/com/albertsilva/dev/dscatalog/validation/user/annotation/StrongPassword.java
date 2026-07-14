@@ -53,7 +53,7 @@ public @interface StrongPassword {
    *
    * @return mensagem padrão da validação
    */
-  String message() default "Senha deve conter no mínimo 10 caracteres, letra maiúscula, minúscula, número e caractere especial";
+  String message() default "{user.password.strong}";
 
   /**
    * Define grupos de validação associados

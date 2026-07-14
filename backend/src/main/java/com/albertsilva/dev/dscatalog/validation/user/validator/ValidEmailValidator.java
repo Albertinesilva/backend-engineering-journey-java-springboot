@@ -75,8 +75,7 @@ public class ValidEmailValidator implements ConstraintValidator<ValidEmail, Stri
    *         e registros MX válidos; {@code false} caso contrário
    */
   @Override
-  public boolean isValid(String value,
-      ConstraintValidatorContext context) {
+  public boolean isValid(String value, ConstraintValidatorContext context) {
 
     if (value == null || value.isBlank()) {
       return true;
@@ -85,12 +84,26 @@ public class ValidEmailValidator implements ConstraintValidator<ValidEmail, Stri
     String email = value.trim().toLowerCase();
 
     if (!isValidEmailFormat(email)) {
+
+      context.disableDefaultConstraintViolation();
+
+      context.buildConstraintViolationWithTemplate("{user.email.invalid}").addConstraintViolation();
+
       return false;
     }
 
     String domain = extractDomain(email);
 
-    return hasMxRecord(domain);
+    if (!hasMxRecord(domain)) {
+
+      context.disableDefaultConstraintViolation();
+
+      context.buildConstraintViolationWithTemplate("{user.email.invalid}").addConstraintViolation();
+
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -133,8 +146,7 @@ public class ValidEmailValidator implements ConstraintValidator<ValidEmail, Stri
 
     Hashtable<String, String> env = new Hashtable<>();
 
-    env.put(
-        "java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
+    env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
 
     InitialDirContext context = null;
 
@@ -142,8 +154,7 @@ public class ValidEmailValidator implements ConstraintValidator<ValidEmail, Stri
 
       context = new InitialDirContext(env);
 
-      Attributes attributes = context.getAttributes(domain,
-          new String[] { "MX" });
+      Attributes attributes = context.getAttributes(domain, new String[] { "MX" });
 
       Attribute attribute = attributes.get("MX");
 

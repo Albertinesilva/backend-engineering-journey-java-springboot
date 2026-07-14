@@ -205,7 +205,7 @@ public class CategoryService {
 
     } catch (EntityNotFoundException e) {
       logger.warn("Falha ao atualizar categoria. Categoria não encontrada. id: {}", id);
-      throw new ResourceNotFoundException("Entity not found id: " + id);
+      throw new ResourceNotFoundException("error.category.notFound");
     }
   }
 
@@ -242,15 +242,16 @@ public class CategoryService {
    * </p>
    *
    * @param id identificador da categoria
+   * 
    * @throws ResourceNotFoundException caso a categoria não exista
    *
    * @implNote
-   *           Realiza atualização parcial do status da categoria,
-   *           mantendo as demais informações inalteradas.
+   * Realiza atualização parcial do status da categoria,
+   * mantendo as demais informações inalteradas.
    *
    * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          atualização parcial, status de entidade e regras de negócio.
+   * Esta implementação reforça conceitos importantes como:
+   * atualização parcial, status de entidade e regras de negócio.
    */
   @Transactional
   public void deactivate(Long id) {
@@ -335,7 +336,7 @@ public class CategoryService {
 
     return categoryRepository.findById(id).orElseThrow(() -> {
       logger.warn("Categoria não encontrada. id: {}", id);
-      return new ResourceNotFoundException("Entity not found id: " + id);
+      return new ResourceNotFoundException("error.category.notFound");
     });
   }
 

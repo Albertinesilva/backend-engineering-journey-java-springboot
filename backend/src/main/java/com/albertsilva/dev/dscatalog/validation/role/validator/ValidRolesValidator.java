@@ -76,7 +76,7 @@ public class ValidRolesValidator implements ConstraintValidator<ValidRoles, Set<
 
     context.disableDefaultConstraintViolation();
 
-    context.buildConstraintViolationWithTemplate("Uma ou mais roles informadas não existem").addConstraintViolation();
+    context.buildConstraintViolationWithTemplate("{role.invalid}").addConstraintViolation();
 
     return false;
   }

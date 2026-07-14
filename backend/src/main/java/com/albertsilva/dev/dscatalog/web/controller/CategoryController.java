@@ -25,49 +25,22 @@ import com.albertsilva.dev.dscatalog.dto.category.response.CategoryDetailsRespon
 import com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse;
 import com.albertsilva.dev.dscatalog.service.CategoryService;
 import com.albertsilva.dev.dscatalog.web.exception.response.ProblemDetails;
+import com.albertsilva.dev.dscatalog.web.exception.response.ValidationError;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 /**
- * Controller responsável por expor os endpoints REST da entidade Category.
- *
- * <p>
- * Esta classe recebe requisições HTTP, delega o processamento para a camada
- * de serviço ({@link CategoryService}) e retorna respostas padronizadas.
- * </p>
- *
- * <p>
- * <b>Base URL:</b> /api/v1/categories
- * </p>
- *
- * <p>
- * <b>Responsabilidades:</b>
- * </p>
- * <ul>
- * <li>Receber requisições HTTP</li>
- * <li>Validar e mapear parâmetros</li>
- * <li>Delegar regras de negócio para o Service</li>
- * <li>Retornar respostas HTTP apropriadas</li>
- * </ul>
- *
- * <p>
- * <b>Padrões REST utilizados:</b>
- * </p>
- * <ul>
- * <li>POST → criação</li>
- * <li>GET → consulta</li>
- * <li>PATCH → atualização parcial</li>
- * <li>DELETE → remoção</li>
- * </ul>
+ * Controller responsável pelas operações de categorias do catálogo.
  */
-@Tag(name = "Categorias", description = "Contém todas as operações aos recursos para cadastro, edição e leitura de uma categoria.")
+@Tag(name = "Categorias", description = "Operações para gestão de categorias do catálogo.")
 @RestController
 @RequestMapping("/api/v1/categories")
 public class CategoryController {
@@ -76,39 +49,19 @@ public class CategoryController {
 
   private final CategoryService categoryService;
 
-  /**
-   * Construtor para injeção de dependência do serviço.
-   *
-   * @param categoryService serviço de categorias
-   */
   public CategoryController(CategoryService categoryService) {
     this.categoryService = categoryService;
   }
 
-  /**
-   * Endpoint para criação de uma nova categoria.
-   *
-   * <p>
-   * Recebe um JSON contendo os dados da categoria e retorna o recurso criado.
-   * </p>
-   *
-   * <p>
-   * <b>Fluxo:</b>
-   * </p>
-   * <ol>
-   * <li>Recebe o request</li>
-   * <li>Delega para o Service</li>
-   * <li>Gera a URI do recurso criado</li>
-   * <li>Retorna HTTP 201 (Created)</li>
-   * </ol>
-   *
-   * @param categoryCreateRequest dados da categoria
-   * @return categoria criada com status 201 e header Location
-   */
-  @Operation(summary = "Cria uma nova categoria", description = "Exige Bearer Token. Acesso restrito a ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Cria uma nova categoria", description = "Cria uma nova categoria no catálogo e retorna o recurso criado. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Categoria criada com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryResponse.class))),
-      @ApiResponse(responseCode = "400", description = "Dados inválidos ou campos obrigatórios ausentes", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
-      @ApiResponse(responseCode = "409", description = "Categoria já existente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "409", description = "Conflito de dados", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "422", description = "Erro de validação", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationError.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @PostMapping
   @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
@@ -123,32 +76,12 @@ public class CategoryController {
     return ResponseEntity.created(uri).body(response);
   }
 
-  /**
-   * Endpoint para listar categorias com paginação.
-   *
-   * <p>
-   * <b>Parâmetros suportados:</b>
-   * </p>
-   * <ul>
-   * <li>page → número da página</li>
-   * <li>linesPerPage → quantidade de registros por página</li>
-   * <li>orderBy → campo para ordenação</li>
-   * <li>direction → direção (ASC ou DESC)</li>
-   * </ul>
-   *
-   * <p>
-   * <b>Exemplo:</b>
-   * </p>
-   * 
-   * <pre>
-   * GET /api/v1/categories?page=0&linesPerPage=10&direction=ASC&orderBy=name
-   * </pre>
-   *
-   * @return lista paginada de categorias
-   */
-  @Operation(summary = "Lista todas as categorias com paginação e filtro por nome", description = "Exige Bearer Token. Acesso restrito a ADMIN.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Lista categorias com paginação", description = "Retorna uma página de categorias filtradas por nome. Requer autenticação com Bearer Token.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Lista paginada de categorias", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CategoryResponse.class)))),
-      @ApiResponse(responseCode = "403", description = "Usuário sem permissão para acessar este recurso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @GetMapping
   public ResponseEntity<Page<CategoryResponse>> findAll(@RequestParam(required = false) String name,
@@ -163,19 +96,13 @@ public class CategoryController {
     return ResponseEntity.ok(response);
   }
 
-  /**
-   * Endpoint para buscar uma categoria pelo ID.
-   *
-   * <p>
-   * Retorna HTTP 200 caso encontre, ou 404 caso não exista.
-   * </p>
-   *
-   * @param id identificador da categoria
-   * @return categoria encontrada
-   */
-  @Operation(summary = "Busca uma categoria pelo ID", description = "Exige Bearer Token. Acesso restrito a ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"), responses = {
-      @ApiResponse(responseCode = "200", description = "Categoria encontrada com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryResponse.class))),
-      @ApiResponse(responseCode = "404", description = "Categoria não encontrada", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+  @Operation(summary = "Busca uma categoria pelo ID", description = "Retorna os detalhes completos de uma categoria existente. Requer autenticação com Bearer Token.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Categoria encontrada com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryDetailsResponse.class))),
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "404", description = "Recurso não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @GetMapping(value = "/{id}")
   public ResponseEntity<CategoryDetailsResponse> findById(@PathVariable Long id) {
@@ -187,29 +114,15 @@ public class CategoryController {
     return ResponseEntity.ok(response);
   }
 
-  /**
-   * Endpoint para atualização parcial de uma categoria.
-   *
-   * <p>
-   * Utiliza o método PATCH, permitindo atualizar apenas os campos enviados.
-   * </p>
-   *
-   * <p>
-   * <b>Importante:</b>
-   * </p>
-   * <ul>
-   * <li>Campos nulos NÃO são atualizados</li>
-   * <li>Apenas campos informados são modificados</li>
-   * </ul>
-   *
-   * @param id                    identificador da categoria
-   * @param categoryUpdateRequest dados para atualização
-   * @return categoria atualizada
-   */
-  @Operation(summary = "Atualiza uma categoria", description = "Exige Bearer Token. Acesso restrito a ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Atualiza uma categoria", description = "Atualiza os dados de uma categoria existente. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Categoria atualizada com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CategoryResponse.class))),
-      @ApiResponse(responseCode = "404", description = "Categoria não encontrada", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
-      @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "404", description = "Recurso não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "422", description = "Erro de validação", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationError.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @PatchMapping(value = "/{id}")
   @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
@@ -224,25 +137,17 @@ public class CategoryController {
     return ResponseEntity.ok(response);
   }
 
-  /**
-   * Endpoint para ativação de uma categoria.
-   *
-   * <p>
-   * Altera o status da categoria para ativo, permitindo sua exibição
-   * e utilização no sistema.
-   * </p>
-   *
-   * @param id identificador da categoria
-   * @return resposta sem conteúdo
-   */
-  @Operation(summary = "Ativa uma categoria", description = "Exige Bearer Token. Acesso restrito a ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Ativa uma categoria", description = "Ativa uma categoria existente no catálogo. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Categoria ativada com sucesso"),
-      @ApiResponse(responseCode = "404", description = "Categoria não encontrada", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "404", description = "Recurso não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @PatchMapping("/{id}/activate")
   @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
   public ResponseEntity<Void> activate(@PathVariable Long id) {
-
     logger.debug("Ativando categoria id={}", id);
 
     categoryService.activate(id);
@@ -251,25 +156,17 @@ public class CategoryController {
     return ResponseEntity.noContent().build();
   }
 
-  /**
-   * Endpoint para desativação de uma categoria.
-   *
-   * <p>
-   * Altera o status da categoria para inativo, ocultando-a das listagens
-   * e impedindo sua utilização no sistema.
-   * </p>
-   *
-   * @param id identificador da categoria
-   * @return resposta sem conteúdo
-   */
-  @Operation(summary = "Desativa uma categoria", description = "Exige Bearer Token. Acesso restrito a ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Desativa uma categoria", description = "Desativa uma categoria existente no catálogo. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Categoria desativada com sucesso"),
-      @ApiResponse(responseCode = "404", description = "Categoria não encontrada", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "404", description = "Recurso não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @PatchMapping("/{id}/deactivate")
   @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
   public ResponseEntity<Void> deactivate(@PathVariable Long id) {
-
     logger.debug("Desativando categoria id={}", id);
 
     categoryService.deactivate(id);
@@ -278,28 +175,14 @@ public class CategoryController {
     return ResponseEntity.noContent().build();
   }
 
-  /**
-   * Endpoint para remoção de uma categoria.
-   *
-   * <p>
-   * Retorna HTTP 204 (No Content) em caso de sucesso.
-   * </p>
-   *
-   * <p>
-   * <b>Possíveis erros:</b>
-   * </p>
-   * <ul>
-   * <li>404 → categoria não encontrada</li>
-   * <li>409 → violação de integridade</li>
-   * </ul>
-   *
-   * @param id identificador da categoria
-   * @return resposta sem conteúdo
-   */
-  @Operation(summary = "Remove uma categoria", description = "Exige Bearer Token. Acesso restrito a ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"), responses = {
+  @Operation(summary = "Remove uma categoria", description = "Remove uma categoria existente do catálogo. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
+  @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Categoria deletada com sucesso"),
-      @ApiResponse(responseCode = "404", description = "Categoria não encontrada", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
-      @ApiResponse(responseCode = "409", description = "Violação de integridade - existem entidades relacionadas", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
+      @ApiResponse(responseCode = "401", description = "Usuário não autenticado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "404", description = "Recurso não encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "409", description = "Conflito de dados", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class))),
+      @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProblemDetails.class)))
   })
   @DeleteMapping(value = "/{id}")
   @PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")

@@ -44,7 +44,7 @@ public @interface ValidRoles {
    *
    * @return mensagem padrão da validação
    */
-  String message() default "Roles inválidas";
+  String message() default "{role.invalid}";
 
   /**
    * Define grupos de validação associados

@@ -3,6 +3,10 @@ package com.albertsilva.dev.dscatalog.web.exception.response;
 import java.io.Serializable;
 import java.time.Instant;
 
+import com.albertsilva.dev.dscatalog.web.exception.enums.ApiErrorCode;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Classe que representa o padrão de resposta de erro da API.
  * Implementação simplificada de resposta de erro da API.
@@ -38,13 +42,26 @@ import java.time.Instant;
  * }
  * </pre>
  */
+@Schema(name = "ProblemDetails", description = "Resposta padrão de erro da API.")
 public class ProblemDetails implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  @Schema(description = "Momento em que o erro ocorreu", example = "2026-07-14T00:00:00Z")
   private Instant timestamp;
+
+  @Schema(description = "Status HTTP", example = "404")
   private Integer status;
+
+  @Schema(implementation = ApiErrorCode.class, description = "Código estável do erro")
+  private ApiErrorCode code;
+
+  @Schema(description = "Título do erro traduzido", example = "Resource not found")
   private String error;
+
+  @Schema(description = "Mensagem traduzida")
   private String message;
+
+  @Schema(description = "Endpoint que originou o erro", example = "/api/v1/products/15")
   private String path;
 
   public ProblemDetails() {
@@ -53,6 +70,16 @@ public class ProblemDetails implements Serializable {
   public ProblemDetails(Instant timestamp, Integer status, String error, String message, String path) {
     this.timestamp = timestamp;
     this.status = status;
+    this.error = error;
+    this.message = message;
+    this.path = path;
+  }
+
+  public ProblemDetails(Instant timestamp, Integer status, ApiErrorCode code, String error, String message,
+      String path) {
+    this.timestamp = timestamp;
+    this.status = status;
+    this.code = code;
     this.error = error;
     this.message = message;
     this.path = path;
@@ -84,6 +111,20 @@ public class ProblemDetails implements Serializable {
    */
   public void setStatus(Integer status) {
     this.status = status;
+  }
+
+  /**
+   * Retorna o código do erro.
+   */
+  public ApiErrorCode getCode() {
+    return code;
+  }
+
+  /**
+   * Define o código do erro.
+   */
+  public void setCode(ApiErrorCode code) {
+    this.code = code;
   }
 
   /**

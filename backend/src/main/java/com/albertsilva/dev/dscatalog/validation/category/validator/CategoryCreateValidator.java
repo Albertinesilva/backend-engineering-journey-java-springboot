@@ -106,7 +106,7 @@ public class CategoryCreateValidator implements ConstraintValidator<CategoryCrea
 
     if (categoryAlreadyExists) {
 
-      errors.add(new FieldMessage("name", "Já existe uma categoria com este nome"));
+      errors.add(new FieldMessage("name", "{category.name.unique}"));
     }
   }
 

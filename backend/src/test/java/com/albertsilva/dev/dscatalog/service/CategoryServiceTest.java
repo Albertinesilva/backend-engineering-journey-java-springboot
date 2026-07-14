@@ -134,7 +134,7 @@ class CategoryServiceTest {
       ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
           () -> service.findById(NON_EXISTING_ID));
 
-      Assertions.assertEquals("Entity not found id: " + NON_EXISTING_ID, exception.getMessage());
+      Assertions.assertEquals("error.category.notFound", exception.getMessage());
 
       Mockito.verify(repository).findById(NON_EXISTING_ID);
       Mockito.verify(categoryMapper, Mockito.never()).toResponse(Mockito.any());
@@ -285,7 +285,7 @@ class CategoryServiceTest {
       ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
           () -> service.update(NON_EXISTING_ID, request));
 
-      Assertions.assertEquals("Entity not found id: " + NON_EXISTING_ID, exception.getMessage());
+      Assertions.assertEquals("error.category.notFound", exception.getMessage());
 
       Mockito.verify(repository).getReferenceById(NON_EXISTING_ID);
       Mockito.verify(repository, Mockito.never()).save(Mockito.any());
@@ -322,7 +322,7 @@ class CategoryServiceTest {
       ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
           () -> service.activate(NON_EXISTING_ID));
 
-      Assertions.assertEquals("Entity not found id: " + NON_EXISTING_ID, exception.getMessage());
+      Assertions.assertEquals("error.category.notFound", exception.getMessage());
 
       Mockito.verify(repository).findById(NON_EXISTING_ID);
     }
@@ -358,7 +358,7 @@ class CategoryServiceTest {
       ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
           () -> service.deactivate(NON_EXISTING_ID));
 
-      Assertions.assertEquals("Entity not found id: " + NON_EXISTING_ID, exception.getMessage());
+      Assertions.assertEquals("error.category.notFound", exception.getMessage());
 
       Mockito.verify(repository).findById(NON_EXISTING_ID);
     }
@@ -392,7 +392,7 @@ class CategoryServiceTest {
       ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
           () -> service.delete(NON_EXISTING_ID));
 
-      Assertions.assertEquals("Entity not found id: " + NON_EXISTING_ID, exception.getMessage());
+      Assertions.assertEquals("error.category.notFound", exception.getMessage());
 
       Mockito.verify(repository).findById(NON_EXISTING_ID);
       Mockito.verify(repository, Mockito.never()).delete(Mockito.any());

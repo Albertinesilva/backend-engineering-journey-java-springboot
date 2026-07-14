@@ -282,7 +282,7 @@ public class ProductService {
 
     } catch (EntityNotFoundException e) {
       logger.warn("Falha ao atualizar produto. Produto não encontrado. id: {}", id);
-      throw new ResourceNotFoundException("Entity not found id: " + id);
+      throw new ResourceNotFoundException("error.product.notFound");
     }
   }
 
@@ -366,7 +366,7 @@ public class ProductService {
 
     } catch (DataIntegrityViolationException e) {
       logger.error("Erro de integridade ao deletar produto. id: {}", id);
-      throw new DatabaseException("Integrity violation: cannot delete product with related entities");
+      throw new DatabaseException("error.database.product.relatedEntities");
     }
   }
 
@@ -386,7 +386,7 @@ public class ProductService {
 
     return productRepository.findById(id).orElseThrow(() -> {
       logger.warn("Produto não encontrado. id: {}", id);
-      return new ResourceNotFoundException("Entity not found id: " + id);
+      return new ResourceNotFoundException("error.product.notFound");
     });
   }
 
@@ -433,7 +433,7 @@ public class ProductService {
 
     if (categories.size() != categoryIds.size()) {
       logger.warn("Uma ou mais categorias não foram encontradas. produtoId: {}", entity.getId());
-      throw new ResourceNotFoundException("One or more categories not found");
+      throw new ResourceNotFoundException("error.product.categories.notFound");
     }
 
     entity.getCategories().addAll(categories);

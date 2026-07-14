@@ -52,7 +52,7 @@ public @interface UniqueEmail {
      *
      * @return mensagem padrão da validação
      */
-    String message() default "Email já existente";
+    String message() default "{user.email.unique}";
 
     /**
      * Define grupos de validação associados

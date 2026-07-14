@@ -237,7 +237,7 @@ public class UserService implements UserDetailsService {
 
       logger.warn("Falha ao atualizar. Usuário não encontrado. id: {}", id);
 
-      throw new ResourceNotFoundException("Entity not found id: " + id);
+      throw new ResourceNotFoundException("error.user.notFound");
     }
   }
 
@@ -362,7 +362,7 @@ public class UserService implements UserDetailsService {
 
     return userRepository.findById(id).orElseThrow(() -> {
       logger.warn("Usuário não encontrado. id: {}", id);
-      return new ResourceNotFoundException("Entity not found id: " + id);
+      return new ResourceNotFoundException("error.user.notFound");
     });
   }
 
@@ -398,7 +398,7 @@ public class UserService implements UserDetailsService {
     Set<Role> roles = new HashSet<>(roleRepository.findAllById(roleIds));
 
     if (roles.size() != roleIds.size()) {
-      throw new ResourceNotFoundException("One or more roles not found for ids: " + roleIds);
+      throw new ResourceNotFoundException("error.role.ids.notFound");
     }
 
     return roles;

@@ -138,11 +138,8 @@ public class UserUpdateValidator implements ConstraintValidator<UserUpdateValid,
     Long userId;
 
     try {
-
       userId = Long.parseLong(uriVars.get("id"));
-
     } catch (NumberFormatException e) {
-
       return;
     }
 
@@ -151,7 +148,7 @@ public class UserUpdateValidator implements ConstraintValidator<UserUpdateValid,
     boolean emailAlreadyExists = repository.existsByEmailIgnoreCaseAndIdNot(normalizedEmail, userId);
 
     if (emailAlreadyExists) {
-      errors.add(new FieldMessage("email", "Email já cadastrado"));
+      errors.add(new FieldMessage("email", "{user.email.unique}"));
     }
   }
 
@@ -217,11 +214,11 @@ public class UserUpdateValidator implements ConstraintValidator<UserUpdateValid,
       return;
     }
 
-    boolean alreadyExists = errors.stream().anyMatch(error -> error.fieldName().equals("password")
-        && error.message().equals("Senha não pode conter dados pessoais"));
+    boolean alreadyExists = errors.stream().anyMatch(
+        error -> error.fieldName().equals("password") && error.message().equals("{user.password.personalData}"));
 
     if (password.contains(normalized) && !alreadyExists) {
-      errors.add(new FieldMessage("password", "Senha não pode conter dados pessoais"));
+      errors.add(new FieldMessage("password", "{user.password.personalData}"));
     }
   }
 

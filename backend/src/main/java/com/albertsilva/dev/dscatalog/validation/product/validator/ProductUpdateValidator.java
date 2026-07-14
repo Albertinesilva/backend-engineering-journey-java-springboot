@@ -147,7 +147,7 @@ public class ProductUpdateValidator implements ConstraintValidator<ProductUpdate
 
     if (productAlreadyExists) {
 
-      errors.add(new FieldMessage("name", "Já existe um produto com este nome"));
+      errors.add(new FieldMessage("name", "{product.name.unique}"));
     }
   }
 
@@ -179,7 +179,7 @@ public class ProductUpdateValidator implements ConstraintValidator<ProductUpdate
 
     if (invalidCategory) {
 
-      errors.add(new FieldMessage("categoryIds", "Uma ou mais categorias informadas não existem"));
+      errors.add(new FieldMessage("categoryIds", "{product.categoryIds.invalid}"));
     }
   }
 

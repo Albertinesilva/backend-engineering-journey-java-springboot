@@ -1,4 +1,4 @@
-package com.albertsilva.dev.dscatalog.config;
+package com.albertsilva.dev.dscatalog.config.documentation;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -16,9 +16,9 @@ public class SpringDocOpenApiConfig {
   public OpenAPI openAPI() {
     return new OpenAPI()
         .components(new Components().addSecuritySchemes("security", securityScheme()))
-        .info(new Info().title("DSCatalog API")
+        .info(new Info().title("ASJCatalog API")
             .description(
-                "RESTful API para gerenciamento de catálogo de produtos, categorias e operações de vendas em um sistema de e-commerce")
+                "RESTful API para gerenciamento de catálogo de produtos, categorias e usuários, com suporte a autenticação e autorização via JWT.")
             .version("v1")
             .license(new License().name("Apache 2.0").url("https://www.apache.org/licenses/LICENSE-2.0"))
             .contact(new Contact().name("Albert Silva de Jesus").email("albertinesilva,17@gmail.com")

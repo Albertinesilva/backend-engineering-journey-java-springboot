@@ -133,7 +133,7 @@ public class CategoryUpdateValidator implements ConstraintValidator<CategoryUpda
 
     if (categoryAlreadyExists) {
 
-      errors.add(new FieldMessage("name", "Já existe uma categoria com este nome"));
+      errors.add(new FieldMessage("name", "{category.name.unique}"));
     }
   }
 
