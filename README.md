@@ -60,33 +60,34 @@ O capítulo também introduz integração com serviços externos através do env
 </p>
 
 ---
+
 ## 📑 Sumário
 
 > Navegação do capítulo.
 
 ---
 
-| 🧩 Module | ⚡ Description |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| [📚 Contexto da Implementação](#-contexto-da-implementação) | Contexto da evolução arquitetural e dos novos requisitos de negócio |
-| [🎯 Objetivos](#-objetivos) | Metas técnicas e arquiteturais implementadas neste módulo |
-| [📂 Organização dos Packages](#-organização-dos-packages) | Estrutura modular da aplicação e responsabilidades das camadas |
-| [🧩 Organização da Camada de Domínio](#-organização-da-camada-de-domínio) | Evolução da camada de domínio e organização dos subdomínios |
-| [🧠 Conceitos Fundamentais Trabalhados](#-conceitos-fundamentais-trabalhados) | Conceitos de arquitetura, persistência e modelagem aplicados |
-| [🛠️ Tecnologias e Frameworks Utilizados](#️-tecnologias-e-frameworks-utilizados) | Stack tecnológica empregada na evolução da aplicação |
-| [🗄️ Modelagem ORM](#️-modelagem-orm) | Modelagem das entidades, relacionamentos e estratégias de persistência |
-| [🎯 Casos de Uso](#-casos-de-uso) | Fluxos de negócio implementados na camada de serviços |
-| [🔍 Consultas ao Banco](#-consultas-ao-banco) | Estratégias de consultas utilizando Spring Data JPA, JPQL e Native SQL |
-| [🚀 Otimizações de Persistência](#-otimizações-de-persistência) | Técnicas aplicadas para otimização de desempenho e eliminação do N+1 Select |
-| [📧 Integração com E-mail](#-integração-com-e-mail) | Fluxo de envio de e-mails transacionais e gerenciamento de tokens |
-| [🧱 Boas Práticas Aplicadas](#-boas-práticas-aplicadas) | Padrões arquiteturais e boas práticas adotadas durante a implementação |
-| [📈 Evolução Arquitetural](#-evolução-arquitetural) | Principais evoluções estruturais da aplicação |
-| [🎓 Aprendizados](#-aprendizados) | Conhecimentos consolidados ao longo deste capítulo |
-| [💼 Competências Técnicas Desenvolvidas](#-competências-técnicas-desenvolvidas) | Competências adquiridas com a implementação |
-| [🏁 Conclusão](#-conclusão) | Considerações finais sobre a evolução da arquitetura |
-| [📚 Referências Técnicas](#-referências-técnicas) | Documentações oficiais e materiais utilizados |
-| [👨‍💻 Autor](#-autor) | Informações sobre o autor da documentação |
-| [📎 Contato](#-contato) | Canais de contato e redes profissionais |
+| 🧩 Module                                                                       | ⚡ Description                                                              |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [📚 Contexto da Implementação](#-contexto-da-implementação)                     | Contexto da evolução arquitetural e dos novos requisitos de negócio         |
+| [🎯 Objetivos](#-objetivos)                                                     | Metas técnicas e arquiteturais implementadas neste módulo                   |
+| [📂 Organização dos Packages](#-organização-dos-packages)                       | Estrutura modular da aplicação e responsabilidades das camadas              |
+| [🧩 Organização da Camada de Domínio](#-organização-da-camada-de-domínio)       | Evolução da camada de domínio e organização dos subdomínios                 |
+| [🧠 Conceitos Fundamentais Trabalhados](#-conceitos-fundamentais-trabalhados)   | Conceitos de arquitetura, persistência e modelagem aplicados                |
+| [🛠️ Tecnologias e Frameworks Utilizados](#️-tecnologias-e-frameworks-utilizados) | Stack tecnológica empregada na evolução da aplicação                        |
+| [🗄️ Modelagem ORM](#️-modelagem-orm)                                             | Modelagem das entidades, relacionamentos e estratégias de persistência      |
+| [🎯 Casos de Uso](#-casos-de-uso)                                               | Fluxos de negócio implementados na camada de serviços                       |
+| [🔍 Consultas ao Banco](#-consultas-ao-banco)                                   | Estratégias de consultas utilizando Spring Data JPA, JPQL e Native SQL      |
+| [🚀 Otimizações de Persistência](#-otimizações-de-persistência)                 | Técnicas aplicadas para otimização de desempenho e eliminação do N+1 Select |
+| [📧 Integração com E-mail](#-integração-com-e-mail)                             | Fluxo de envio de e-mails transacionais e gerenciamento de tokens           |
+| [🧱 Boas Práticas Aplicadas](#-boas-práticas-aplicadas)                         | Padrões arquiteturais e boas práticas adotadas durante a implementação      |
+| [📈 Evolução Arquitetural](#-evolução-arquitetural)                             | Principais evoluções estruturais da aplicação                               |
+| [🎓 Aprendizados](#-aprendizados)                                               | Conhecimentos consolidados ao longo deste capítulo                          |
+| [💼 Competências Técnicas Desenvolvidas](#-competências-técnicas-desenvolvidas) | Competências adquiridas com a implementação                                 |
+| [🏁 Conclusão](#-conclusão)                                                     | Considerações finais sobre a evolução da arquitetura                        |
+| [📚 Referências Técnicas](#-referências-técnicas)                               | Documentações oficiais e materiais utilizados                               |
+| [👨‍💻 Autor](#-autor)                                                             | Informações sobre o autor da documentação                                   |
+| [📎 Contato](#-contato)                                                         | Canais de contato e redes profissionais                                     |
 
 ---
 
