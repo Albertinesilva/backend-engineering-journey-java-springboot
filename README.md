@@ -68,7 +68,7 @@ O capítulo também introduz integração com serviços externos através do env
 
 | 🧩 Module | ⚡ Description |
 | ------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| [📚 Contexto do Capítulo](#-contexto-do-capítulo) | Contexto da evolução arquitetural e dos novos requisitos de negócio |
+| [📚 Contexto da Implementação](#-contexto-da-implementação) | Contexto da evolução arquitetural e dos novos requisitos de negócio |
 | [🎯 Objetivos](#-objetivos) | Metas técnicas e arquiteturais implementadas neste módulo |
 | [📂 Organização dos Packages](#-organização-dos-packages) | Estrutura modular da aplicação e responsabilidades das camadas |
 | [🧩 Organização da Camada de Domínio](#-organização-da-camada-de-domínio) | Evolução da camada de domínio e organização dos subdomínios |
