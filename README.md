@@ -90,7 +90,7 @@ O capítulo também introduz integração com serviços externos através do env
 
 ---
 
-## 📚 Contexto do Capítulo
+## 📚 Contexto da Implementação
 
 Após a implementação da infraestrutura de autenticação e autorização baseada em Spring Security, OAuth2 e JWT, o ASJCatalog evolui para incorporar fluxos de negócio mais próximos dos requisitos encontrados em aplicações corporativas reais.
 Neste modulo foram implementados casos de uso completos relacionados ao ciclo de vida da conta do usuário, além da evolução da camada de persistência utilizando JPA/Hibernate, consultas otimizadas e integração com serviços de e-mail.
@@ -100,7 +100,7 @@ O foco principal foi construir fluxos de negócio completos, desacoplados e alin
 
 ## 🎯 Objetivos
 
-Este modulo possui os seguintes objetivos:
+Os principais objetivos deste módulo são:
 
 - Evoluir a modelagem ORM da aplicação.
 - Implementar casos de uso completos relacionados à gestão de contas de usuário.
