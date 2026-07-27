@@ -3,10 +3,11 @@ package com.albertsilva.dev.dscatalog.dto.user.request;
 import java.util.Set;
 
 import com.albertsilva.dev.dscatalog.validation.role.annotation.ValidRoles;
+import com.albertsilva.dev.dscatalog.validation.user.annotation.PasswordPersonalData;
 import com.albertsilva.dev.dscatalog.validation.user.annotation.StrongPassword;
 import com.albertsilva.dev.dscatalog.validation.user.annotation.UniqueEmail;
-import com.albertsilva.dev.dscatalog.validation.user.annotation.UserCreateValid;
 import com.albertsilva.dev.dscatalog.validation.user.annotation.ValidEmail;
+import com.albertsilva.dev.dscatalog.validation.user.contract.PasswordPersonalDataCandidate;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -60,7 +61,7 @@ import jakarta.validation.constraints.Size;
  * @param roleIds   lista contendo os identificadores
  *                  das roles associadas ao usuário
  */
-@UserCreateValid
+@PasswordPersonalData
 public record UserCreateRequest(
 
     @NotBlank(message = "{user.firstName.notBlank}") 
@@ -76,9 +77,11 @@ public record UserCreateRequest(
     @UniqueEmail 
     String email,
 
+    @NotBlank(message = "{user.password.blank}")
+    @Size(min = 10, max = 72, message = "{user.password.length}")
     @StrongPassword 
     String password,
 
     @ValidRoles 
-    Set<Long> roleIds) {
+    Set<Long> roleIds) implements PasswordPersonalDataCandidate {
 }

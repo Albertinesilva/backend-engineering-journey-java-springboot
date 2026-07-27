@@ -1,9 +1,10 @@
 package com.albertsilva.dev.dscatalog.dto.user.request;
 
+import com.albertsilva.dev.dscatalog.validation.user.annotation.PasswordPersonalData;
 import com.albertsilva.dev.dscatalog.validation.user.annotation.StrongPassword;
 import com.albertsilva.dev.dscatalog.validation.user.annotation.UniqueEmail;
-import com.albertsilva.dev.dscatalog.validation.user.annotation.UserCreateValid;
 import com.albertsilva.dev.dscatalog.validation.user.annotation.ValidEmail;
+import com.albertsilva.dev.dscatalog.validation.user.contract.PasswordPersonalDataCandidate;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -43,7 +44,7 @@ import jakarta.validation.constraints.Size;
  * @param email     email do usuário
  * @param password  senha do usuário
  */
-// @UserCreateValid
+@PasswordPersonalData
 public record UserRegisterRequest(
   
   @NotBlank(message = "{user.firstName.notBlank}") 
@@ -59,6 +60,8 @@ public record UserRegisterRequest(
   @UniqueEmail 
   String email,
 
+  @NotBlank(message = "{user.password.blank}")
+  @Size(min = 10, max = 72, message = "{user.password.length}")
   @StrongPassword 
-  String password) {
+  String password) implements PasswordPersonalDataCandidate {
 }
