@@ -81,6 +81,8 @@ import org.springframework.security.core.GrantedAuthority;
  */
 public class AuthenticatedUser {
 
+  private final Long id;
+
   private final String username;
 
   private final Collection<? extends GrantedAuthority> authorities;
@@ -100,9 +102,19 @@ public class AuthenticatedUser {
    *           chamador
    *           para evitar NullPointerException ao acessar getters.
    */
-  public AuthenticatedUser(String username, Collection<? extends GrantedAuthority> authorities) {
+  public AuthenticatedUser(Long id, String username, Collection<? extends GrantedAuthority> authorities) {
+    this.id = id;
     this.username = username;
     this.authorities = authorities;
+  }
+
+  /**
+   * Obtém o ID do usuário.
+   *
+   * @return ID do usuário
+   */
+  public Long getId() {
+    return id;
   }
 
   /**

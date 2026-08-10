@@ -13,6 +13,7 @@ import com.albertsilva.dev.dscatalog.domain.recovery.Token;
 import com.albertsilva.dev.dscatalog.domain.recovery.enums.TokenType;
 import com.albertsilva.dev.dscatalog.domain.user.Role;
 import com.albertsilva.dev.dscatalog.domain.user.User;
+import com.albertsilva.dev.dscatalog.dto.user.request.AuthenticatedUserUpdateRequest;
 import com.albertsilva.dev.dscatalog.dto.user.request.UserRegisterRequest;
 import com.albertsilva.dev.dscatalog.dto.user.response.UserResponse;
 import com.albertsilva.dev.dscatalog.mapper.user.UserMapper;
@@ -234,6 +235,20 @@ public class AccountService {
     token.disable();
 
     userRepository.save(user);
+  }
+
+  @Transactional
+  public UserResponse updateAuthenticatedUser(AuthenticatedUserUpdateRequest request) {
+
+    User user = authenticatedUserService.getAuthenticatedUser();
+
+    user.setFirstName(request.firstName().trim());
+    user.setLastName(request.lastName().trim());
+    user.setEmail(request.email().trim().toLowerCase());
+
+    user = userRepository.save(user);
+
+    return userMapper.toResponse(user);
   }
 
   @Transactional(readOnly = true)

@@ -83,6 +83,18 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 public interface UserDetailsProjection {
 
   /**
+   * Obtém o ID do usuário da projeção.
+   *
+   * <p>
+   * Este ID é útil para transmitir informações de usuário autenticado
+   * em tokens JWT ou contextos de segurança.
+   * </p>
+   *
+   * @return ID único do usuário no banco de dados
+   */
+  Long getId();
+
+  /**
    * Obtém o nome de usuário (login) da projeção.
    *
    * @return nome de usuário único

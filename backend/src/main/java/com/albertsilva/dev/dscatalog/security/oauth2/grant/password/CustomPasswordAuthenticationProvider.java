@@ -31,6 +31,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.util.Assert;
 
+import com.albertsilva.dev.dscatalog.domain.user.User;
 import com.albertsilva.dev.dscatalog.security.userdetails.AuthenticatedUser;
 
 /**
@@ -202,24 +203,26 @@ public class CustomPasswordAuthenticationProvider implements AuthenticationProvi
     String username = customPasswordAuthenticationToken.getUsername();
     String password = customPasswordAuthenticationToken.getPassword();
 
-    UserDetails user;
+    UserDetails userDetails;
 
     try {
-      user = userDetailsService.loadUserByUsername(username);
-      validateCredentials(user, password);
-      validateUserStatus(user);
+      userDetails = userDetailsService.loadUserByUsername(username);
+      validateCredentials(userDetails, password);
+      validateUserStatus(userDetails);
     } catch (UsernameNotFoundException e) {
       throw new OAuth2AuthenticationException(
           new OAuth2Error(OAuth2ErrorCodes.INVALID_GRANT, "Invalid credentials", ERROR_URI));
     }
 
-    Set<String> authorizedScopes = user.getAuthorities().stream().map(scope -> scope.getAuthority())
+    Set<String> authorizedScopes = userDetails.getAuthorities().stream().map(scope -> scope.getAuthority())
         .filter(scope -> registeredClient.getScopes().contains(scope)).collect(Collectors.toSet());
+
+    Long userId = ((User) userDetails).getId(); // Necessário para acessar o ID da entidade
 
     // -----------Create a new Security Context Holder Context----------
     OAuth2ClientAuthenticationToken oAuth2ClientAuthenticationToken = (OAuth2ClientAuthenticationToken) SecurityContextHolder
         .getContext().getAuthentication();
-    AuthenticatedUser customPasswordUser = new AuthenticatedUser(username, user.getAuthorities());
+    AuthenticatedUser customPasswordUser = new AuthenticatedUser(userId, username, userDetails.getAuthorities());
     oAuth2ClientAuthenticationToken.setDetails(customPasswordUser);
 
     var newcontext = SecurityContextHolder.createEmptyContext();

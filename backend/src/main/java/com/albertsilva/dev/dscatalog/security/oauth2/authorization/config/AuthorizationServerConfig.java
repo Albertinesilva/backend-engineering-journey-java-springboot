@@ -418,6 +418,7 @@ public class AuthorizationServerConfig {
         // @formatter:off
 				context.getClaims()
           .claim("authorities", authorities)
+          .claim("userId", user.getId())
           .claim("username", user.getUsername());
 				// @formatter:on
       }
