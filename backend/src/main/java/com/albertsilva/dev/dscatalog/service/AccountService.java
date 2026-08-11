@@ -14,6 +14,7 @@ import com.albertsilva.dev.dscatalog.domain.recovery.enums.TokenType;
 import com.albertsilva.dev.dscatalog.domain.user.Role;
 import com.albertsilva.dev.dscatalog.domain.user.User;
 import com.albertsilva.dev.dscatalog.dto.user.request.AuthenticatedUserUpdateRequest;
+import com.albertsilva.dev.dscatalog.dto.user.request.PasswordUpdateRequest;
 import com.albertsilva.dev.dscatalog.dto.user.request.UserRegisterRequest;
 import com.albertsilva.dev.dscatalog.dto.user.response.UserResponse;
 import com.albertsilva.dev.dscatalog.mapper.user.UserMapper;
@@ -21,9 +22,11 @@ import com.albertsilva.dev.dscatalog.repository.RoleRepository;
 import com.albertsilva.dev.dscatalog.repository.UserRepository;
 import com.albertsilva.dev.dscatalog.security.auth.AuthenticatedUserService;
 import com.albertsilva.dev.dscatalog.service.exception.InvalidTokenException;
+import com.albertsilva.dev.dscatalog.service.exception.PasswordUpdateException;
 import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
 
 import jakarta.mail.MessagingException;
+import jakarta.validation.Valid;
 
 /**
  * Serviço responsável pelo gerenciamento do ciclo de vida das contas
@@ -251,6 +254,20 @@ public class AccountService {
     return userMapper.toResponse(user);
   }
 
+  @Transactional
+  public void updatePassword(PasswordUpdateRequest request) {
+
+    validatePasswordConfirmation(request);
+
+    User user = authenticatedUserService.getAuthenticatedUser();
+
+    validateCurrentPassword(request.currentPassword(), user);
+
+    validateNewPassword(request.newPassword(), user);
+
+    user.setPassword(passwordEncoder.encode(request.newPassword()));
+  }
+
   @Transactional(readOnly = true)
   public UserResponse getAuthenticatedUser() {
 
@@ -262,4 +279,26 @@ public class AccountService {
   public void deactivateAccount() {
     throw new UnsupportedOperationException("Unimplemented method 'deactivateAccount'");
   }
+
+  private void validatePasswordConfirmation(PasswordUpdateRequest request) {
+
+    if (!request.newPassword().equals(request.confirmPassword())) {
+      throw new PasswordUpdateException("error.account.password.confirmationMismatch");
+    }
+  }
+
+  private void validateCurrentPassword(String currentPassword, User user) {
+
+    if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+      throw new PasswordUpdateException("error.account.password.currentInvalid");
+    }
+  }
+
+  private void validateNewPassword(String newPassword, User user) {
+
+    if (passwordEncoder.matches(newPassword, user.getPassword())) {
+      throw new PasswordUpdateException("error.account.password.sameAsCurrent");
+    }
+  }
+
 }

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.albertsilva.dev.dscatalog.dto.user.request.AuthenticatedUserUpdateRequest;
 import com.albertsilva.dev.dscatalog.dto.user.request.PasswordResetRequest;
+import com.albertsilva.dev.dscatalog.dto.user.request.PasswordUpdateRequest;
 import com.albertsilva.dev.dscatalog.dto.user.request.UserEmailRequest;
 import com.albertsilva.dev.dscatalog.dto.user.request.UserRegisterRequest;
 import com.albertsilva.dev.dscatalog.dto.user.response.UserResponse;
@@ -160,6 +162,14 @@ public class AccountController {
     logger.info("Perfil atualizado com sucesso");
 
     return ResponseEntity.ok(response);
+  }
+
+  @PatchMapping("/me/password")
+  public ResponseEntity<Void> updatePassword(@Valid @RequestBody PasswordUpdateRequest request) {
+
+    accountService.updatePassword(request);
+
+    return ResponseEntity.noContent().build();
   }
 
   @Operation(summary = "Obtém o usuário autenticado", description = "Retorna os dados do usuário atualmente autenticado no sistema. Requer autenticação com Bearer Token.", security = @SecurityRequirement(name = "security"))

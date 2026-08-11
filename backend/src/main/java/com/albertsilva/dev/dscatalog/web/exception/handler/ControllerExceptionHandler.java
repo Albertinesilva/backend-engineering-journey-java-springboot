@@ -20,6 +20,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import com.albertsilva.dev.dscatalog.service.exception.AuthenticatedUserNotFoundException;
 import com.albertsilva.dev.dscatalog.service.exception.DatabaseException;
 import com.albertsilva.dev.dscatalog.service.exception.InvalidTokenException;
+import com.albertsilva.dev.dscatalog.service.exception.PasswordUpdateException;
 import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
 import com.albertsilva.dev.dscatalog.web.exception.enums.ApiErrorCode;
 import com.albertsilva.dev.dscatalog.web.exception.response.ProblemDetails;
@@ -117,6 +118,18 @@ public class ControllerExceptionHandler {
     logger.warn("AuthenticatedUserNotFoundException - path: {}, message: {}", request.getRequestURI(), e.getMessage());
     ProblemDetails err = buildProblemDetails(status, ApiErrorCode.AUTHENTICATION_REQUIRED,
         "error.authentication.title", e.getMessage(), "error.authentication.message", request.getRequestURI(), locale);
+
+    return ResponseEntity.status(status).body(err);
+  }
+
+  @ExceptionHandler(PasswordUpdateException.class)
+  public ResponseEntity<ProblemDetails> handlePasswordUpdate(PasswordUpdateException e, HttpServletRequest request,
+      Locale locale) {
+
+    HttpStatus status = HttpStatus.UNPROCESSABLE_ENTITY;
+
+    ProblemDetails err = buildProblemDetails(status, ApiErrorCode.PASSWORD_UPDATE_ERROR, "error.password.update.title",
+        e.getMessage(), "error.password.update.message", request.getRequestURI(), locale);
 
     return ResponseEntity.status(status).body(err);
   }

@@ -8,6 +8,9 @@ public enum ApiErrorCode {
   @Schema(description = "Erro de validação dos dados enviados")
   VALIDATION_ERROR,
 
+  @Schema(description = "Erro ao atualizar a senha do usuário")
+  PASSWORD_UPDATE_ERROR,
+
   @Schema(description = "Recurso não encontrado")
   RESOURCE_NOT_FOUND,
 
