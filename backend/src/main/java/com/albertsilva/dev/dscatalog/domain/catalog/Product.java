@@ -28,20 +28,34 @@ import jakarta.persistence.Table;
  * </p>
  *
  * <p>
- * <b>Regras de negócio:</b>
+ * <b>Regras e invariantes:</b>
  * </p>
  * <ul>
- * <li>O produto deve possuir um nome</li>
- * <li>O preço deve ser maior que zero</li>
- * <li>O produto pode estar ativo ou inativo</li>
+ * <li>O nome é obrigatório e único (restrições do mapeamento)</li>
+ * <li>A entidade <b>não</b> valida o preço: o campo é um {@link Double}
+ * opcional, e a exigência de valor positivo é feita no DTO de entrada
+ * ({@code @Positive}), não aqui</li>
+ * <li>O indicador {@code active} é apenas armazenado: a entidade não impõe
+ * restrições com base nele. Uma instância nova nasce inativa ({@code false})
+ * até que o valor seja definido</li>
+ * <li>Um produto pode pertencer a várias categorias; a entidade não exige pelo
+ * menos uma categoria (essa exigência está nos DTOs de entrada)</li>
+ * <li>A identidade é definida somente pelo {@code id} (ver
+ * {@link #equals(Object)})</li>
  * </ul>
  *
  * <p>
  * <b>Mapeamento:</b>
  * </p>
  * <ul>
- * <li>Tabela: tb_product</li>
- * <li>Relacionamento Many-to-Many com Category</li>
+ * <li>Tabela: {@code tb_product}</li>
+ * <li>Relacionamento muitos-para-muitos com {@link Category}, no qual
+ * {@code Product} é o lado dono (tabela de junção
+ * {@code tb_product_category})</li>
+ * <li>Datas de auditoria preenchidas por callbacks JPA privados
+ * ({@code prePersist} e {@code preUpdate})</li>
+ * <li>Implementa {@link Identifiable}, o que permite tratá-lo de forma genérica
+ * pelo identificador</li>
  * </ul>
  */
 @Entity
@@ -84,7 +98,9 @@ public class Product implements Serializable, Identifiable<Long> {
    * Preço do produto.
    *
    * <p>
-   * Utilizado em operações comerciais e cálculos financeiros.
+   * Valor do produto. É um {@link Double} sem restrição de nulidade ou de faixa
+   * na entidade (a validação ocorre nos DTOs de entrada); por ser ponto
+   * flutuante, não oferece precisão decimal exata.
    * </p>
    */
   private Double price;
@@ -102,7 +118,9 @@ public class Product implements Serializable, Identifiable<Long> {
    * Data de criação do registro.
    *
    * <p>
-   * Preenchida automaticamente no momento da persistência.
+   * Preenchida automaticamente no momento da persistência (callback
+   * {@code prePersist}); permanece {@code null} em instâncias ainda não
+   * persistidas.
    * </p>
    */
   @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
@@ -112,7 +130,10 @@ public class Product implements Serializable, Identifiable<Long> {
    * Data da última atualização do registro.
    *
    * <p>
-   * Atualizada automaticamente sempre que a entidade é modificada.
+   * Definida na criação (com o mesmo instante de {@code createdAt}) e
+   * atualizada pelo callback {@code preUpdate} quando uma alteração é
+   * sincronizada com o banco. Permanece {@code null} em instâncias ainda não
+   * persistidas.
    * </p>
    */
   @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
@@ -122,7 +143,10 @@ public class Product implements Serializable, Identifiable<Long> {
    * Indica se o produto está ativo.
    *
    * <p>
-   * Produtos inativos podem ser ocultados ou desconsiderados em operações.
+   * A entidade apenas armazena o valor: não oculta nem bloqueia nada com base
+   * nele. Vale {@code false} em uma instância recém-criada até que seja
+   * definido (por {@link #setActive(boolean)} ou pelos construtores que
+   * recebem o parâmetro).
    * </p>
    */
   private boolean active;
@@ -142,14 +166,42 @@ public class Product implements Serializable, Identifiable<Long> {
    * Este relacionamento é gerenciado pela tabela intermediária
    * {@code tb_product_category}.
    * </p>
+   *
+   * <p>
+   * {@code Product} é o lado dono: adicionar ou remover categorias neste
+   * conjunto altera o vínculo persistido. Não há {@code cascade}, portanto as
+   * categorias precisam já existir (uma categoria nova não é criada ao salvar
+   * o produto), e não há {@code fetch} explícito (vale o padrão da JPA para
+   * coleções, carregamento tardio).
+   * </p>
    */
   @ManyToMany
   @JoinTable(name = "tb_product_category", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
   private Set<Category> categories = new HashSet<>();
 
+  /**
+   * Cria um produto vazio: campos nulos, {@code active} igual a {@code false} e
+   * nenhuma categoria associada. Construtor sem argumentos exigido pela JPA.
+   */
   public Product() {
   }
 
+  /**
+   * Cria um produto com identificador definido.
+   *
+   * <p>
+   * Nenhum argumento é validado; as categorias começam vazias e
+   * {@code createdAt}/{@code updatedAt} não são preenchidos aqui (apenas pelos
+   * callbacks JPA).
+   * </p>
+   *
+   * @param id          identificador do produto
+   * @param name        nome do produto
+   * @param description descrição do produto
+   * @param price       preço do produto
+   * @param imgUrl      URL da imagem do produto
+   * @param active      indica se o produto está ativo
+   */
   public Product(Long id, String name, String description, Double price, String imgUrl, boolean active) {
     this.id = id;
     this.name = name;
@@ -159,6 +211,21 @@ public class Product implements Serializable, Identifiable<Long> {
     this.active = active;
   }
 
+  /**
+   * Cria um produto ainda sem identificador (o banco o gera na persistência).
+   *
+   * <p>
+   * Nenhum argumento é validado; as categorias começam vazias e
+   * {@code createdAt}/{@code updatedAt} não são preenchidos aqui (apenas pelos
+   * callbacks JPA).
+   * </p>
+   *
+   * @param name        nome do produto
+   * @param description descrição do produto
+   * @param price       preço do produto
+   * @param imgUrl      URL da imagem do produto
+   * @param active      indica se o produto está ativo
+   */
   public Product(String name, String description, Double price, String imgUrl, boolean active) {
     this.name = name;
     this.description = description;
@@ -253,6 +320,11 @@ public class Product implements Serializable, Identifiable<Long> {
   }
 
   /**
+   * Retorna o próprio conjunto interno (não uma cópia). Como {@code Product} é
+   * o lado dono do relacionamento, adicionar ou remover categorias aqui altera
+   * o vínculo persistido em {@code tb_product_category}. Não existe método
+   * auxiliar de vínculo na entidade.
+   *
    * @return conjunto de categorias associadas ao produto
    */
   public Set<Category> getCategories() {
@@ -266,6 +338,10 @@ public class Product implements Serializable, Identifiable<Long> {
     return active;
   }
 
+  /**
+   * Callback JPA executado antes da primeira persistência: define
+   * {@code createdAt} e {@code updatedAt} com o mesmo instante atual.
+   */
   @PrePersist
   private void prePersist() {
     Instant now = Instant.now();
@@ -274,6 +350,10 @@ public class Product implements Serializable, Identifiable<Long> {
     updatedAt = now;
   }
 
+  /**
+   * Callback JPA executado antes de uma atualização: define {@code updatedAt}
+   * com o instante atual.
+   */
   @PreUpdate
   private void preUpdate() {
     updatedAt = Instant.now();
@@ -298,7 +378,10 @@ public class Product implements Serializable, Identifiable<Long> {
    * Compara dois produtos com base no identificador.
    *
    * <p>
-   * Dois produtos são considerados iguais quando possuem o mesmo ID.
+   * Dois produtos são considerados iguais quando possuem o mesmo ID. Duas
+   * instâncias sem ID (ainda não persistidas) são consideradas iguais entre
+   * si, e {@link #hashCode()} depende apenas do ID. A comparação exige a mesma
+   * classe exata ({@code getClass()}), e não apenas compatibilidade de tipo.
    * </p>
    */
   @Override

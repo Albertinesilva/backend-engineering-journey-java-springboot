@@ -25,19 +25,30 @@ import jakarta.persistence.PreUpdate;
  * </p>
  *
  * <p>
- * <b>Regras de negócio:</b>
+ * <b>Regras e invariantes:</b>
  * </p>
  * <ul>
- * <li>O nome da categoria deve representar claramente o agrupamento entre os
- * produtos</li>
- * <li>A categoria pode estar ativa ou inativa</li>
+ * <li>O nome é obrigatório e único, com até 80 caracteres (restrições do
+ * mapeamento); a descrição é opcional, com até 255 caracteres</li>
+ * <li>A categoria possui um indicador {@code active}, que a entidade apenas
+ * armazena: ela não impõe nenhuma restrição com base nele. Uma instância nova
+ * nasce inativa ({@code false}); quem a cria define o valor</li>
+ * <li>A validação de formato do nome e da descrição não é feita nesta
+ * entidade; ocorre nos DTOs de entrada</li>
+ * <li>A identidade é definida somente pelo {@code id} (ver
+ * {@link #equals(Object)})</li>
  * </ul>
  *
  * <p>
  * <b>Mapeamento:</b>
  * </p>
  * <ul>
- * <li>Tabela: tb_category</li>
+ * <li>Tabela: {@code tb_category}</li>
+ * <li>Relacionamento muitos-para-muitos com {@link Product}, no qual
+ * {@code Product} é o lado dono; nesta entidade o lado é apenas inverso
+ * ({@code mappedBy = "categories"})</li>
+ * <li>Datas de auditoria preenchidas por callbacks JPA
+ * ({@link #prePersist()} e {@link #preUpdate()})</li>
  * </ul>
  */
 @Entity
@@ -82,8 +93,10 @@ public class Category implements Serializable {
    * Indica se a categoria está ativa.
    *
    * <p>
-   * Categorias inativas podem ser desconsideradas em listagens ou operações
-   * de negócio.
+   * A entidade apenas armazena o valor: não filtra nem bloqueia nada com base
+   * nele. Vale {@code false} em uma instância recém-criada até que seja
+   * definido (por {@link #setActive(boolean)} ou pelos construtores que
+   * recebem o parâmetro).
    * </p>
    */
   private boolean active;
@@ -92,7 +105,9 @@ public class Category implements Serializable {
    * Data de criação do registro.
    *
    * <p>
-   * Preenchida automaticamente no momento da persistência.
+   * Preenchida automaticamente no momento da persistência (callback
+   * {@link #prePersist()}); permanece {@code null} em instâncias ainda não
+   * persistidas.
    * </p>
    */
   @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
@@ -102,7 +117,9 @@ public class Category implements Serializable {
    * Data da última atualização do registro.
    *
    * <p>
-   * Atualizada automaticamente sempre que a entidade é modificada.
+   * Atualizada pelo callback {@link #preUpdate()} quando uma alteração é
+   * sincronizada com o banco. Não é preenchida na criação: permanece
+   * {@code null} até a primeira atualização.
    * </p>
    */
   @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
@@ -114,13 +131,37 @@ public class Category implements Serializable {
    * <p>
    * Representa a relação de muitos para muitos entre categorias e produtos.
    * </p>
+   *
+   * <p>
+   * É o lado inverso do relacionamento ({@code mappedBy}): a tabela de junção é
+   * mantida por {@link Product#getCategories()}, portanto adicionar ou remover
+   * produtos apenas neste conjunto não altera o vínculo persistido.
+   * </p>
    */
   @ManyToMany(mappedBy = "categories")
   private Set<Product> products = new HashSet<>();
 
+  /**
+   * Cria uma categoria vazia: textos nulos, {@code active} igual a
+   * {@code false} e nenhum produto associado. Construtor sem argumentos exigido
+   * pela JPA.
+   */
   public Category() {
   }
 
+  /**
+   * Cria uma categoria com identificador definido.
+   *
+   * <p>
+   * Nenhum argumento é validado, e {@code createdAt}/{@code updatedAt} não são
+   * preenchidos aqui (apenas pelos callbacks JPA).
+   * </p>
+   *
+   * @param id          identificador da categoria
+   * @param name        nome da categoria
+   * @param description descrição da categoria
+   * @param active      indica se a categoria está ativa
+   */
   public Category(Long id, String name, String description, boolean active) {
     this.id = id;
     this.name = name;
@@ -128,6 +169,18 @@ public class Category implements Serializable {
     this.active = active;
   }
 
+  /**
+   * Cria uma categoria ainda sem identificador (o banco o gera na persistência).
+   *
+   * <p>
+   * Nenhum argumento é validado, e {@code createdAt}/{@code updatedAt} não são
+   * preenchidos aqui (apenas pelos callbacks JPA).
+   * </p>
+   *
+   * @param name        nome da categoria
+   * @param description descrição da categoria
+   * @param active      indica se a categoria está ativa
+   */
   public Category(String name, String description, boolean active) {
     this.name = name;
     this.description = description;
@@ -209,7 +262,8 @@ public class Category implements Serializable {
    * Método executado automaticamente antes da persistência da entidade.
    *
    * <p>
-   * Responsável por definir a data de criação.
+   * Responsável por definir a data de criação ({@code createdAt}); a data de
+   * atualização ({@code updatedAt}) não é definida neste momento.
    * </p>
    */
   @PrePersist
@@ -230,6 +284,10 @@ public class Category implements Serializable {
   }
 
   /**
+   * Retorna o próprio conjunto interno (não uma cópia). Por ser o lado inverso
+   * do relacionamento, alterações feitas nele não modificam o vínculo
+   * persistido; ver {@link Product#getCategories()}.
+   *
    * @return conjunto de produtos associados a esta categoria
    */
   public Set<Product> getProducts() {
@@ -249,6 +307,10 @@ public class Category implements Serializable {
    *
    * <p>
    * Duas categorias são consideradas iguais quando possuem o mesmo ID.
+   * Duas instâncias sem ID (ainda não persistidas) são consideradas iguais
+   * entre si, e {@link #hashCode()} depende apenas do ID. A comparação exige a
+   * mesma classe exata ({@code getClass()}), e não apenas compatibilidade de
+   * tipo.
    * </p>
    */
   @Override

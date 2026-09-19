@@ -13,7 +13,21 @@ import jakarta.persistence.Table;
  *
  * <p>
  * Roles são utilizadas para controle de acesso e autorização, e são
- * atribuídas a instâncias de {@code User} por meio de relacionamento.
+ * atribuídas a instâncias de {@link User} por meio de relacionamento.
+ * </p>
+ *
+ * <p>
+ * Implementa {@link GrantedAuthority}: o valor de {@code authority} é o texto
+ * que o Spring Security trata como autoridade. Nos dados iniciais do projeto
+ * ele já inclui o prefixo {@code ROLE_} (por exemplo, {@code ROLE_ADMIN} e
+ * {@code ROLE_OPERATOR}). O relacionamento é unidirecional: {@code User}
+ * conhece suas roles, mas {@code Role} não referencia os usuários.
+ * </p>
+ *
+ * <p>
+ * <b>Invariantes:</b> o mapeamento não declara restrições de nulidade ou
+ * unicidade para {@code authority}; a identidade é definida somente pelo
+ * {@code id} (ver {@link #equals(Object)}).
  * </p>
  *
  * <p>
@@ -36,9 +50,20 @@ public class Role implements GrantedAuthority {
   /** Nome/identificador da autoridade (ex.: "ROLE_ADMIN"). */
   private String authority;
 
+  /**
+   * Cria uma role vazia ({@code id} e {@code authority} nulos). Construtor sem
+   * argumentos exigido pela JPA.
+   */
   public Role() {
   }
 
+  /**
+   * Cria uma role com identificador e autoridade informados, sem nenhuma
+   * validação dos argumentos.
+   *
+   * @param id        identificador da role
+   * @param authority nome da autoridade (por exemplo, {@code ROLE_ADMIN})
+   */
   public Role(Long id, String authority) {
     this.id = id;
     this.authority = authority;
@@ -59,7 +84,7 @@ public class Role implements GrantedAuthority {
   }
 
   /**
-   * @return nome/identificador da autoridade (por exemplo, "ROLE_USER")
+   * @return nome/identificador da autoridade (por exemplo, "ROLE_ADMIN")
    */
   @Override
   public String getAuthority() {
@@ -81,6 +106,16 @@ public class Role implements GrantedAuthority {
     return result;
   }
 
+  /**
+   * Compara duas roles pelo identificador ({@code id}).
+   *
+   * <p>
+   * Duas instâncias sem {@code id} (ainda não persistidas) são consideradas
+   * iguais entre si, e {@link #hashCode()} depende apenas do {@code id}. A
+   * comparação exige a mesma classe exata ({@code getClass()}), e não apenas
+   * compatibilidade de tipo.
+   * </p>
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj)
