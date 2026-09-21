@@ -13,8 +13,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -137,7 +137,7 @@ class ProductControllerTest {
     @DisplayName("Should return paged products")
     void findAllShouldReturnPage() throws Exception {
 
-      when(productService.search(any(), any(Pageable.class))).thenReturn(page);
+      when(productService.findAllPaged(eq(""), eq("0"), any(Pageable.class))).thenReturn(page);
 
       ResultActions resultActions = mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_JSON));
 
@@ -150,21 +150,35 @@ class ProductControllerTest {
           .andExpect(jsonPath("$.size").value(10))
           .andExpect(jsonPath("$.number").value(0));
 
-      verify(productService).search(any(), any(Pageable.class));
+      verify(productService).findAllPaged(eq(""), eq("0"), any(Pageable.class));
     }
 
     @Test
     @DisplayName("Should return filtered paged products")
     void findAllShouldReturnFilteredPage() throws Exception {
 
-      when(productService.search(eq("pc"), any(Pageable.class))).thenReturn(page);
+      when(productService.findAllPaged(eq("pc"), eq("0"), any(Pageable.class))).thenReturn(page);
 
       ResultActions resultActions = mockMvc.perform(get(BASE_URL + "?page=0&size=12&sort=name,desc")
           .param("name", "pc").accept(MediaType.APPLICATION_JSON));
 
       resultActions.andExpect(status().isOk()).andExpect(jsonPath("$.content").isArray());
 
-      verify(productService).search(eq("pc"), any(Pageable.class));
+      verify(productService).findAllPaged(eq("pc"), eq("0"), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("Should forward categoryIds to the service")
+    void findAllShouldForwardCategoryIdsWhenInformed() throws Exception {
+
+      when(productService.findAllPaged(eq(""), eq("1,3"), any(Pageable.class))).thenReturn(page);
+
+      ResultActions resultActions = mockMvc
+          .perform(get(BASE_URL).param("categoryIds", "1,3").accept(MediaType.APPLICATION_JSON));
+
+      resultActions.andExpect(status().isOk()).andExpect(jsonPath("$.content").isArray());
+
+      verify(productService).findAllPaged(eq(""), eq("1,3"), any(Pageable.class));
     }
   }
 
@@ -208,7 +222,7 @@ class ProductControllerTest {
   }
 
   @Nested
-  @DisplayName("PATCH /products/{id}")
+  @DisplayName("PUT /products/{id}")
   class UpdateTests {
 
     @Test
@@ -223,7 +237,7 @@ class ProductControllerTest {
       when(productService.update(eq(EXISTING_ID), any(ProductUpdateRequest.class)))
           .thenReturn(updatedResponse);
 
-      ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}", EXISTING_ID)
+      ResultActions resultActions = mockMvc.perform(put(BASE_URL + "/{id}", EXISTING_ID)
           .with(csrf())
           .content(asJson(request))
           .contentType(MediaType.APPLICATION_JSON)
@@ -249,7 +263,7 @@ class ProductControllerTest {
       when(productService.update(eq(NON_EXISTING_ID), any(ProductUpdateRequest.class)))
           .thenThrow(new ResourceNotFoundException("error.product.notFound"));
 
-      ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}", NON_EXISTING_ID)
+      ResultActions resultActions = mockMvc.perform(put(BASE_URL + "/{id}", NON_EXISTING_ID)
           .with(csrf())
           .content(asJson(request))
           .contentType(MediaType.APPLICATION_JSON)

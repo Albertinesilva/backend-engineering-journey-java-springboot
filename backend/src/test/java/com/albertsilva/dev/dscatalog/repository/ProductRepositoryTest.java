@@ -2,6 +2,7 @@ package com.albertsilva.dev.dscatalog.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -201,6 +202,48 @@ class ProductRepositoryTest {
       assertThat(productRepository.existsById(productId)).as("Product should be deleted").isFalse();
 
       assertThat(categoryRepository.existsById(categoryId)).as("Category should remain").isTrue();
+    }
+  }
+
+  @Nested
+  @DisplayName("Audit Dates Operations")
+  class AuditDatesOperations {
+
+    @Test
+    @DisplayName("should fill createdAt and updatedAt with the same instant when product is persisted")
+    void shouldFillCreatedAtAndUpdatedAtWhenProductIsPersisted() {
+
+      // Arrange
+      Product product = ProductFactory.createProduct();
+
+      // Act
+      Product savedProduct = productRepository.saveAndFlush(product);
+
+      // Assert
+      assertThat(savedProduct.getCreatedAt()).as("createdAt should be filled on persist").isNotNull();
+      assertThat(savedProduct.getUpdatedAt()).as("updatedAt should be filled on persist").isNotNull();
+      assertThat(savedProduct.getUpdatedAt()).as("both dates should share the same instant on persist")
+          .isEqualTo(savedProduct.getCreatedAt());
+    }
+
+    @Test
+    @DisplayName("should refresh only updatedAt when persisted product is modified")
+    void shouldRefreshOnlyUpdatedAtWhenPersistedProductIsModified() throws InterruptedException {
+
+      // Arrange
+      Product product = productRepository.saveAndFlush(ProductFactory.createProduct());
+      Instant createdAt = product.getCreatedAt();
+      Instant firstUpdatedAt = product.getUpdatedAt();
+
+      Thread.sleep(20);
+
+      // Act
+      product.setName("Updated Name");
+      productRepository.flush();
+
+      // Assert
+      assertThat(product.getCreatedAt()).as("createdAt should not change on update").isEqualTo(createdAt);
+      assertThat(product.getUpdatedAt()).as("updatedAt should be refreshed on update").isAfter(firstUpdatedAt);
     }
   }
 

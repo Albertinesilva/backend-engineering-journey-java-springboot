@@ -182,9 +182,13 @@ class CategoryControllerIT extends AbstractIT {
           .andExpect(header().exists("Location"))
           .andExpect(jsonPath("$.id").isNotEmpty())
           .andExpect(jsonPath("$.name").value(request.name()))
-          .andExpect(jsonPath("$.description").value(request.description()));
+          .andExpect(jsonPath("$.description").doesNotExist());
+
+      Long id = objectMapper.readTree(resultActions.andReturn().getResponse().getContentAsString()).get("id")
+          .asLong();
 
       assertEquals(categoryRepository.count(), initialCount + 1);
+      assertEquals(request.description(), categoryRepository.findById(id).orElseThrow().getDescription());
     }
   }
 
@@ -212,7 +216,9 @@ class CategoryControllerIT extends AbstractIT {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.id").value(EXISTING_ID))
           .andExpect(jsonPath("$.name").value(request.name()))
-          .andExpect(jsonPath("$.description").value(request.description()));
+          .andExpect(jsonPath("$.description").doesNotExist());
+
+      assertEquals(request.description(), categoryRepository.findById(EXISTING_ID).orElseThrow().getDescription());
     }
 
     @Test

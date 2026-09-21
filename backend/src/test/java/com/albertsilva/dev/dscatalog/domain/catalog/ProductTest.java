@@ -26,8 +26,22 @@ public class ProductTest {
     Assertions.assertNotNull(product.getDescription());
     Assertions.assertNotNull(product.getPrice());
     Assertions.assertNotNull(product.getImgUrl());
-    Assertions.assertNotNull(product.getCreatedAt());
-    Assertions.assertNotNull(product.getUpdatedAt());
+  }
+
+  @Test
+  @DisplayName("Product audit dates should be null before persistence")
+  void productAuditDatesShouldBeNullBeforePersistence() {
+
+    // Arrange
+    Product product = ProductFactory.createProduct();
+
+    // Act
+    // Apenas instanciação: createdAt/updatedAt são preenchidos pelo callback JPA
+    // (@PrePersist), exercitado em ProductRepositoryTest
+
+    // Assert
+    Assertions.assertNull(product.getCreatedAt());
+    Assertions.assertNull(product.getUpdatedAt());
   }
 
   @Test

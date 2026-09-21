@@ -26,6 +26,7 @@ import com.albertsilva.dev.dscatalog.dto.product.response.ProductDetailsResponse
 import com.albertsilva.dev.dscatalog.dto.product.response.ProductResponse;
 import com.albertsilva.dev.dscatalog.factory.ProductFactory;
 import com.albertsilva.dev.dscatalog.mapper.product.ProductMapper;
+import com.albertsilva.dev.dscatalog.projection.ProductProjection;
 import com.albertsilva.dev.dscatalog.repository.ProductRepository;
 import com.albertsilva.dev.dscatalog.service.exception.DatabaseException;
 import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
@@ -215,6 +216,102 @@ class ProductServiceTest {
       Assertions.assertNotNull(result);
 
       Mockito.verify(repository).findByNameContainingIgnoreCase("pc", pageable);
+    }
+  }
+
+  @Nested
+  @DisplayName("FindAllPaged Operations")
+  class FindAllPagedOperations {
+
+    @Test
+    @DisplayName("findAllPaged should search without category filter when categoryId is 0")
+    void findAllPagedShouldSearchWithoutCategoryFilterWhenCategoryIdIsZero() {
+
+      // Arrange
+      Page<ProductProjection> projections = new PageImpl<>(List.of(), pageable, 0);
+
+      Mockito.when(repository.searchProducts(List.of(), "pc", pageable)).thenReturn(projections);
+      Mockito.when(repository.searchProductsWithCategories(List.of())).thenReturn(List.of());
+
+      // Act
+      Page<ProductResponse> result = service.findAllPaged("pc", "0", pageable);
+
+      // Assert
+      Assertions.assertNotNull(result);
+      Assertions.assertTrue(result.isEmpty());
+      Assertions.assertEquals(0, result.getTotalElements());
+
+      // Verify
+      Mockito.verify(repository).searchProducts(List.of(), "pc", pageable);
+      Mockito.verify(repository).searchProductsWithCategories(List.of());
+    }
+
+    @Test
+    @DisplayName("findAllPaged should split comma separated categoryIds before searching")
+    void findAllPagedShouldSplitCommaSeparatedCategoryIdsBeforeSearching() {
+
+      // Arrange
+      Page<ProductProjection> projections = new PageImpl<>(List.of(), pageable, 0);
+
+      Mockito.when(repository.searchProducts(List.of(1L, 3L), "", pageable)).thenReturn(projections);
+      Mockito.when(repository.searchProductsWithCategories(List.of())).thenReturn(List.of());
+
+      // Act
+      Page<ProductResponse> result = service.findAllPaged("", "1,3", pageable);
+
+      // Assert
+      Assertions.assertNotNull(result);
+
+      // Verify
+      Mockito.verify(repository).searchProducts(List.of(1L, 3L), "", pageable);
+    }
+
+    @Test
+    @DisplayName("findAllPaged should keep the page order and the total of the native query")
+    void findAllPagedShouldKeepPageOrderAndTotalOfNativeQuery() {
+
+      // Arrange
+      ProductProjection first = projectionWithId(3L);
+      ProductProjection second = projectionWithId(1L);
+      ProductProjection third = projectionWithId(2L);
+      Page<ProductProjection> projections = new PageImpl<>(List.of(first, second, third), pageable, 30);
+
+      Product product1 = productWithId(1L);
+      Product product2 = productWithId(2L);
+      Product product3 = productWithId(3L);
+
+      // O repositório não garante ordem: devolve fora da ordem da página
+      Mockito.when(repository.searchProducts(List.of(), "", pageable)).thenReturn(projections);
+      Mockito.when(repository.searchProductsWithCategories(List.of(3L, 1L, 2L)))
+          .thenReturn(List.of(product1, product2, product3));
+      Mockito.when(productMapper.toResponse(Mockito.any(Product.class))).thenAnswer(invocation -> {
+        Product product = invocation.getArgument(0);
+        return new ProductResponse(product.getId(), product.getName(), null, null, null, List.of());
+      });
+
+      // Act
+      Page<ProductResponse> result = service.findAllPaged("", "0", pageable);
+
+      // Assert
+      Assertions.assertEquals(List.of(3L, 1L, 2L), result.getContent().stream().map(ProductResponse::id).toList());
+      Assertions.assertEquals(30, result.getTotalElements());
+      Assertions.assertEquals(pageable, result.getPageable());
+
+      // Verify
+      Mockito.verify(repository).searchProductsWithCategories(List.of(3L, 1L, 2L));
+      Mockito.verify(productMapper, Mockito.times(3)).toResponse(Mockito.any(Product.class));
+    }
+
+    private ProductProjection projectionWithId(Long id) {
+      ProductProjection projection = Mockito.mock(ProductProjection.class);
+      Mockito.when(projection.getId()).thenReturn(id);
+      return projection;
+    }
+
+    private Product productWithId(Long id) {
+      Product product = ProductFactory.createProduct();
+      product.setId(id);
+      return product;
     }
   }
 

@@ -6,8 +6,11 @@ import static com.albertsilva.dev.dscatalog.factory.ProductFactory.NON_EXISTING_
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
@@ -26,6 +29,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.albertsilva.dev.dscatalog.domain.catalog.Product;
 import com.albertsilva.dev.dscatalog.dto.product.request.ProductCreateRequest;
 import com.albertsilva.dev.dscatalog.dto.product.request.ProductUpdateRequest;
 import com.albertsilva.dev.dscatalog.factory.ProductFactory;
@@ -173,9 +177,37 @@ class ProductControllerIT extends AbstractIT {
           .andExpect(jsonPath("$.name").value(request.name()))
           .andExpect(jsonPath("$.description").value(request.description()))
           .andExpect(jsonPath("$.price").value(request.price()))
-          .andExpect(jsonPath("$.date").value(request.date().toString()));
+          .andExpect(jsonPath("$.date").doesNotExist());
 
       assertEquals(productRepository.count(), initialCount + 1);
+    }
+
+    @Test
+    @DisplayName("POST /products should accept date but discard it and fill audit dates on persistence")
+    void insertShouldDiscardDateAndFillAuditDatesOnPersistence() throws Exception {
+
+      // Arrange
+      ProductCreateRequest request = ProductFactory.createProductCreateRequest();
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(post(BASE_URL)
+          .with(bearerToken())
+          .content(asJson(request))
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      resultActions.andExpect(status().isCreated());
+
+      Long id = objectMapper.readTree(resultActions.andReturn().getResponse().getContentAsString()).get("id")
+          .asLong();
+      Product persisted = productRepository.findById(id).orElseThrow();
+
+      assertNotNull(persisted.getCreatedAt());
+      assertNotNull(persisted.getUpdatedAt());
+      assertNotEquals(request.date(), persisted.getCreatedAt());
+      assertEquals(persisted.getCreatedAt(), persisted.getUpdatedAt());
+      assertEquals(true, persisted.isActive());
     }
   }
 
@@ -184,7 +216,7 @@ class ProductControllerIT extends AbstractIT {
   class UpdateOperations {
 
     @Test
-    @DisplayName("PATCH /products/{id} should update product when id exists")
+    @DisplayName("PUT /products/{id} should update product when id exists")
     void updateShouldReturnProductResponseWhenIdExists() throws Exception {
 
       // Arrange
@@ -195,7 +227,7 @@ class ProductControllerIT extends AbstractIT {
       String expectedDescription = request.description();
 
       // Act
-      ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}", EXISTING_ID)
+      ResultActions resultActions = mockMvc.perform(put(BASE_URL + "/{id}", EXISTING_ID)
           .with(bearerToken())
           .content(jsonRequest)
           .contentType(MediaType.APPLICATION_JSON)
@@ -210,7 +242,7 @@ class ProductControllerIT extends AbstractIT {
     }
 
     @Test
-    @DisplayName("PATCH /products/{id} should return 404 when id does not exist")
+    @DisplayName("PUT /products/{id} should return 404 when id does not exist")
     void updateShouldReturnNotFoundWhenIdDoesNotExist() throws Exception {
 
       // Arrange
@@ -218,7 +250,7 @@ class ProductControllerIT extends AbstractIT {
       String jsonRequest = asJson(request);
 
       // Act
-      ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}", NON_EXISTING_ID)
+      ResultActions resultActions = mockMvc.perform(put(BASE_URL + "/{id}", NON_EXISTING_ID)
           .with(bearerToken())
           .content(jsonRequest)
           .contentType(MediaType.APPLICATION_JSON)
