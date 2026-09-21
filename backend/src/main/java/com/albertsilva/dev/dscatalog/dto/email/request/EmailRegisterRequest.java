@@ -4,37 +4,27 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * DTO de requisição para criação de um email.
+ * DTO <b>interno</b> com os dados de um e-mail a registrar em {@code tb_email};
+ * não é corpo de nenhum endpoint.
  *
  * <p>
- * Este record encapsula os dados necessários para registrar
- * ou enviar um email através da aplicação.
+ * É criado por {@code EmailService.registerEmailLog} (após o envio) e consumido
+ * pelo construtor {@code Email(EmailRegisterRequest)}, que copia os três campos
+ * e define a data de criação e o status {@code PENDING}. Não há mapper.
  * </p>
- *
- * <ul>
- * <li>{@code sender}: endereço de email do remetente</li>
- * <li>{@code recipient}: endereço de email do destinatário</li>
- * <li>{@code subject}: assunto do email</li>
- * <li>{@code content}: conteúdo da mensagem</li>
- * </ul>
  *
  * <p>
- * Exemplo:
+ * As anotações de Bean Validation ({@code @NotBlank}, {@code @Email}) estão
+ * declaradas, mas nenhum ponto do código aciona a validação sobre este objeto
+ * (ele é instanciado internamente, sem {@code @Valid}). Atualmente o
+ * {@code content} recebido é um rótulo fixo ("Confirmação de Cadastro" ou
+ * "Redefinição de Senha"), e não o corpo do e-mail. O record não possui campo de
+ * assunto.
  * </p>
  *
- * <pre>{@code
- * EmailCreateRequest request = new EmailCreateRequest(
- *     "noreply@dscatalog.com",
- *     "user@email.com",
- *     "Recuperação de senha",
- *     "Clique no link para redefinir sua senha."
- * );
- * }</pre>
- *
- * @param sender    endereço de email do remetente
- * @param recipient endereço de email do destinatário
- * @param subject   assunto do email
- * @param content   conteúdo da mensagem
+ * @param sender    endereço do remetente registrado
+ * @param recipient endereço do destinatário
+ * @param content   texto a registrar
  */
 public record EmailRegisterRequest(
 

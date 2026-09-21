@@ -11,53 +11,40 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 /**
- * DTO utilizado para requisições de atualização
- * de produtos.
+ * Corpo da requisição de <b>atualização de produto</b>
+ * ({@code PUT /api/v1/products/{id}}).
  *
  * <p>
- * Representa os dados fornecidos pelo cliente
- * durante o processo de atualização de um produto.
+ * Fluxo: {@code ProductController.update} → {@code ProductService.update} →
+ * {@code ProductMapper.updateEntity} (nome, descrição, preço e URL da imagem) e
+ * {@code ProductService.syncCategories} (categorias). Não possui o campo
+ * {@code date} de {@link ProductCreateRequest}.
+ * </p>
  *
  * <p>
- * Este DTO utiliza a annotation
- * {@link ProductUpdateValid} para executar
- * validações contextuais relacionadas ao processo
- * de atualização do produto.
+ * <b>Semântica de atualização:</b> o mapper só sobrescreve nome, descrição,
+ * preço e URL da imagem quando o valor recebido é diferente de {@code null};
+ * portanto, omitir um campo opcional mantém o valor atual e não é possível
+ * limpá-lo enviando {@code null}. O nome e {@code categoryIds} são obrigatórios
+ * neste DTO, então sempre chegam ao service; {@code categoryIds} substitui
+ * integralmente as categorias do produto. O indicador {@code active} não é
+ * alterado por este request.
+ * </p>
  *
  * <p>
- * As validações aplicadas garantem:
- * <ul>
- * <li>Obrigatoriedade do nome do produto</li>
- * <li>Tamanho mínimo e máximo permitido</li>
- * <li>Validação de caracteres permitidos</li>
- * <li>Validação do preço</li>
- * <li>Validação da URL da imagem</li>
- * <li>Validação das categorias associadas</li>
- * <li>Validações contextuais de atualização</li>
- * </ul>
+ * <b>Validação estrutural:</b> mesmas regras de {@link ProductCreateRequest}
+ * (preço, descrição e URL aceitam {@code null}). A unicidade do nome,
+ * excluindo o próprio produto, e a existência das categorias são verificadas
+ * por {@link ProductUpdateValid}.
+ * </p>
  *
- * <p>
- * As categorias relacionadas ao produto continuam
- * sendo enviadas apenas pelos seus identificadores.
- *
- * <p>
- * Exemplo:
- * 
- * <pre>{@code
- * "categoryIds": [1, 2, 3]
- * }</pre>
- *
- * <p>
- * As regras de validação utilizam Bean Validation
- * através das annotations presentes nos atributos
- * do record.
- *
- * @param name        novo nome do produto
- * @param description nova descrição do produto
- * @param price       novo preço do produto
- * @param imgUrl      nova URL da imagem do produto
- * @param categoryIds lista contendo os identificadores
- *                    das categorias do produto
+ * @param name        novo nome (obrigatório; 3 a 100 caracteres)
+ * @param description nova descrição (opcional; se informada, 3 a 200 caracteres)
+ * @param price       novo preço (opcional; se informado, maior que zero)
+ * @param imgUrl      nova URL da imagem (opcional; {@code http://} ou
+ *                    {@code https://})
+ * @param categoryIds identificadores das categorias que substituirão as atuais
+ *                    (obrigatório, não vazio)
  */
 @ProductUpdateValid
 public record ProductUpdateRequest(

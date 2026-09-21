@@ -10,39 +10,34 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * DTO utilizado para requisições de registro
- * de usuários.
+ * Corpo da requisição de <b>registro público de conta</b>
+ * ({@code POST /api/v1/accounts/register}).
  *
  * <p>
- * Representa os dados fornecidos pelo cliente
- * durante o processo de registro de um novo usuário
- * no sistema.
+ * Fluxo: {@code AccountController.register} → {@code AccountService.register}
+ * → {@code UserMapper.toEntity(UserRegisterRequest, Set<Role>)}. Tem os mesmos
+ * campos e regras de {@link UserCreateRequest}, exceto {@code roleIds}: a role
+ * é fixa ({@code ROLE_OPERATOR}, definida pelo service) e a conta nasce
+ * <b>inativa</b>, até a confirmação por e-mail.
+ * </p>
  *
  * <p>
- * Este DTO utiliza a annotation
- * {@link UserCreateValid} para executar
- * validações contextuais relacionadas ao processo
- * de criação do usuário.
+ * <b>Dado sensível:</b> {@code password} é aceita em texto, apenas neste
+ * request; o mapper a copia sem codificar e o service a codifica em seguida.
+ * O e-mail é copiado como recebido (sem {@code trim} nem conversão de caixa).
+ * </p>
  *
  * <p>
- * As validações aplicadas garantem:
- * <ul>
- * <li>Obrigatoriedade do primeiro nome</li>
- * <li>Obrigatoriedade do sobrenome</li>
- * <li>Validação estrutural do email</li>
- * <li>Validação de unicidade do email</li>
- * <li>Validação de segurança da senha</li>
- * </ul>
+ * <b>Validação estrutural:</b> nomes de 2 a 80 caracteres; e-mail com
+ * {@code @ValidEmail} (formato e DNS) e {@code @UniqueEmail}; senha de 10 a 72
+ * caracteres com {@code @StrongPassword}; e {@link PasswordPersonalData} (a
+ * senha não pode conter nome, sobrenome ou o prefixo do e-mail).
+ * </p>
  *
- * <p>
- * As regras de validação utilizam Bean Validation
- * através das annotations presentes nos atributos
- * do record.
- *
- * @param firstName primeiro nome do usuário
- * @param lastName  sobrenome do usuário
- * @param email     email do usuário
- * @param password  senha do usuário
+ * @param firstName primeiro nome (obrigatório; 2 a 80 caracteres)
+ * @param lastName  sobrenome (obrigatório; 2 a 80 caracteres)
+ * @param email     e-mail (obrigatório, válido e não cadastrado)
+ * @param password  senha em texto (obrigatória; 10 a 72 caracteres; forte)
  */
 @PasswordPersonalData
 public record UserRegisterRequest(

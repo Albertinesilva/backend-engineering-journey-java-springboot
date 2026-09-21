@@ -14,12 +14,22 @@ import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 /**
- * Valida se o endereço de email informado é único para o usuário autenticado.
+ * Restrição de <b>campo</b> que aciona
+ * {@link UniqueEmailForAuthenticatedUserValidator}; aplicada ao e-mail de
+ * {@code AuthenticatedUserUpdateRequest} (edição do próprio perfil).
  *
  * <p>
- * Diferentemente da annotation {@link UniqueEmail}, esta validação permite que
- * o usuário mantenha o próprio endereço de email, impedindo apenas a utilização
- * de um email pertencente a outro usuário.
+ * <b>Regra efetiva:</b> o e-mail (após {@code trim} e minúsculas) não pode
+ * pertencer a <b>outro</b> usuário; o usuário autenticado pode manter o
+ * próprio e-mail. O usuário atual é obtido de {@code AuthenticatedUserService}
+ * (claim {@code userId} do JWT no {@code SecurityContext}), <b>e não da URL</b>.
+ * {@code null} e valores em branco são válidos. <b>Consulta o banco e depende
+ * da autenticação.</b>
+ * </p>
+ *
+ * <p>
+ * <b>Metadados:</b> {@code @Target({FIELD, ANNOTATION_TYPE})} (também pode ser
+ * usada como meta-anotação), {@code @Retention(RUNTIME)}, {@code @Documented}.
  * </p>
  */
 @Documented
@@ -28,9 +38,26 @@ import jakarta.validation.Payload;
 @Retention(RUNTIME)
 public @interface UniqueEmailForAuthenticatedUser {
 
+  /**
+   * Chave de mensagem padrão ({@code user.email.unique}); é a mesma chave que o validator emite.
+   *
+   * @return chave de mensagem padrão da restrição
+   */
   String message() default "{user.email.unique}";
 
+  /**
+   * Grupos de validação da restrição (padrão do Bean Validation). Nenhuma
+   * validação do projeto usa grupos.
+   *
+   * @return grupos de validação
+   */
   Class<?>[] groups() default {};
 
+  /**
+   * Metadados associados à restrição (padrão do Bean Validation). Não são
+   * usados pelo projeto.
+   *
+   * @return payloads da restrição
+   */
   Class<? extends Payload>[] payload() default {};
 }

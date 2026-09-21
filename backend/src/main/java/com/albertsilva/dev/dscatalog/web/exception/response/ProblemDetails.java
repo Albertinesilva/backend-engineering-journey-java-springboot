@@ -8,39 +8,43 @@ import com.albertsilva.dev.dscatalog.web.exception.enums.ApiErrorCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * Classe que representa o padrão de resposta de erro da API.
- * Implementação simplificada de resposta de erro da API.
- * Não segue integralmente o padrão RFC 7807 (Problem Details).
+ * Corpo padrão das respostas de erro da API. É uma classe <b>própria</b> do
+ * projeto: não é {@code org.springframework.http.ProblemDetail} e não segue o
+ * RFC 7807 (não há {@code type}, {@code title}, {@code detail} nem
+ * {@code instance}).
  *
  * <p>
- * Todos os erros retornados pela aplicação seguem esse formato,
- * garantindo consistência e previsibilidade para quem consome a API.
- * </p>
- *
- * <p>
- * <b>Campos:</b>
+ * <b>Campos (JSON):</b>
  * </p>
  * <ul>
- * <li><b>timestamp</b> - Momento em que o erro ocorreu</li>
- * <li><b>status</b> - Código HTTP (ex: 404, 400)</li>
- * <li><b>error</b> - Tipo do erro (resumo)</li>
- * <li><b>message</b> - Mensagem detalhada</li>
- * <li><b>path</b> - Endpoint que gerou o erro</li>
+ * <li>{@code timestamp}: instante da resposta ({@code Instant});</li>
+ * <li>{@code status}: código HTTP numérico;</li>
+ * <li>{@code code}: {@link ApiErrorCode}, estável entre idiomas (pode ser
+ * {@code null} se o construtor sem {@code code} for usado);</li>
+ * <li>{@code error}: título traduzido;</li>
+ * <li>{@code message}: detalhe traduzido;</li>
+ * <li>{@code path}: URI da requisição ({@code getRequestURI()}).</li>
  * </ul>
  *
  * <p>
- * <b>Exemplo de retorno:</b>
+ * Exemplo:
  * </p>
- * 
+ *
  * <pre>
  * {
- *   "timestamp": "2025-01-01T10:00:00Z",
+ *   "timestamp": "2026-01-01T10:00:00Z",
  *   "status": 404,
- *   "error": "Resource not found",
- *   "message": "Entity not found id: 1",
- *   "path": "/categories/1"
+ *   "code": "RESOURCE_NOT_FOUND",
+ *   "error": "Recurso não encontrado",
+ *   "message": "Usuário não encontrado",
+ *   "path": "/api/v1/users/99"
  * }
  * </pre>
+ *
+ * <p>
+ * Respostas de erro geradas <em>antes</em> do controller pela cadeia de
+ * segurança (por exemplo, token ausente ou inválido) não usam este formato.
+ * </p>
  */
 @Schema(name = "ProblemDetails", description = "Resposta padrão de erro da API.")
 public class ProblemDetails implements Serializable {
@@ -64,9 +68,15 @@ public class ProblemDetails implements Serializable {
   @Schema(description = "Endpoint que originou o erro", example = "/api/v1/products/15")
   private String path;
 
+  /**
+   * Construtor sem argumentos (todos os campos nulos).
+   */
   public ProblemDetails() {
   }
 
+  /**
+   * Cria o corpo <b>sem</b> o {@code code}.
+   */
   public ProblemDetails(Instant timestamp, Integer status, String error, String message, String path) {
     this.timestamp = timestamp;
     this.status = status;
@@ -75,6 +85,9 @@ public class ProblemDetails implements Serializable {
     this.path = path;
   }
 
+  /**
+   * Cria o corpo completo (usado por {@code ControllerExceptionHandler}).
+   */
   public ProblemDetails(Instant timestamp, Integer status, ApiErrorCode code, String error, String message,
       String path) {
     this.timestamp = timestamp;

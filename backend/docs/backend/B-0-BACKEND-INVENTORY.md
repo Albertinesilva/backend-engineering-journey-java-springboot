@@ -127,6 +127,8 @@ Legenda de JavaDoc (heurística — ver seção 11): **C** = há JavaDoc de tipo
 
 ### 4.2 DTOs (todos `record`)
 
+> **Atualização (fase B-4):** a leitura dos DTOs e mappers refinou esta seção: em `ProductCreateRequest`, `date` (`@PastOrPresent`) é validado mas **descartado** (`ProductMapper.toEntity` não o copia e nenhum código o lê); `price` (`@Positive`) **aceita `null`** (não há `@NotNull`); `UserUpdateRequest.password` e `PasswordResetRequest.password` não têm `@Size`; `EmailRegisterRequest` não possui campo `subject`. Ver [B-4-DTO-MAPPER-LAYER.md](B-4-DTO-MAPPER-LAYER.md).
+
 | Classe | Tipo | Campos / validações principais [FATO] | Anotações de classe | JD |
 |--------|:----:|---------------------------------------|---------------------|:--:|
 | `CategoryCreateRequest` | rec | `name` (`@NotBlank`, `@Size 3–80`, `@Pattern` letras/dígitos/espaço), `description` (`@Pattern` vazio ou 3–255) | `@CategoryCreateValid` | C |
@@ -161,6 +163,8 @@ Legenda de JavaDoc (heurística — ver seção 11): **C** = há JavaDoc de tipo
 | `IdentifiableUtils` | classe `final` | `reorderByReference(List<T>, List<? extends Identifiable<ID>>)`: reordena a primeira lista segundo a ordem da segunda. | – |
 
 ### 4.4 Repositories (todos `@Repository`, estendem `JpaRepository<E, Long>`)
+
+> **Atualização (fase B-2):** a leitura completa desta camada confirmou o que está abaixo (6 repositories, 13 consultas derivadas, 1 JPQL, 2 nativas) e acrescentou detalhes de comportamento; ver [B-2-REPOSITORY-LAYER.md](B-2-REPOSITORY-LAYER.md). Todos os repositories e projections passaram a ter JavaDoc.
 
 | Interface | Métodos customizados [FATO] |
 |-----------|-----------------------------|
@@ -605,6 +609,16 @@ O perfil `test` usa `logging.level.org.springframework.web=DEBUG` e `...mvc.meth
 
 ## 15. Problemas encontrados
 
+> **Atualização (fase B-6):** **P1-7** (SpEL `authentication.principal.id`) — confirmado por leitura e por bytecode: o principal é o `Jwt` e `id` resolve para `Jwt.getId()` (claim `jti`), não `userId`; o efeito em execução permanece hipótese. **P1-8** confirmado e detalhado (cliente, autorizações e chave RSA em memória; refresh de 30 dias fixo; sem revogação). Nova observação: o provider ignora os escopos pedidos e a interseção authorities × `{read, write}` é vazia (o JWT não deve carregar `scope`). Também: o preflight de CORS não depende de `OPTIONS` constar da lista de métodos (refina §9.4). Ver [B-6-SECURITY-OAUTH2-LAYER.md](B-6-SECURITY-OAUTH2-LAYER.md).
+
+> **Atualização (fase B-7):** o achado **P2-1** (405 → 500) foi confirmado no código e tem alcance maior: JSON ilegível, parâmetro ausente, tipo de argumento inválido e 415 também viram 500 (não existe `ResponseEntityExceptionHandler`). O total de endpoints em `/api/v1` é **30** (não 33). `POST /accounts/deactivate` produz 500 (não implementado) e os `GET` de catálogo são públicos, contrariando o OpenAPI. Ver [B-7-WEB-LAYER.md](B-7-WEB-LAYER.md).
+
+> **Atualização (fase B-8):** `spring.mail.test-connection=true` foi confirmado no bytecode do Spring Boot 3.5.13 (falha de SMTP → `IllegalStateException("Mail server is not available")` na subida do contexto; o efeito real segue como hipótese, e o baseline provavelmente passou por haver credenciais de e-mail no ambiente local). O perfil `prod` sem datasource tende a cair em H2 embarcado (inferência); o logger de bind de `dev` não existe no Hibernate 6.6; o template de redefinição usa `${texto}` que o Java não fornece. Ver [B-8-CONFIG-INFRASTRUCTURE.md](B-8-CONFIG-INFRASTRUCTURE.md).
+
+> **Atualização (fase B-3):** a leitura dos services refinou alguns itens: **P1-4** (`@Async` sem `@EnableAsync`) — confirmado que nenhum código o habilita e que os chamadores descartam o `CompletableFuture`, logo falhas de envio são apenas logadas (B-3 §9.2); **P2-2** e **P2-3** confirmados no código dos services; **P2-10** (`ProductService.search` sem chamadores) e **P2-11** (`disableAllPasswordRecoveryTokens` sem chamadores) confirmados por busca em `src/main`. O JavaDoc antigo de `AccountService.requestPasswordRecovery` (dizia lançar `ResourceNotFoundException`) e de `ProductService.findAllPaged` (dizia que `categoryId` nulo não filtra) estava incorreto e foi corrigido. Ver [B-3-SERVICE-LAYER.md](B-3-SERVICE-LAYER.md).
+
+> **Atualização (fase B-5):** **P1-5** (`ValidEmailValidator`) refinado: a consulta DNS não tem provedor/timeout configurados no código, considera apenas MX (sem fallback A/AAAA) e qualquer exceção resulta em e-mail inválido; `ValidEmailValidatorTest` usa `user@gmail.com` sem simular o DNS. Também confirmado: `@StrongPassword` não valida tamanho (e o JavaDoc antigo dizia que sim); as mensagens padrão `{user.password.strong}` e `{user.update.validation}` não existem nos bundles (nunca são emitidas). Ver [B-5-VALIDATION-LAYER.md](B-5-VALIDATION-LAYER.md).
+
 Classificação sem correção. **Não foi aplicada nenhuma alteração.**
 
 ### P0 — Bloqueador
@@ -635,7 +649,7 @@ Nenhum. O projeto compila e o contexto Spring sobe nos testes (`DscatalogApplica
 | P2-6 | Documentação OpenAPI × perfil | Os caminhos liberados (`/docs-asjcatalog*`) só coincidem com o perfil `test`; no perfil `dev` os caminhos configurados são `/docs-dscatalog*`, que não estão na lista `permitAll` [INFERÊNCIA: exigirão autenticação]. | `application-dev.properties` × `ResourceServerConfig` |
 | P2-7 | `messages_*.properties` | A chave usada no código é `error.auth.userId.claim.notFound`; existe em `messages_pt_BR` mas em `messages_en`/`messages_es` a chave correspondente é `error.auth.username.claim.notFound`. | `diff` das chaves |
 | P2-8 | `pom.xml` / `SpringDocOpenApiConfig` | E-mails de contato com erros de digitação (`albertinesilva@.17gmail.com` no `pom.xml`; `albertinesilva,17@gmail.com` no OpenAPI); licença MIT no `pom.xml` × Apache 2.0 no OpenAPI. | Arquivos lidos |
-| P2-9 | `ProductService.findAllPaged` | `categoryId` é dividido por `,` e convertido com `Long::parseLong` sem tratamento (valor não numérico → exceção → 500 [INFERÊNCIA]); quando `"0"` é enviado, usa lista vazia — o comportamento da query nativa com `:categoryIds IS NULL OR ... IN :categoryIds` para lista vazia não foi verificado [HIPÓTESE]. | `ProductService`, `ProductRepository` |
+| P2-9 | `ProductService.findAllPaged` | `categoryId` é dividido por `,` e convertido com `Long::parseLong` sem tratamento (valor não numérico → exceção → 500 [INFERÊNCIA]); quando `"0"` é enviado, usa lista vazia — o comportamento da query nativa com `:categoryIds IS NULL OR ... IN :categoryIds` para lista vazia não foi verificado [HIPÓTESE]. **Refinado na B-2:** o `ProductControllerIT` (verde no baseline, H2) indica que a lista vazia retorna todos os produtos com categoria; permanece não verificado no PostgreSQL (B-2 §13.3). | `ProductService`, `ProductRepository` |
 | P2-10 | `ProductService.search` | Método público sem uso em produção (o controller usa `findAllPaged`); os testes de controller mockam `search`. | Busca por `grep` |
 | P2-11 | `TokenService.disableAllPasswordRecoveryTokens` | Público e sem uso em produção. | Busca por `grep` |
 | P2-12 | `UserService` (`@Transactional(readOnly=true)` em método privado) | Anotação sem efeito prático em métodos privados chamados internamente (proxy). | Código |

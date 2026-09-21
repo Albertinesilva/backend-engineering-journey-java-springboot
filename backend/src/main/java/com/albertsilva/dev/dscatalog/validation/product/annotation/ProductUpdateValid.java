@@ -12,29 +12,25 @@ import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 /**
- * Valida regras contextuais do processo de atualização
- * de produtos.
+ * Restrição de <b>classe</b> que aciona {@link ProductUpdateValidator}; usada
+ * em {@code ProductUpdateRequest}.
  *
  * <p>
- * Esta annotation executa validações em nível
- * de classe ({@link ElementType#TYPE}), permitindo
- * validar regras que dependem de múltiplos atributos
- * do objeto validado.
+ * <b>Regras efetivas (ambas consultam o banco):</b>
+ * </p>
+ * <ul>
+ * <li>o nome não pode pertencer a <b>outro</b> produto (sem diferenciar
+ * maiúsculas de minúsculas); o id do produto atual vem da variável {@code id}
+ * do caminho da URL e, se ela não estiver disponível, a verificação é
+ * ignorada — violação no campo {@code name};</li>
+ * <li>todos os ids de {@code categoryIds} devem existir como categoria —
+ * violação no campo {@code categoryIds}.</li>
+ * </ul>
  *
  * <p>
- * A lógica de validação é implementada por
- * {@link ProductUpdateValidator}.
- *
- * <p>
- * Exemplo:
- * 
- * <pre>{@code
- * @ProductUpdateValid
- * public record ProductUpdateRequest(
- *     String name,
- *     Double price) {
- * }
- * }</pre>
+ * <b>Metadados:</b> {@code @Target(TYPE)}, {@code @Retention(RUNTIME)},
+ * {@code @Documented}. <b>Depende do contexto HTTP.</b>
+ * </p>
  */
 @Documented
 @Constraint(validatedBy = ProductUpdateValidator.class)
@@ -43,25 +39,25 @@ import jakarta.validation.Payload;
 public @interface ProductUpdateValid {
 
   /**
-   * Mensagem padrão retornada quando a validação falha.
+   * Chave de mensagem padrão ({@code error.validation.message}, definida nos três idiomas). Na prática não é emitida: o validator desabilita a violação padrão e registra chaves específicas por campo.
    *
-   * @return mensagem padrão da validação
+   * @return chave de mensagem padrão da restrição
    */
   String message() default "{error.validation.message}";
 
   /**
-   * Define grupos de validação associados
-   * à constraint.
+   * Grupos de validação da restrição (padrão do Bean Validation). Nenhuma
+   * validação do projeto usa grupos.
    *
    * @return grupos de validação
    */
   Class<?>[] groups() default {};
 
   /**
-   * Permite associar metadados adicionais
-   * à validação.
+   * Metadados associados à restrição (padrão do Bean Validation). Não são
+   * usados pelo projeto.
    *
-   * @return payloads associados à constraint
+   * @return payloads da restrição
    */
   Class<? extends Payload>[] payload() default {};
 }

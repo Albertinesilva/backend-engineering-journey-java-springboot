@@ -12,35 +12,30 @@ import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 /**
- * Valida se a senha atende aos critérios mínimos
- * de segurança definidos pela aplicação.
+ * Restrição de <b>campo</b> que aciona {@link StrongPasswordValidator}; aplicada
+ * a senhas em {@code UserCreateRequest}, {@code UserRegisterRequest},
+ * {@code UserUpdateRequest}, {@code PasswordUpdateRequest.newPassword} e
+ * {@code PasswordResetRequest.password}.
  *
  * <p>
- * Esta annotation executa validações em nível
- * de campo ({@link ElementType#FIELD}) e deve ser
- * aplicada em atributos do tipo {@link String}.
+ * <b>Regras efetivas:</b> sem espaços em branco; ao menos uma letra
+ * maiúscula (A-Z), uma minúscula (a-z), um dígito (0-9) e um caractere
+ * "especial" (qualquer caractere que não seja letra ASCII, dígito ou espaço,
+ * inclusive letras acentuadas); não ser uma das senhas comuns da lista interna;
+ * e não conter sequência numérica crescente ou decrescente de 6 ou mais dígitos
+ * (considerando todos os dígitos da senha). {@code null} é válido.
+ * </p>
  *
  * <p>
- * A lógica de validação é implementada por
- * {@link StrongPasswordValidator}.
+ * <b>Não valida o tamanho</b>: mínimo e máximo são impostos, quando existem,
+ * por {@code @Size} nos DTOs (não em {@code UserUpdateRequest.password} nem em
+ * {@code PasswordResetRequest.password}). Não consulta o banco.
+ * </p>
  *
  * <p>
- * A senha deve conter:
- * <ul>
- * <li>No mínimo 10 caracteres</li>
- * <li>Ao menos uma letra maiúscula</li>
- * <li>Ao menos uma letra minúscula</li>
- * <li>Ao menos um número</li>
- * <li>Ao menos um caractere especial</li>
- * </ul>
- *
- * <p>
- * Exemplo:
- * 
- * <pre>{@code
- * @StrongPassword
- * private String password;
- * }</pre>
+ * <b>Metadados:</b> {@code @Target(FIELD)}, {@code @Retention(RUNTIME)},
+ * {@code @Documented}.
+ * </p>
  */
 @Documented
 @Constraint(validatedBy = StrongPasswordValidator.class)
@@ -49,25 +44,25 @@ import jakarta.validation.Payload;
 public @interface StrongPassword {
 
   /**
-   * Mensagem padrão retornada quando a validação falha.
+   * Chave de mensagem padrão ({@code user.password.strong}). Essa chave <b>não existe</b> nos arquivos de mensagens e, na prática, nunca é emitida: o validator sempre substitui a violação padrão por chaves específicas ({@code user.password.uppercase}, etc.).
    *
-   * @return mensagem padrão da validação
+   * @return chave de mensagem padrão da restrição
    */
   String message() default "{user.password.strong}";
 
   /**
-   * Define grupos de validação associados
-   * à constraint.
+   * Grupos de validação da restrição (padrão do Bean Validation). Nenhuma
+   * validação do projeto usa grupos.
    *
    * @return grupos de validação
    */
   Class<?>[] groups() default {};
 
   /**
-   * Permite associar metadados adicionais
-   * à validação.
+   * Metadados associados à restrição (padrão do Bean Validation). Não são
+   * usados pelo projeto.
    *
-   * @return payloads associados à constraint
+   * @return payloads da restrição
    */
   Class<? extends Payload>[] payload() default {};
 }

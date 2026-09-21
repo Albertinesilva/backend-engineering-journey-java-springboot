@@ -3,82 +3,47 @@ package com.albertsilva.dev.dscatalog.projection;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 /**
- * Projeção para otimizar consultas de detalhes de usuário para autenticação.
+ * Projeção (interface) que representa uma linha do resultado de
+ * {@code UserRepository#searchUserAndRolesByEmail(String)}: os dados de
+ * autenticação de um usuário combinados com <b>uma</b> de suas roles.
  *
  * <p>
- * Esta interface define uma projeção do Spring Data JPA que recupera apenas
- * as colunas necessárias para autenticação e autorização de usuários,
- * evitando carregar entidades completas do banco de dados.
+ * É uma <em>interface projection</em> fechada do Spring Data: cada getter
+ * corresponde a uma coluna (ou alias) do {@code SELECT} nativo, sem
+ * {@code @Value} nem SpEL, e nenhuma entidade é carregada. Serve ao
+ * {@link UserDetailsService} customizado do sistema, que precisa apenas de
+ * credenciais e roles para autenticar.
  * </p>
  *
  * <p>
- * <b>Propósito:</b>
- * </p>
- * <p>
- * Otimizar queries SQL recuperando apenas username, password e informações
- * de role/authority necessárias para validação de credenciais em login.
- * Reduz uso de memória e acelera autenticação comparado a carregar
- * entidades completas (User, Role, etc.).
- * </p>
- *
- * <p>
- * <b>Estrutura da projeção:</b>
+ * <b>Origem dos campos</b> (aliases da consulta nativa):
  * </p>
  * <ul>
- * <li>{@code username}: Identificador único do usuário</li>
- * <li>{@code password}: Hash de senha para validação</li>
- * <li>{@code roleId}: ID da role/autoridade do usuário</li>
- * <li>{@code authority}: Nome da role em formato string (ex: "ROLE_ADMIN")</li>
+ * <li>{@code getId()} ← {@code tb_user.id AS id}</li>
+ * <li>{@code getUsername()} ← {@code tb_user.email AS username} (o e-mail é o
+ * nome de usuário)</li>
+ * <li>{@code getPassword()} ← {@code tb_user.password} (hash armazenado)</li>
+ * <li>{@code getActive()} ← {@code tb_user.active}</li>
+ * <li>{@code getRoleId()} ← {@code tb_role.id AS roleId}</li>
+ * <li>{@code getAuthority()} ← {@code tb_role.authority}</li>
  * </ul>
  *
  * <p>
- * <b>Padrão de uso:</b>
- * </p>
- * <p>
- * Tipicamente utilizada em repositórios com queries customizadas
- * usando {@code @Query} com {@code @Projection}, permitindo que
- * Spring Data JPA mapeie resultados de SELECT diretamente para
- * esta interface sem carregar entidades completas.
+ * <b>Cardinalidade:</b> como a consulta faz junção com as roles, ela devolve
+ * <b>uma linha por role</b>: os campos do usuário ({@code id}, {@code username},
+ * {@code password}, {@code active}) se repetem em todas as linhas, e apenas
+ * {@code roleId} e {@code authority} variam. Um usuário sem roles não gera
+ * nenhuma linha.
  * </p>
  *
  * <p>
- * <b>Exemplo de query no repositório:</b>
+ * <b>Uso atual:</b> {@code UserService.loadUserByUsername} lê a primeira linha
+ * para preencher id, e-mail, senha e {@code active} de um
+ * {@link com.albertsilva.dev.dscatalog.domain.user.User} parcial e percorre
+ * todas as linhas para adicionar as roles.
  * </p>
  *
- * <pre>
- * &#64;Query("SELECT u.username, u.password, r.id, r.authority " +
- *     "FROM users u " +
- *     "LEFT JOIN user_role ur ON u.id = ur.user_id " +
- *     "LEFT JOIN role r ON ur.role_id = r.id " +
- *     "WHERE u.username = :username")
- * List&lt;UserDetailsProjection&gt; findUserDetailsByUsername(&#64;Param("username") String username);
- * </pre>
- *
- * <p>
- * <b>Benefícios:</b>
- * </p>
- * <ul>
- * <li>Reduz dados trafegando entre banco e aplicação</li>
- * <li>Menos overhead de mapeamento ORM</li>
- * <li>Melhor performance em queries de autenticação frequentes</li>
- * <li>Type-safe: Compile-time checks vs strings de SQL</li>
- * </ul>
- *
- * @implNote
- *           Spring Data JPA mapeia automaticamente as colunas do SELECT
- *           para os getters desta interface. Os nomes dos getters devem
- *           corresponder aos aliases do SQL (ex: getUsername() → username).
- *           Pode ser necessário utilizar {@code @Value} em {@code @Query}
- *           para aliases explícitos.
- *
- * @apiNote
- *          Esta projeção é utilizada pelo {@link UserDetailsService}
- *          customizado para carregar detalhes de usuário na autenticação.
- *          Para cenários onde múltiplas roles são necessárias por usuário,
- *          esta projeção retorna múltiplas linhas (uma por role).
- *
- * @see org.springframework.data.jpa.repository.Query
- * @see org.springframework.security.core.userdetails.UserDetailsService
+ * @see UserDetailsService
  */
 public interface UserDetailsProjection {
 
@@ -97,7 +62,7 @@ public interface UserDetailsProjection {
   /**
    * Obtém o nome de usuário (login) da projeção.
    *
-   * @return nome de usuário único
+   * @return e-mail do usuário, usado como nome de usuário (alias {@code username} de {@code tb_user.email})
    */
   String getUsername();
 
@@ -137,16 +102,15 @@ public interface UserDetailsProjection {
    * Obtém o nome da authority/role em formato string.
    *
    * <p>
-   * Tipicamente no formato "ROLE_*" (ex: "ROLE_ADMIN", "ROLE_USER").
+   * Tipicamente no formato "ROLE_*" (ex: "ROLE_ADMIN", "ROLE_OPERATOR").
    * Este valor é direto e pronto para utilização no Spring Security.
    * </p>
    *
    * @return nome da autoridade/role (ex: "ROLE_ADMIN")
    *
    * @apiNote
-   *          Este valor é adicionado diretamente aos authorities
-   *          do usuário durante criação de
-   *          {@link org.springframework.security.core.Authentication}
+   *          O valor é usado como está para compor a {@code Role} do usuário
+   *          carregado (ver {@code UserService.loadUserByUsername}).
    */
   String getAuthority();
 
@@ -154,8 +118,9 @@ public interface UserDetailsProjection {
    * Indica se a conta do usuário está ativa ou não.
    *
    * <p>
-   * Este campo é utilizado para determinar se o usuário pode autenticar
-   * ou não. Se {@code false}, o usuário não poderá fazer login.
+   * Copia o valor de {@code tb_user.active}. A consulta não filtra por esse
+   * campo: usuários inativos também são retornados, e a recusa do login ocorre
+   * depois, no fluxo de autenticação, com base em {@code User#isEnabled()}.
    * </p>
    *
    * @return {@code true} se a conta do usuário está ativa; {@code false}

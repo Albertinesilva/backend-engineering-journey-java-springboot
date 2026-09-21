@@ -5,26 +5,28 @@ import java.util.List;
 import com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse;
 
 /**
- * DTO de resposta simplificada para produto.
+ * Resposta <b>resumida</b> de produto, com as categorias em forma resumida.
  *
  * <p>
- * Utilizado em listagens para evitar retorno de dados excessivos.
+ * Produzida por {@code ProductMapper.toResponse} e devolvida na listagem
+ * ({@code GET /api/v1/products}), na criação e na atualização. O mapper
+ * percorre {@code Product.getCategories()} e cria um
+ * {@link com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse}
+ * (id e nome) para cada categoria; a lista reflete as categorias reais do
+ * produto (não é vazia "por desenho").
  * </p>
  *
  * <p>
- * <b>Observação:</b>
+ * <b>Não expõe</b> {@code createdAt}, {@code updatedAt} nem {@code active}
+ * (presentes em {@link ProductDetailsResponse}).
  * </p>
- * <ul>
- * <li>O campo {@code categories} pode vir vazio propositalmente</li>
- * </ul>
  *
- * @param id          identificador
+ * @param id          identificador do produto
  * @param name        nome
- * @param description descrição
- * @param price       preço
- * @param imgUrl      imagem
- * @param createdAt   data de criação
- * @param categories  lista de categorias (geralmente vazia neste DTO)
+ * @param description descrição (pode ser {@code null})
+ * @param price       preço (pode ser {@code null})
+ * @param imgUrl      URL da imagem (pode ser {@code null})
+ * @param categories  categorias do produto, com id e nome
  */
 public record ProductResponse(
     Long id,

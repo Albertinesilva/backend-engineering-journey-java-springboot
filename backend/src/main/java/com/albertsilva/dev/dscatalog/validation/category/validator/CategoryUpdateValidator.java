@@ -16,34 +16,34 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Implementa as regras de validação utilizadas durante
- * o processo de atualização de categorias.
+ * Validator de {@link CategoryUpdateValid}: verifica se o nome já pertence a
+ * <b>outra</b> categoria.
  *
  * <p>
- * Este validator é associado à annotation
- * {@link CategoryUpdateValid} e executa validações
- * contextuais em nível de classe.
+ * Se o nome for {@code null}/em branco, ou se {@code HttpServletRequest} não
+ * tiver o atributo de variáveis de URI ou a chave {@code id}, <b>nada é
+ * verificado</b> (resultado válido). Caso contrário, converte o {@code id} com
+ * {@code Long.parseLong} — <b>sem tratar {@code NumberFormatException}</b> — e
+ * consulta {@code existsByNameIgnoreCaseAndIdNot(nomeNormalizado, id)}
+ * ({@code trim()} + {@code toLowerCase()}); violação em {@code name} com
+ * {@code {category.name.unique}}. O id não é verificado como existente: com id
+ * inexistente, qualquer nome já cadastrado é considerado duplicado.
+ * </p>
  *
  * <p>
- * Durante a atualização, a validação garante que
- * não exista outra categoria cadastrada com o mesmo nome,
- * desconsiderando a própria categoria que está sendo atualizada.
- *
- * <p>
- * O identificador da categoria é obtido diretamente
- * da URI da requisição HTTP através do
- * {@link HandlerMapping#URI_TEMPLATE_VARIABLES_ATTRIBUTE}.
- *
- * <p>
- * As mensagens de erro geradas durante a validação
- * são armazenadas em uma lista de {@link FieldMessage}
- * e adicionadas manualmente ao contexto de validação.
+ * Depende do formato atual das rotas (uma variável de caminho chamada
+ * {@code id}) e de estar sendo executado dentro de uma requisição MVC. Se o
+ * {@code id} vier não numérico, é provável que o Spring já tenha rejeitado a
+ * requisição ao converter o {@code @PathVariable}, antes deste validator (a
+ * confirmar na camada web).
+ * </p>
  */
 public class CategoryUpdateValidator implements ConstraintValidator<CategoryUpdateValid, CategoryUpdateRequest> {
 
-  // Repositório utilizado para realizar consultas
-  // relacionadas à entidade de categoria durante a validação.
+  /** Repositório usado para verificar a existência de outra categoria com o mesmo nome. */
   private final CategoryRepository repository;
+
+  /** Requisição HTTP corrente, de onde se lê a variável de caminho {@code id}. */
   private final HttpServletRequest request;
 
   /**
@@ -62,19 +62,13 @@ public class CategoryUpdateValidator implements ConstraintValidator<CategoryUpda
   }
 
   /**
-   * Executa as validações relacionadas ao processo
-   * de atualização de categorias.
+   * Verifica se o nome já pertence a outra categoria (o id vem da URL).
    *
-   * <p>
-   * As regras são aplicadas utilizando os dados
-   * presentes no DTO e informações da requisição HTTP.
-   *
-   * @param dto     objeto contendo os dados da categoria
-   *                que será validada
-   * @param context contexto utilizado pelo Bean Validation
-   *                para registrar erros personalizados
-   * @return {@code true} caso nenhuma inconsistência seja encontrada;
-   *         {@code false} caso existam erros de validação
+   * @param dto     dados de atualização
+   * @param context contexto usado para registrar a violação no campo
+   *                {@code name}
+   * @return {@code true} se não houver duplicidade ou se a verificação for
+   *         ignorada
    */
   @Override
   public boolean isValid(CategoryUpdateRequest dto, ConstraintValidatorContext context) {
@@ -97,10 +91,10 @@ public class CategoryUpdateValidator implements ConstraintValidator<CategoryUpda
    * sendo atualizada é desconsiderada na consulta.
    *
    * <p>
-   * Antes da validação, o nome informado é normalizado:
+   * Antes da consulta, o nome informado é normalizado:
    * <ul>
-   * <li>Removendo espaços extras</li>
-   * <li>Convertendo para letras minúsculas</li>
+   * <li>{@code trim()} (remove espaços apenas nas extremidades)</li>
+   * <li>{@code toLowerCase()} (sem {@code Locale})</li>
    * </ul>
    *
    * <p>

@@ -12,34 +12,28 @@ import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 /**
- * Valida se o endereço de email possui um formato válido
- * e possui registros MX válidos no servidor DNS.
+ * Restrição de <b>campo</b> que aciona {@link ValidEmailValidator}; aplicada ao
+ * e-mail em {@code UserCreateRequest}, {@code UserRegisterRequest},
+ * {@code UserUpdateRequest} e {@code UserEmailRequest}.
  *
  * <p>
- * Esta annotation executa validações em nível de campo
- * ({@link ElementType#FIELD}) e deve ser aplicada em atributos
- * do tipo {@link String} que representam endereços de email.
+ * <b>Regra efetiva:</b> após {@code trim} e minúsculas, o e-mail deve casar
+ * com uma expressão regular simples (apenas caracteres ASCII) <b>e</b> o
+ * domínio deve ter ao menos um registro MX na consulta DNS. Qualquer falha na
+ * consulta DNS resulta em e-mail <b>inválido</b>. {@code null} e valores em
+ * branco são válidos (a obrigatoriedade é de {@code @NotBlank}). <b>Depende de
+ * rede (DNS)</b>; não consulta o banco.
+ * </p>
  *
  * <p>
- * A lógica de validação é implementada por
- * {@link ValidEmailValidator}, que realiza validações de
- * formato e verifica a existência de registros MX.
+ * A validação é feita sobre o valor normalizado, mas o DTO original não é
+ * modificado.
+ * </p>
  *
  * <p>
- * As validações incluem:
- * <ul>
- * <li>Verifica o formato do email através de expressão regular</li>
- * <li>Valida se o domínio possui registros MX (Mail Exchange) válidos</li>
- * <li>Normaliza o email para minúsculas e remove espaços em branco</li>
- * </ul>
- *
- * <p>
- * Exemplo:
- *
- * <pre>{@code
- * @ValidEmail
- * private String email;
- * }</pre>
+ * <b>Metadados:</b> {@code @Target(FIELD)}, {@code @Retention(RUNTIME)},
+ * {@code @Documented}.
+ * </p>
  */
 @Documented
 @Constraint(validatedBy = ValidEmailValidator.class)
@@ -48,25 +42,25 @@ import jakarta.validation.Payload;
 public @interface ValidEmail {
 
     /**
-     * Mensagem padrão retornada quando a validação falha.
+     * Chave de mensagem padrão ({@code user.email.invalid}); é a mesma chave que o validator emite.
      *
-     * @return mensagem padrão da validação
+     * @return chave de mensagem padrão da restrição
      */
     String message() default "{user.email.invalid}";
 
     /**
-     * Define grupos de validação associados
-     * à constraint.
+     * Grupos de validação da restrição (padrão do Bean Validation). Nenhuma
+     * validação do projeto usa grupos.
      *
      * @return grupos de validação
      */
     Class<?>[] groups() default {};
 
     /**
-     * Permite associar metadados adicionais
-     * à validação.
+     * Metadados associados à restrição (padrão do Bean Validation). Não são
+     * usados pelo projeto.
      *
-     * @return payloads associados à constraint
+     * @return payloads da restrição
      */
     Class<? extends Payload>[] payload() default {};
 }

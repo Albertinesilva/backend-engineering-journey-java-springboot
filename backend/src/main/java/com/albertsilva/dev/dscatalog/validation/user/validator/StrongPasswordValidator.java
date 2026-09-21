@@ -11,36 +11,34 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Implementa a lógica de validação utilizada pela annotation
- * {@link StrongPassword}.
+ * Validator de {@link StrongPassword}: aplica regras de composição à senha.
  *
  * <p>
- * Este validator é responsável exclusivamente pelas regras de segurança
- * da senha que não são cobertas pelas constraints padrão do Bean Validation.
- * </p>
- *
- * <p>
- * As seguintes regras são aplicadas:
+ * <b>Comportamento:</b> {@code null} ⇒ <b>válido</b>. Qualquer outro valor,
+ * <b>inclusive {@code ""} e texto só com espaços</b>, é avaliado. Todas as
+ * regras são verificadas (não há interrupção na primeira falha) e <b>cada
+ * regra violada gera uma violação própria</b>, com chave específica:
  * </p>
  * <ul>
- * <li>Ausência de espaços em branco</li>
- * <li>Presença de letra maiúscula</li>
- * <li>Presença de letra minúscula</li>
- * <li>Presença de número</li>
- * <li>Presença de caractere especial</li>
- * <li>Bloqueio de senhas comuns e padrões numéricos previsíveis</li>
+ * <li>{@code user.password.whitespace}: contém algum espaço em branco
+ * ({@code Character.isWhitespace});</li>
+ * <li>{@code user.password.uppercase}: nenhuma letra A-Z;</li>
+ * <li>{@code user.password.lowercase}: nenhuma letra a-z;</li>
+ * <li>{@code user.password.number}: nenhum dígito 0-9;</li>
+ * <li>{@code user.password.specialCharacter}: nenhum caractere fora de
+ * A-Z, a-z, 0-9 e espaço — <b>letras acentuadas contam como "especial"</b>;</li>
+ * <li>{@code user.password.common}: a senha (após {@code trim} e minúsculas) é
+ * exatamente uma das 9 senhas comuns da lista;</li>
+ * <li>{@code user.password.sequence}: os dígitos da senha, tomados em
+ * conjunto, contêm 6 ou mais dígitos consecutivos crescentes ou decrescentes
+ * (ver {@code validateNumericSequences}).</li>
  * </ul>
  *
  * <p>
- * A obrigatoriedade da senha e a validação do tamanho mínimo e máximo
- * são delegadas às constraints padrão do Bean Validation, como
- * {@link jakarta.validation.constraints.NotBlank} e
- * {@link jakarta.validation.constraints.Size}.
- * </p>
- *
- * <p>
- * Todas as violações são registradas utilizando chaves do
- * {@code MessageSource}, permitindo internacionalização automática.
+ * <b>Não verifica tamanho</b> (mínimo/máximo ficam a cargo de {@code @Size} nos
+ * DTOs, quando existe) <b>nem dados pessoais</b> (ver
+ * {@link PasswordPersonalDataValidator}). Todas as verificações de letras e
+ * dígitos são ASCII. Não há dependências, banco, HTTP ou rede.
  * </p>
  */
 public class StrongPasswordValidator implements ConstraintValidator<StrongPassword, String> {
@@ -64,6 +62,13 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
      */
     private static final int MIN_NUMERIC_SEQUENCE_LENGTH = 6;
 
+    /**
+     * Avalia todas as regras da senha e registra uma violação por regra violada.
+     *
+     * @param value   senha informada (pode ser {@code null})
+     * @param context contexto usado para registrar as violações
+     * @return {@code true} se for {@code null} ou não violar nenhuma regra
+     */
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
 
@@ -86,6 +91,10 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
         return errors.isEmpty();
     }
 
+    /**
+     * Registra {@code user.password.whitespace} se a senha contiver qualquer
+     * caractere para o qual {@code Character.isWhitespace} seja verdadeiro.
+     */
     private void validateWhitespace(String password, List<String> errors) {
 
         boolean containsWhitespace = password.chars().anyMatch(Character::isWhitespace);
@@ -95,6 +104,7 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
         }
     }
 
+    /** Registra {@code user.password.uppercase} se não houver letra A-Z. */
     private void validateUppercase(String password, List<String> errors) {
 
         if (!UPPERCASE_PATTERN.matcher(password).matches()) {
@@ -102,6 +112,7 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
         }
     }
 
+    /** Registra {@code user.password.lowercase} se não houver letra a-z. */
     private void validateLowercase(String password, List<String> errors) {
 
         if (!LOWERCASE_PATTERN.matcher(password).matches()) {
@@ -109,6 +120,7 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
         }
     }
 
+    /** Registra {@code user.password.number} se não houver dígito 0-9. */
     private void validateNumber(String password, List<String> errors) {
 
         if (!NUMBER_PATTERN.matcher(password).matches()) {
@@ -116,6 +128,10 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
         }
     }
 
+    /**
+     * Registra {@code user.password.specialCharacter} se não houver nenhum caractere
+     * fora de A-Z, a-z, 0-9 e espaço (letras acentuadas satisfazem esta regra).
+     */
     private void validateSpecialCharacter(String password, List<String> errors) {
 
         if (!SPECIAL_CHARACTER_PATTERN.matcher(password).matches()) {
@@ -124,17 +140,14 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
     }
 
     /**
-     * Valida se a senha corresponde exatamente a uma senha
-     * amplamente conhecida por ser insegura.
-     *
-     * <p>
-     * A comparação é realizada após normalização para letras
-     * minúsculas, permitindo bloquear variações como
-     * {@code PASSWORD}, {@code Password} e {@code password}.
-     * </p>
+     * Registra {@code user.password.common} se a senha, após {@code trim()} e
+     * {@code toLowerCase()}, for <b>exatamente igual</b> a uma das senhas da lista
+     * interna (comparação de igualdade, não de conteúdo). Como todas as entradas
+     * da lista são só dígitos ou só letras minúsculas, uma senha assim já viola
+     * também as regras de maiúscula e de caractere especial.
      *
      * @param password senha informada
-     * @param errors   lista de erros encontrados
+     * @param errors   lista que acumula as chaves de mensagem das violações
      */
     private void validateCommonPasswords(String password, List<String> errors) {
 
@@ -146,24 +159,21 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
     }
 
     /**
-     * Valida se a senha contém sequências numéricas
-     * crescentes ou decrescentes.
+     * Detecta sequências numéricas previsíveis.
      *
      * <p>
-     * São consideradas inseguras sequências com pelo menos
-     * {@value #MIN_NUMERIC_SEQUENCE_LENGTH} dígitos consecutivos,
-     * como:
+     * Extrai <b>todos os dígitos da senha, concatenados</b> (descartando os demais
+     * caracteres) e procura, nessa cadeia, {@value #MIN_NUMERIC_SEQUENCE_LENGTH}
+     * ou mais dígitos consecutivos em que cada um é exatamente o anterior mais 1
+     * (por exemplo, {@code 123456}) ou menos 1 (por exemplo, {@code 654321}). Como
+     * os dígitos são concatenados, dígitos <em>separados</em> por outros
+     * caracteres na senha também formam sequência (por exemplo, {@code a1b2c3d4e5f6}).
+     * Se a cadeia tiver menos de 6 dígitos, nada é verificado. No máximo uma
+     * violação {@code user.password.sequence} é registrada.
      * </p>
      *
-     * <ul>
-     * <li>123456</li>
-     * <li>1234567</li>
-     * <li>654321</li>
-     * <li>987654</li>
-     * </ul>
-     *
      * @param password senha informada
-     * @param errors   lista de erros encontrados
+     * @param errors   lista que acumula as chaves de mensagem das violações
      */
     private void validateNumericSequences(String password, List<String> errors) {
 
@@ -201,6 +211,11 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
         }
     }
 
+    /**
+     * Se houver erros, desabilita a violação padrão ({@code {user.password.strong}})
+     * e registra cada chave acumulada como violação separada, sem nó de propriedade
+     * (herda o campo anotado).
+     */
     private void addErrors(List<String> errors, ConstraintValidatorContext context) {
 
         if (errors.isEmpty()) {

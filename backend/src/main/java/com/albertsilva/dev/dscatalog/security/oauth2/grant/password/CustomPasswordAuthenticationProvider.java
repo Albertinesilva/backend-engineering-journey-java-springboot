@@ -36,72 +36,53 @@ import com.albertsilva.dev.dscatalog.domain.user.User;
 import com.albertsilva.dev.dscatalog.security.userdetails.AuthenticatedUser;
 
 /**
- * Provedor de autenticação customizado para o fluxo OAuth2 "password".
+ * Autentica o usuário do grant {@code password} e emite o par de tokens
+ * (access token JWT e refresh token). É o segundo passo do login
+ * ({@code POST /oauth2/token}), depois do
+ * {@link CustomPasswordAuthenticationConverter}, e está registrado em
+ * {@code AuthorizationServerConfig}. <b>Não</b> trata o grant
+ * {@code refresh_token}, que é resolvido pelo provider padrão do framework.
  *
  * <p>
- * Esta classe implementa {@link AuthenticationProvider} para processar tokens
- * de autenticação
- * customizados do fluxo "password" (Resource Owner Password Credentials),
- * realizando validação
- * de credenciais e geração de tokens de acesso JWT.
- * </p>
- *
- * <p>
- * <b>Responsabilidades principais:</b>
- * </p>
- * <ul>
- * <li>Autenticar usuários comparando credenciais fornecidas com dados do
- * banco</li>
- * <li>Validar cliente OAuth2 registrado</li>
- * <li>Gerar tokens de acesso JWT com autoridades customizadas</li>
- * <li>Gerenciar contexto de segurança com detalhes do usuário autenticado</li>
- * <li>Persistir autorizações no serviço de autorização</li>
- * </ul>
- *
- * <p>
- * <b>Fluxo de autenticação:</b>
+ * <b>Sequência de {@link #authenticate(Authentication)}:</b>
  * </p>
  * <ol>
- * <li>Extrai principal do cliente OAuth2 do token de autenticação</li>
- * <li>Carrega dados de usuário pelo username usando
- * {@link UserDetailsService}</li>
- * <li>Valida senha comparando com hash armazenado usando
- * {@link PasswordEncoder}</li>
- * <li>Filtra autoridades do usuário para escopos autorizados do cliente</li>
- * <li>Atualiza contexto de segurança com detalhes de usuário customizado</li>
- * <li>Gera token de acesso JWT com claims customizados</li>
- * <li>Persiste autorização no serviço</li>
- * <li>Retorna token de acesso autenticado</li>
+ * <li>exige que o principal do pedido seja um {@code OAuth2ClientAuthenticationToken}
+ * autenticado (senão {@code invalid_client});</li>
+ * <li>carrega o usuário com {@code UserDetailsService.loadUserByUsername}
+ * (na aplicação, {@code UserService}: consulta nativa que devolve um
+ * {@code User} <b>parcial</b>: id, e-mail, hash da senha, {@code active} e
+ * roles);</li>
+ * <li>confere a senha com {@code PasswordEncoder.matches} e, depois, o status
+ * ({@code isEnabled} etc.); o <b>username digitado</b> não é comparado a mais
+ * nada;</li>
+ * <li>calcula os escopos autorizados: nomes das authorities do usuário que
+ * também sejam escopos do cliente ({@code read}, {@code write}) — os escopos
+ * pedidos na requisição são ignorados;</li>
+ * <li>cria {@link AuthenticatedUser}(id, username digitado, authorities) e o
+ * coloca nos {@code details} do token do cliente, além de substituir o
+ * {@code SecurityContext} da thread por um contexto com esse token (é dali que
+ * o customizador de JWT lê o usuário);</li>
+ * <li>gera o access token (JWT) e o refresh token com o {@code OAuth2TokenGenerator};
+ * falha na geração ⇒ {@code server_error};</li>
+ * <li>monta e salva em {@code OAuth2AuthorizationService} (memória) uma
+ * autorização cujo <b>{@code principalName} é o {@code clientId}</b> (não o
+ * usuário), com o token do cliente como atributo principal;</li>
+ * <li>devolve {@code OAuth2AccessTokenAuthenticationToken}.</li>
  * </ol>
  *
  * <p>
- * <b>Integração com Spring Security:</b>
+ * <b>Erros ({@link OAuth2AuthenticationException}):</b> usuário inexistente
+ * ({@code UsernameNotFoundException}) ou senha incorreta ⇒
+ * {@code invalid_grant} "Invalid credentials" (mesma mensagem); conta
+ * desativada ⇒ {@code invalid_grant} "Your account has not been activated yet.
+ * Please check your email." (só depois de a senha conferir); cliente inválido ⇒
+ * {@code invalid_client}.
  * </p>
- * <p>
- * Este provedor é registrado no {@code AuthorizationServerConfig} como parte
- * do pipeline de token endpoint, trabalhando em conjunto com
- * {@link CustomPasswordAuthenticationConverter} para processar requisições
- * completas.
- * </p>
- *
- * @implNote
- *           Todos os parâmetros construtor devem ser não-nulos; validações
- *           são feitas com {@link Assert#notNull(Object, String)}.
- *           O contexto de segurança é atualizado com detalhes de usuário
- *           para que o customizador de token possa acessar informações do
- *           usuário.
- *
- * @apiNote
- *          Este provedor implementa validação rigorosa de credenciais,
- *          incluindo comparação de username e password, filtragem de escopos
- *          e tratamento de erros OAuth2 padrão.
- *
- * @see CustomPasswordAuthenticationToken
- * @see CustomPasswordAuthenticationConverter
- * @see AuthenticatedUser
  */
 public class CustomPasswordAuthenticationProvider implements AuthenticationProvider {
 
+  /** Referência (RFC 6749, seção 5.2) incluída nos erros OAuth2 emitidos por este provider. */
   private static final String ERROR_URI = "https://datatracker.ietf.org/doc/html/rfc6749#section-5.2";
   private final OAuth2AuthorizationService authorizationService;
   private final UserDetailsService userDetailsService;
@@ -109,24 +90,13 @@ public class CustomPasswordAuthenticationProvider implements AuthenticationProvi
   private final PasswordEncoder passwordEncoder;
 
   /**
-   * Construtor do provedor de autenticação customizado.
+   * Cria o provider. Todos os argumentos são obrigatórios: {@code Assert.notNull}
+   * lança {@link IllegalArgumentException} se algum for {@code null}.
    *
-   * <p>
-   * Inicializa o provedor com as dependências necessárias para autenticação,
-   * validação de senhas e geração de tokens. Todos os parâmetros devem ser
-   * não-nulos.
-   * </p>
-   *
-   * @param authorizationService serviço para persistir autorizações emitidas
-   * @param tokenGenerator       gerador de tokens JWT com customizadores
-   * @param userDetailsService   serviço para carregar detalhes de usuários
-   * @param passwordEncoder      encoder para validação de senhas armazenadas
-   * @throws IllegalArgumentException se algum parâmetro for nulo
-   *
-   * @implNote
-   *           As validações de não-nulidade são feitas imediatamente no
-   *           construtor
-   *           para garantir falha rápida se alguma dependência estiver ausente.
+   * @param authorizationService serviço onde a autorização emitida é salva
+   * @param tokenGenerator       gerador do JWT e do refresh token
+   * @param userDetailsService   carrega o usuário pelo e-mail
+   * @param passwordEncoder      confere a senha informada com o hash
    */
   public CustomPasswordAuthenticationProvider(OAuth2AuthorizationService authorizationService,
       OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator, UserDetailsService userDetailsService,
@@ -143,56 +113,21 @@ public class CustomPasswordAuthenticationProvider implements AuthenticationProvi
   }
 
   /**
-   * Autentica um usuário e gera um token de acesso.
+   * Executa a autenticação e a emissão de tokens conforme a documentação da
+   * classe.
    *
    * <p>
-   * Processa um {@link CustomPasswordAuthenticationToken} validando credenciais
-   * do usuário e gerando um JWT com claims customizados (authorities e username).
+   * Efeitos colaterais: altera os {@code details} do token do cliente presente
+   * no {@code SecurityContext}, substitui o contexto da thread e grava a
+   * autorização (com o refresh token) no {@code OAuth2AuthorizationService}.
+   * Este método <b>sempre</b> emite um refresh token.
    * </p>
    *
-   * <p>
-   * <b>Etapas do processo:</b>
-   * </p>
-   * <ol>
-   * <li>Valida autenticação do cliente OAuth2</li>
-   * <li>Carrega detalhes de usuário pelo username</li>
-   * <li>Valida senha fornecida contra hash armazenado</li>
-   * <li>Filtra autoridades do usuário para escopos do cliente</li>
-   * <li>Atualiza contexto de segurança com {@link AuthenticatedUser}</li>
-   * <li>Constrói contexto de token com autoridades e client</li>
-   * <li>Gera token de acesso JWT</li>
-   * <li>Persiste autorização no serviço</li>
-   * <li>Retorna token autenticado</li>
-   * </ol>
-   *
-   * <p>
-   * <b>Tratamento de erros:</b>
-   * </p>
-   * <ul>
-   * <li>{@code UsernameNotFoundException}: Convertido em "Invalid
-   * credentials"</li>
-   * <li>Senha inválida: Lança "Invalid credentials"</li>
-   * <li>Username não corresponde: Lança "Invalid credentials"</li>
-   * <li>Cliente não autenticado: Lança {@code INVALID_CLIENT}</li>
-   * <li>Falha ao gerar token: Lança {@code SERVER_ERROR}</li>
-   * </ul>
-   *
-   * @param authentication token de autenticação com credenciais a validar
-   * @return {@link OAuth2AccessTokenAuthenticationToken} contendo o JWT gerado
-   * @throws OAuth2AuthenticationException se validação de credenciais ou
-   *                                       cliente falhar
-   * @throws AuthenticationException       se credenciais forem inválidas
-   *
-   * @implNote
-   *           O contexto de segurança é atualizado para que o customizador de
-   *           token
-   *           possa acessar detalhes do usuário autenticado. O token é persistido
-   *           no serviço de autorização para rastreamento de sessões.
-   *
-   * @apiNote
-   *          Mensagens de erro genéricas ("Invalid credentials") são utilizadas
-   *          para evitar enumeração de usuários válidos. O cliente é responsável
-   *          por fornecer credenciais válidas.
+   * @param authentication deve ser um {@link CustomPasswordAuthenticationToken}
+   * @return token de acesso autenticado, com access e refresh token
+   * @throws AuthenticationException ({@link OAuth2AuthenticationException}) com
+   *                                 {@code invalid_client}, {@code invalid_grant}
+   *                                 ou {@code server_error}
    */
   @Override
   public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -297,22 +232,8 @@ public class CustomPasswordAuthenticationProvider implements AuthenticationProvi
   }
 
   /**
-   * Verifica se este provedor suporta o tipo de autenticação fornecido.
-   *
-   * <p>
-   * Retorna {@code true} apenas para tokens do tipo
-   * {@link CustomPasswordAuthenticationToken},
-   * permitindo que o Spring Security direione requisições ao provedor correto.
-   * </p>
-   *
-   * @param authentication classe do token de autenticação a verificar
-   * @return {@code true} se o token for
-   *         {@link CustomPasswordAuthenticationToken},
-   *         {@code false} caso contrário
-   *
-   * @apiNote
-   *          Este método permite que múltiplos provedores de autenticação
-   *          funcionem juntos no gerenciador de autenticação do Spring Security.
+   * @param authentication tipo de autenticação a avaliar
+   * @return {@code true} apenas para {@link CustomPasswordAuthenticationToken}
    */
   @Override
   public boolean supports(Class<?> authentication) {
@@ -320,25 +241,14 @@ public class CustomPasswordAuthenticationProvider implements AuthenticationProvi
   }
 
   /**
-   * Valida as credenciais do usuário comparando a senha fornecida com o hash
-   * armazenado.
+   * Confere a senha informada com o hash do usuário por
+   * {@code PasswordEncoder.matches}. <b>Só a senha é verificada</b>: o username
+   * não é comparado ao do {@code UserDetails}.
    *
-   * <p>
-   * Verifica se o username corresponde ao nome de usuário do UserDetails e se a
-   * senha fornecida, quando codificada, corresponde à senha armazenada. Lança
-   * {@code OAuth2AuthenticationException} com mensagem genérica "Invalid
-   * credentials" se qualquer validação falhar.
-   * </p>
-   *
-   * @param user     detalhes do usuário carregados do banco
-   * @param password senha fornecida na autenticação
-   * @throws OAuth2AuthenticationException se o username não corresponder ou se a
-   *                                       senha for inválida
-   *
-   * @implNote
-   *           A mensagem de erro é genérica para evitar enumeração de usuários
-   *           válidos. O método utiliza {@link PasswordEncoder#matches} para
-   *           comparação segura de senhas.
+   * @param user     usuário carregado (só o hash da senha é usado)
+   * @param password senha em texto informada
+   * @throws OAuth2AuthenticationException ({@code invalid_grant}, "Invalid
+   *                                       credentials") se a senha não conferir
    */
   private void validateCredentials(UserDetails user, String password) {
     if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -348,34 +258,14 @@ public class CustomPasswordAuthenticationProvider implements AuthenticationProvi
   }
 
   /**
-   * Valida e extrai o principal do cliente OAuth2 da autenticação.
+   * Extrai o cliente autenticado do principal da solicitação.
    *
-   * <p>
-   * Verifica se a autenticação contém um {@link OAuth2ClientAuthenticationToken}
-   * válido
-   * e autenticado, lançando exceção se não encontrar ou se estiver inválido.
-   * </p>
-   *
-   * <p>
-   * <b>Validações:</b>
-   * </p>
-   * <ul>
-   * <li>Principal deve ser uma instância de
-   * {@link OAuth2ClientAuthenticationToken}</li>
-   * <li>Token deve estar autenticado</li>
-   * <li>Lança {@code INVALID_CLIENT} se alguma validação falhar</li>
-   * </ul>
-   *
-   * @param authentication token de autenticação contendo principal do cliente
-   * @return {@link OAuth2ClientAuthenticationToken} validado e autenticado
-   * @throws OAuth2AuthenticationException com erro {@code INVALID_CLIENT}
-   *                                       se o cliente não estiver autenticado ou
-   *                                       inválido
-   *
-   * @implNote
-   *           Este método é privado e estático pois é apenas um utilitário
-   *           de validação. A exceção lançada inclui um URI para referência
-   *           às especificações OAuth2 RFC 6749.
+   * @param authentication solicitação (o principal deve ser um
+   *                       {@link OAuth2ClientAuthenticationToken} autenticado)
+   * @return token do cliente autenticado
+   * @throws OAuth2AuthenticationException ({@code invalid_client}) se o principal
+   *                                       não for um token de cliente
+   *                                       autenticado
    */
   private static OAuth2ClientAuthenticationToken getAuthenticatedClientElseThrowInvalidClient(
       Authentication authentication) {
@@ -390,6 +280,19 @@ public class CustomPasswordAuthenticationProvider implements AuthenticationProvi
     throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_CLIENT);
   }
 
+  /**
+   * Verifica o status da conta, lançando {@code invalid_grant} para o primeiro
+   * critério que falhar, nesta ordem: {@code isEnabled()} ("Your account has not
+   * been activated yet. Please check your email."), {@code isAccountNonLocked()},
+   * {@code isAccountNonExpired()} e {@code isCredentialsNonExpired()}. Com a
+   * entidade {@code User} atual, só o primeiro pode falhar (os demais retornam
+   * sempre {@code true}); {@code isEnabled()} reflete o indicador {@code active}
+   * lido pela consulta de login.
+   *
+   * @param user usuário carregado
+   * @throws OAuth2AuthenticationException ({@code invalid_grant}) se a conta não
+   *                                       puder autenticar
+   */
   private void validateUserStatus(UserDetails user) {
 
     if (!user.isEnabled()) {

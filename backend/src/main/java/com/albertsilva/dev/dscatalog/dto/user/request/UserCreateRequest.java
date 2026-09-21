@@ -13,53 +13,41 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * DTO utilizado para requisições de criação
- * de usuários.
+ * Corpo da requisição de <b>criação de usuário por administrador</b>
+ * ({@code POST /api/v1/users}).
  *
  * <p>
- * Representa os dados fornecidos pelo cliente
- * durante o processo de cadastro de um novo usuário
- * no sistema.
+ * Fluxo: {@code UserController.create} → {@code UserService.create} →
+ * {@code UserMapper.toEntity(UserCreateRequest, Set<Role>)}. O service resolve
+ * {@code roleIds} em entidades e as passa ao mapper (que <b>não lê</b>
+ * {@code roleIds}); o mapper copia nome, e-mail e senha <b>sem normalizar e sem
+ * codificar</b>, e o service codifica a senha em seguida e cria o usuário ativo.
+ * </p>
  *
  * <p>
- * Este DTO utiliza a annotation
- * {@link UserCreateValid} para executar
- * validações contextuais relacionadas ao processo
- * de criação do usuário.
+ * <b>Dado sensível:</b> {@code password} chega em texto e só existe neste
+ * request; nenhuma resposta o devolve. Como todo {@code record}, o
+ * {@code toString()} gerado inclui o valor (ver observações de logging da
+ * documentação B-0).
+ * </p>
  *
  * <p>
- * As validações aplicadas garantem:
- * <ul>
- * <li>Obrigatoriedade do primeiro nome</li>
- * <li>Obrigatoriedade do sobrenome</li>
- * <li>Validação estrutural do email</li>
- * <li>Validação de unicidade do email</li>
- * <li>Validação de segurança da senha</li>
- * <li>Validação das roles associadas</li>
- * </ul>
+ * <b>Validação estrutural:</b> nomes de 2 a 80 caracteres; e-mail com
+ * {@code @ValidEmail} (formato e consulta DNS) e {@code @UniqueEmail};
+ * senha de 10 a 72 caracteres com {@code @StrongPassword}; {@code roleIds} com
+ * {@code @ValidRoles} (aceita {@code null} e vazio; cada id informado deve
+ * existir). A anotação de classe {@link PasswordPersonalData}, apoiada pelo
+ * contrato {@link PasswordPersonalDataCandidate}, impede senha que contenha
+ * dados pessoais.
+ * </p>
  *
- * <p>
- * As roles relacionadas ao usuário são enviadas
- * apenas pelos seus identificadores.
- *
- * <p>
- * Exemplo:
- * 
- * <pre>{@code
- * "roleIds": [1, 2]
- * }</pre>
- *
- * <p>
- * As regras de validação utilizam Bean Validation
- * através das annotations presentes nos atributos
- * do record.
- *
- * @param firstName primeiro nome do usuário
- * @param lastName  sobrenome do usuário
- * @param email     email do usuário
- * @param password  senha do usuário
- * @param roleIds   lista contendo os identificadores
- *                  das roles associadas ao usuário
+ * @param firstName primeiro nome (obrigatório; 2 a 80 caracteres)
+ * @param lastName  sobrenome (obrigatório; 2 a 80 caracteres)
+ * @param email     e-mail (obrigatório, válido e não cadastrado); vira o nome
+ *                  de usuário
+ * @param password  senha em texto (obrigatória; 10 a 72 caracteres; forte)
+ * @param roleIds   ids das roles do usuário; {@code null} ou vazio cria usuário
+ *                  sem roles
  */
 @PasswordPersonalData
 public record UserCreateRequest(

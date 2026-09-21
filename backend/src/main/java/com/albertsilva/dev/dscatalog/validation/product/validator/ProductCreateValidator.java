@@ -13,33 +13,34 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Implementa as regras de validação utilizadas durante
- * o processo de criação de produtos.
+ * Validator de {@link ProductCreateValid}: duas verificações sobre
+ * {@code ProductCreateRequest}, sempre executadas (acumulam violações).
+ *
+ * <ol>
+ * <li><b>Nome único:</b> se o nome não for {@code null}/em branco, normaliza
+ * ({@code trim()} + {@code toLowerCase()}) e consulta
+ * {@code ProductRepository.existsByNameIgnoreCase}; violação em {@code name}
+ * com {@code {product.name.unique}}.</li>
+ * <li><b>Categorias existentes:</b> se {@code categoryIds} não for
+ * {@code null} nem vazio, chama {@code CategoryRepository.existsById} para
+ * cada id (uma consulta por id, interrompendo na primeira ausente); violação
+ * em {@code categoryIds} com {@code {product.categoryIds.invalid}}. Ids
+ * repetidos passam (cada um existe) e um elemento {@code null} na lista faria
+ * {@code existsById} lançar exceção (a confirmar em testes).</li>
+ * </ol>
  *
  * <p>
- * Este validator é associado à annotation
- * {@link ProductCreateValid} e executa validações
- * contextuais em nível de classe.
- *
- * <p>
- * Atualmente, a validação garante:
- * <ul>
- * <li>Que não exista outro produto cadastrado
- * com o mesmo nome</li>
- * <li>Que todas as categorias informadas existam
- * na base de dados</li>
- * </ul>
- *
- * <p>
- * As mensagens de erro geradas durante a validação
- * são armazenadas em uma lista de {@link FieldMessage}
- * e adicionadas manualmente ao contexto de validação.
+ * Consulta o banco; não usa HTTP nem autenticação. Usa {@code FieldMessage}
+ * (pacote de exceções da camada web) como estrutura de acúmulo. A obrigação de
+ * {@code categoryIds} não vazio é de {@code @NotEmpty} no DTO.
+ * </p>
  */
 public class ProductCreateValidator implements ConstraintValidator<ProductCreateValid, ProductCreateRequest> {
 
-  // Repositórios utilizados para realizar consultas necessárias durante o
-  // processo de validação
+  /** Repositório de produtos, usado na verificação de nome duplicado. */
   private final ProductRepository productRepository;
+
+  /** Repositório de categorias, usado na verificação de existência dos ids. */
   private final CategoryRepository categoryRepository;
 
   /**
@@ -60,19 +61,12 @@ public class ProductCreateValidator implements ConstraintValidator<ProductCreate
   }
 
   /**
-   * Executa as validações relacionadas ao processo
-   * de criação de produtos.
+   * Verifica nome único e existência das categorias, acumulando as violações.
    *
-   * <p>
-   * As regras de validação são aplicadas utilizando
-   * os dados presentes no DTO informado.
-   *
-   * @param dto     objeto contendo os dados do produto
-   *                que será validado
-   * @param context contexto utilizado pelo Bean Validation
-   *                para registrar erros personalizados
-   * @return {@code true} caso nenhuma inconsistência seja encontrada;
-   *         {@code false} caso existam erros de validação
+   * @param dto     dados de criação
+   * @param context contexto usado para registrar as violações nos campos
+   *                {@code name} e {@code categoryIds}
+   * @return {@code true} se nenhuma violação for encontrada
    */
   @Override
   public boolean isValid(ProductCreateRequest dto, ConstraintValidatorContext context) {
@@ -94,7 +88,7 @@ public class ProductCreateValidator implements ConstraintValidator<ProductCreate
    * <p>
    * Antes da verificação, o nome é normalizado:
    * <ul>
-   * <li>Removendo espaços extras</li>
+   * <li>{@code trim()} (remove espaços apenas nas extremidades)</li>
    * <li>Convertendo para letras minúsculas</li>
    * </ul>
    *

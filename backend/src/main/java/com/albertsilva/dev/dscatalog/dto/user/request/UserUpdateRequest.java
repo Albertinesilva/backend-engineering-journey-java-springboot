@@ -11,53 +11,46 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * DTO utilizado para requisições de atualização
- * de usuários.
+ * Corpo da requisição de <b>atualização de usuário</b>
+ * ({@code PUT /api/v1/users/{id}}).
  *
  * <p>
- * Representa os dados fornecidos pelo cliente
- * durante o processo de atualização de um usuário
- * no sistema.
- *
- * <p>
- * Este DTO utiliza a annotation
- * {@link UserUpdateValid} para executar
- * validações contextuais relacionadas ao processo
- * de atualização do usuário.
- *
- * <p>
- * As validações aplicadas garantem:
+ * Fluxo: {@code UserController.update} → {@code UserService.update}. O
+ * {@code UserMapper.updateEntity} copia apenas {@code firstName},
+ * {@code lastName} e {@code email}, <b>sem verificar {@code null} e sem
+ * normalizar</b> (o DTO já os exige não vazios). {@code password} e
+ * {@code roleIds} são tratados pelo próprio service:
+ * </p>
  * <ul>
- * <li>Obrigatoriedade do primeiro nome</li>
- * <li>Obrigatoriedade do sobrenome</li>
- * <li>Validação estrutural do email</li>
- * <li>Validação de segurança da senha</li>
- * <li>Validação das roles associadas</li>
- * <li>Validações contextuais de atualização</li>
+ * <li>{@code password}: {@code null} mantém a senha atual; caso contrário é
+ * codificada e gravada</li>
+ * <li>{@code roleIds}: {@code null} mantém as roles; um conjunto (mesmo vazio)
+ * substitui as atuais, e um conjunto vazio remove todas</li>
  * </ul>
+ * <p>
+ * O indicador {@code active} não faz parte deste request.
+ * </p>
  *
  * <p>
- * As roles relacionadas ao usuário continuam
- * sendo enviadas apenas pelos seus identificadores.
+ * <b>Validação estrutural:</b> nomes de 2 a 80 caracteres; e-mail com
+ * {@code @ValidEmail} (sem {@code @UniqueEmail}: a unicidade, excluindo o
+ * próprio usuário, e a regra de dados pessoais na senha são verificadas por
+ * {@link UserUpdateValid}); {@code password} opcional com
+ * {@code @StrongPassword}, <b>sem {@code @Size}</b> (o limite de 10 a 72
+ * caracteres de {@link UserCreateRequest} não se aplica aqui); {@code roleIds}
+ * com {@code @ValidRoles}.
+ * </p>
  *
  * <p>
- * Exemplo:
- * 
- * <pre>{@code
- * "roleIds": [1, 2]
- * }</pre>
+ * <b>Dado sensível:</b> {@code password} só existe em request e seu
+ * {@code toString()} gerado a inclui.
+ * </p>
  *
- * <p>
- * As regras de validação utilizam Bean Validation
- * através das annotations presentes nos atributos
- * do record.
- *
- * @param firstName novo primeiro nome do usuário
- * @param lastName  novo sobrenome do usuário
- * @param email     novo email do usuário
- * @param password  nova senha do usuário
- * @param roleIds   lista contendo os identificadores
- *                  das roles associadas ao usuário
+ * @param firstName novo primeiro nome (obrigatório; 2 a 80 caracteres)
+ * @param lastName  novo sobrenome (obrigatório; 2 a 80 caracteres)
+ * @param email     novo e-mail (obrigatório e válido)
+ * @param password  nova senha em texto (opcional; {@code null} mantém a atual)
+ * @param roleIds   ids das roles (opcional; {@code null} mantém as atuais)
  */
 @UserUpdateValid
 public record UserUpdateRequest(

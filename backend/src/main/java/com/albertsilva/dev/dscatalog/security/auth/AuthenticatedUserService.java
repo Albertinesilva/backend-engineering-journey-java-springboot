@@ -10,63 +10,61 @@ import com.albertsilva.dev.dscatalog.repository.UserRepository;
 import com.albertsilva.dev.dscatalog.service.exception.AuthenticatedUserNotFoundException;
 
 /**
- * Serviço responsável pela resolução do usuário autenticado na aplicação.
+ * Resolve o <b>usuário autenticado</b> da requisição a partir do JWT.
  *
  * <p>
- * A identidade do usuário é obtida exclusivamente a partir do JWT presente
- * no {@link SecurityContextHolder}. O claim {@code userId} representa o
- * identificador único e estável do usuário no domínio.
+ * <b>Fonte da identidade:</b> o {@code Authentication} do
+ * {@link SecurityContextHolder}, cujo principal deve ser um {@link Jwt}. O
+ * usuário é identificado pelo claim customizado <b>{@code userId}</b> (não pelo
+ * e-mail, pelo claim {@code username}, por {@code sub} nem por {@code jti}) e
+ * carregado com {@code UserRepository.findById}. No código atual, este é o
+ * único ponto da aplicação que transforma o JWT em um {@code User}.
  * </p>
  *
  * <p>
- * O serviço não utiliza atributos mutáveis como e-mail ou username para
- * localizar o usuário autenticado, evitando inconsistências após alterações
- * cadastrais.
+ * <b>Usos:</b> {@code AccountService} (perfil e senha do próprio usuário),
+ * {@code UniqueEmailForAuthenticatedUserValidator} e a expressão
+ * {@code @authenticatedUserService.isCurrentUser(#id)} de
+ * {@code UserController.findById}.
  * </p>
  *
  * <p>
- * Fluxo de resolução:
+ * <b>Não faz:</b> não verifica se o usuário está ativo (uma conta desativada
+ * com token ainda válido é resolvida normalmente); não usa transação própria;
+ * cada chamada faz uma consulta ao banco.
  * </p>
  *
  * <pre>
- * JWT
- *  |
- *  |-- userId
- *       |
- *       v
- * UserRepository.findById()
- *       |
- *       v
- * Usuário autenticado
+ * SecurityContext → Authentication.getPrincipal() (Jwt)
+ *   → claim "userId" → UserRepository.findById → User
  * </pre>
- *
- * @author Albert Silva
  */
 @Service
 public class AuthenticatedUserService {
 
   private final UserRepository userRepository;
 
+  /**
+   * @param userRepository repositório usado para carregar o usuário pelo id do JWT
+   */
   public AuthenticatedUserService(UserRepository userRepository) {
     this.userRepository = userRepository;
   }
 
   /**
-   * Recupera o usuário atualmente autenticado.
+   * Devolve o usuário do JWT da requisição corrente.
    *
    * <p>
-   * O método valida a existência da autenticação, garante que o principal
-   * seja um JWT válido e extrai o {@code userId} utilizado para buscar
-   * o usuário persistido.
+   * Lança {@link AuthenticatedUserNotFoundException} (com chave de mensagem) em
+   * quatro situações: sem {@code Authentication} ou com principal que não seja
+   * {@link Jwt} ({@code error.auth.invalid.principal}); claim {@code userId}
+   * ausente ou menor ou igual a zero ({@code error.auth.userId.claim.notFound});
+   * usuário inexistente ({@code error.auth.user.notFound}). O claim é lido como
+   * {@code Long}.
    * </p>
    *
-   * @return usuário autenticado encontrado no banco de dados
-   *
-   * @throws AuthenticatedUserNotFoundException quando não existe autenticação,
-   *                                            o principal não é um JWT válido, o
-   *                                            claim {@code userId} não está
-   *                                            presente ou o usuário não foi
-   *                                            encontrado
+   * @return usuário persistido correspondente ao {@code userId} do token
+   * @throws AuthenticatedUserNotFoundException nas situações acima
    */
   public User getAuthenticatedUser() {
 
@@ -87,11 +85,13 @@ public class AuthenticatedUserService {
   }
 
   /**
-   * Verifica se o usuário informado é o usuário atualmente autenticado.
+   * Indica se {@code userId} é o id do usuário do JWT. Chama
+   * {@link #getAuthenticatedUser()}, portanto lança a mesma exceção quando não há
+   * identidade válida.
    *
-   * @param userId identificador do usuário a ser verificado
-   * @return {@code true} quando o usuário informado corresponde ao usuário
-   *         autenticado; {@code false} caso contrário
+   * @param userId id a comparar (um valor {@code null} resulta em
+   *               {@code false})
+   * @return {@code true} se for o usuário autenticado
    */
   public boolean isCurrentUser(Long userId) {
     return getAuthenticatedUser().getId().equals(userId);

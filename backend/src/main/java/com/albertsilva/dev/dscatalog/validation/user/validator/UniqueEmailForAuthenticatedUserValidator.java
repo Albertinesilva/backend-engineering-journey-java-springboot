@@ -9,24 +9,28 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Implementa a lógica de validação utilizada pela annotation
- * {@link UniqueEmailForAuthenticatedUser}.
+ * Validator de {@link UniqueEmailForAuthenticatedUser}: garante que o e-mail
+ * novo do <b>usuário autenticado</b> não pertença a outro usuário.
  *
  * <p>
- * Este validator verifica se o endereço de email informado pode ser utilizado
- * pelo usuário autenticado durante a atualização do seu perfil.
+ * <b>Comportamento:</b> {@code null} ou em branco ⇒ <b>válido</b>. Caso
+ * contrário: normaliza o e-mail ({@code trim()} + {@code toLowerCase()}); obtém
+ * o usuário autenticado com {@code AuthenticatedUserService.getAuthenticatedUser()}
+ * (claim {@code userId} do JWT no {@code SecurityContext}, seguido de
+ * {@code UserRepository.findById}); consulta
+ * {@code existsByEmailIgnoreCaseAndIdNot(email, idDoUsuárioAutenticado)}. Se
+ * outro usuário tiver o e-mail, registra {@code {user.email.unique}}.
  * </p>
  *
  * <p>
- * A validação considera válido quando:
- * </p>
- * <ul>
- * <li>o email ainda não está cadastrado;</li>
- * <li>o email pertence ao próprio usuário autenticado.</li>
- * </ul>
- *
- * <p>
- * A validação considera inválido quando o email pertence a outro usuário.
+ * <b>Dependências:</b> {@code UserRepository} e {@code AuthenticatedUserService}
+ * (pacote de segurança). <b>Diferença para os demais validators de unicidade
+ * de atualização:</b> o id de referência <b>não vem da URL</b>, e sim do JWT.
+ * Se não houver JWT, claim ou usuário, {@code getAuthenticatedUser()} lança
+ * {@code AuthenticatedUserNotFoundException}, que este validator não captura; a
+ * forma como essa exceção chega ao cliente depende do Bean Validation e do
+ * handler de exceções (a confirmar na camada web). O mesmo aviso de
+ * normalização de {@link UniqueEmailValidator} se aplica ao valor persistido.
  * </p>
  */
 public class UniqueEmailForAuthenticatedUserValidator
@@ -55,13 +59,13 @@ public class UniqueEmailForAuthenticatedUserValidator
   }
 
   /**
-   * Executa a validação de unicidade do email para atualização
-   * do usuário autenticado.
+   * Verifica se o e-mail (normalizado) está livre ou pertence ao próprio usuário
+   * autenticado.
    *
-   * @param value   endereço de email informado
-   * @param context contexto do Bean Validation
-   * @return {@code true} quando o email é válido; {@code false} caso pertença
-   *         a outro usuário
+   * @param value   e-mail informado (pode ser {@code null})
+   * @param context contexto usado para registrar a violação personalizada
+   * @return {@code true} se for nulo/em branco, se não existir ou se pertencer
+   *         ao usuário autenticado; {@code false} se pertencer a outro usuário
    */
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {

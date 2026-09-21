@@ -24,133 +24,83 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 /**
- * Configuração do Resource Server OAuth2 para proteção de endpoints da API.
+ * Configuração do <b>Resource Server</b>: protege a API com JWT, define quais
+ * rotas são públicas, habilita a segurança por método e configura o CORS.
  *
  * <p>
- * Esta classe é responsável por configurar a segurança de todos os endpoints
- * da aplicação como um Resource Server protegido por OAuth2 com validação de
- * tokens JWT.
- * Define regras de acesso, proteção contra CSRF, validação de tokens e CORS.
- * </p>
- *
- * <p>
- * <b>Responsabilidades principais:</b>
+ * <b>Cadeias de filtros:</b>
  * </p>
  * <ul>
- * <li>Configurar proteção de endpoints com OAuth2 JWT</li>
- * <li>Definir endpoints públicos que não requerem autenticação</li>
- * <li>Permitir acesso ao H2 Console em desenvolvimento</li>
- * <li>Configurar CORS para aceitar requisições de origins específicos</li>
- * <li>Extrair authorities (roles) dos claims JWT</li>
- * <li>Habilitar @PreAuthorize/@PostAuthorize para method-level security</li>
+ * <li>{@code @Order(1)} — H2 Console: só existe se
+ * {@code spring.h2.console.enabled=true} (perfil {@code test}); casa somente
+ * com o console, sem regras de autorização, com CSRF e {@code frameOptions}
+ * desabilitados;</li>
+ * <li>{@code @Order(2)} — Authorization Server (em
+ * {@code AuthorizationServerConfig}): {@code /oauth2/**} e
+ * {@code /.well-known/**};</li>
+ * <li>{@code @Order(3)} — Resource Server (este {@link #rsSecurityFilterChain}):
+ * sem {@code securityMatcher}, atende todas as demais requisições.</li>
  * </ul>
  *
  * <p>
- * <b>Cadeias de filtros de segurança:</b>
- * </p>
- * <ul>
- * <li><b>Order 1 (H2Console):</b> Permite acesso ao console H2 sem autenticação
- * (desenvolvimento)</li>
- * <li><b>Order 3 (Resource Server):</b> Protege todos os endpoints da API com
- * JWT</li>
- * </ul>
- *
- * <p>
- * <b>Endpoints públicos:</b>
- * </p>
- * <ul>
- * <li>GET {@code /api/v1/categories/**}: Listagem e detalhes de categorias</li>
- * <li>GET {@code /api/v1/products/**}: Listagem e detalhes de produtos</li>
- * <li>{@code /docs-dscatalog}, {@code /swagger-ui/**}: Documentação
- * OpenAPI</li>
- * </ul>
- *
- * <p>
- * <b>Validação de tokens:</b>
- * </p>
- * <p>
- * Todos os outros endpoints requerem um token JWT válido no header
- * Authorization.
- * O token é validado usando a chave pública RSA publicada no Authorization
- * Server.
- * Claims de authorities são extraídos do claim "authorities" do JWT.
+ * <b>Regras de URL da cadeia do Resource Server</b> (em ordem): {@code GET} em
+ * {@code /api/v1/categories/**}, {@code /api/v1/products/**} e
+ * {@code /api/v1/accounts/**} — públicos; {@code POST} em
+ * {@code /api/v1/accounts/**} — público; documentação
+ * ({@code /docs-asjcatalog}, {@code /docs-asjcatalog/**},
+ * {@code /docs-asjcatalog.html}, {@code /swagger-ui/**}) — pública; qualquer
+ * outra requisição — exige autenticação. Esses caminhos de documentação
+ * correspondem ao perfil {@code test}; {@code application-dev.properties}
+ * configura outros. A autorização fina é feita por {@code @PreAuthorize} nos
+ * controllers ({@code @EnableMethodSecurity}); rotas públicas "por URL" podem
+ * ter regra própria no método (por exemplo, {@code GET /api/v1/accounts/me}).
  * </p>
  *
  * <p>
- * <b>CORS:</b>
+ * <b>Autenticação:</b> {@code oauth2ResourceServer().jwt()} com o
+ * {@code JwtDecoder} da aplicação; o {@link #jwtAuthenticationConverter()}
+ * transforma o claim {@code authorities} em authorities do Spring Security.
+ * CSRF está desabilitado nesta cadeia; a política de sessão não é configurada
+ * explicitamente.
  * </p>
+ *
  * <p>
- * Configurado dinamicamente a partir da propriedade {@code cors.origins}.
- * Permite requisições preflight e credenciais de múltiplos origins.
- * Métodos HTTP permitidos: GET, POST, PUT, DELETE, PATCH.
- * Headers obrigatórios: Authorization, Content-Type.
+ * <b>CORS:</b> origens de {@code cors.origins}; ver
+ * {@link #corsConfigurationSource()}.
  * </p>
- *
- * @implNote
- *           O ResourceServerConfig utiliza @Order para ordenar
- *           SecurityFilterChains
- *           em relação ao AuthorizationServerConfig. A ordem é crítica para que
- *           o servidor de autorização (order 2) processe tokens antes do
- *           Resource Server.
- *           O filtro CORS é registrado com HIGHEST_PRECEDENCE para interceptar
- *           requisições preflight antes de outros filtros.
- *
- * @apiNote
- *          Esta configuração implementa um Resource Server seguindo as
- *          especificações de Spring Security 6.x e Spring Authorization Server,
- *          permitindo que diferentes aplicações clientes obtenham tokens do
- *          Authorization Server e os utilizem para acessar este Resource
- *          Server.
  */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class ResourceServerConfig {
 
+  /** Caminhos públicos da documentação OpenAPI/Swagger (os do perfil {@code test}). */
   private static final String[] DOCUMENTATION_OPENAPI = { "/docs-asjcatalog", "/docs-asjcatalog/**",
       "/docs-asjcatalog.html", "/swagger-ui/**" };
+  /** Prefixos liberados sem autenticação para requisições {@code GET}. */
   private static final String[] PUBLIC_GET_ENDPOINTS = { "/api/v1/categories/**", "/api/v1/products/**" , "/api/v1/accounts/**"};
 
+  /** Prefixos liberados sem autenticação para requisições {@code POST}. */
   private static final String[] PUBLIC_POST_ENDPOINTS = { "/api/v1/accounts/**" };
 
+  /** Origens CORS permitidas, separadas por vírgula ({@code cors.origins}). */
   @Value("${cors.origins}")
   private String corsOrigins;
 
   /**
-   * Configura a cadeia de filtros de segurança para o H2 Console.
+   * Cadeia do console do H2 ({@code @Order(1)}), criada somente quando
+   * {@code spring.h2.console.enabled=true}.
    *
    * <p>
-   * Este filtro permitir acesso ao H2 Console sem autenticação, desabilitando
-   * CSRF
-   * e frame options. É aplicado apenas quando a propriedade
-   * {@code spring.h2.console.enabled}
-   * estiver definida como "true" (desenvolvimento).
+   * Casa apenas com o caminho do console ({@code PathRequest.toH2Console()}),
+   * desabilita CSRF e {@code frameOptions} e <b>não define regras de
+   * autorização</b>, isto é, o console fica acessível sem autenticação nessa
+   * condição.
    * </p>
    *
-   * <p>
-   * <b>Configurações aplicadas:</b>
-   * </p>
-   * <ul>
-   * <li>CSRF desabilitado para permitir requisições POST do console</li>
-   * <li>Frame options desabilitadas para permitir renderização em iframe</li>
-   * <li>Sem autenticação ou autorização necessária</li>
-   * </ul>
-   *
-   * @param http construtor de segurança HTTP do Spring
-   * @return {@link SecurityFilterChain} configurada para H2 Console
-   * @throws Exception se houver erro na configuração de segurança
-   *
-   * @implNote
-   *           Este bean é registrado com {@code @Order(1)} e
-   *           {@code @ConditionalOnProperty},
-   *           garantindo que seja aplicado apenas em desenvolvimento. Em
-   *           produção,
-   *           a propriedade deve estar desabilitada para segurança.
-   *
-   * @apiNote
-   *          H2 Console requer configurações especiais de segurança. Nunca
-   *          habilite
-   *          em ambientes de produção sem restrições adicionais de IP/rede.
+   * @param http construtor de segurança HTTP
+   * @return cadeia do H2 Console
+   * @throws Exception se a configuração falhar
    */
   @Bean
   @Order(1)
@@ -163,49 +113,20 @@ public class ResourceServerConfig {
   }
 
   /**
-   * Configura a cadeia de filtros de segurança para o Resource Server.
+   * Cadeia principal do Resource Server ({@code @Order(3)}).
    *
    * <p>
-   * Define as regras de autorização para todos os endpoints da API, permitindo
-   * acesso público a documentação e endpoints específicos (GET para categorias e
-   * produtos),
-   * requerendo autenticação OAuth2 com JWT para demais endpoints.
+   * Desabilita CSRF; aplica as regras de URL descritas na documentação da classe
+   * (públicos por {@code GET}/{@code POST}, documentação pública, demais rotas
+   * autenticadas); ativa {@code oauth2ResourceServer().jwt()} e o CORS com
+   * {@link #corsConfigurationSource()}. Requisição sem token válido em rota
+   * protegida é rejeitada pelo filtro de bearer token (o formato da resposta
+   * será detalhado na análise da camada web).
    * </p>
    *
-   * <p>
-   * <b>Regras de autorização (em ordem de avaliação):</b>
-   * </p>
-   * <ol>
-   * <li>GET {@code /api/v1/categories/**} e {@code /api/v1/products/**}:
-   * Público</li>
-   * <li>Endpoints de documentação OpenAPI: Público</li>
-   * <li>Todos os demais endpoints: Requerem autenticação (JWT válido)</li>
-   * </ol>
-   *
-   * <p>
-   * <b>Segurança adicional:</b>
-   * </p>
-   * <ul>
-   * <li>CSRF desabilitado (stateless API com JWT)</li>
-   * <li>OAuth2 Resource Server com validação JWT automática</li>
-   * <li>CORS habilitado com configuração customizada</li>
-   * </ul>
-   *
-   * @param http construtor de segurança HTTP do Spring
-   * @return {@link SecurityFilterChain} configurada para o Resource Server
-   * @throws Exception se houver erro na configuração de segurança
-   *
-   * @implNote
-   *           Este bean é registrado com {@code @Order(3)}, posicionando-se
-   *           após H2Console (order 1) e AuthorizationServer (order 2).
-   *           A ordem é crucial para que requisições sejam processadas
-   *           corretamente.
-   *
-   * @apiNote
-   *          Mudanças nas regras de autorização aqui requerem sincronização
-   *          com autoridades de usuário (@PreAuthorize no controller).
-   *          Use @PreAuthorize/@PostAuthorize para lógica de autorização
-   *          detalhada.
+   * @param http construtor de segurança HTTP
+   * @return cadeia do Resource Server
+   * @throws Exception se a configuração falhar
    */
   @Bean
   @Order(3)
@@ -229,51 +150,26 @@ public class ResourceServerConfig {
   }
 
   /**
-   * Cria um conversor de JWT customizado para extrair authorities.
+   * Converte um JWT validado em {@code JwtAuthenticationToken}, lendo as
+   * authorities do claim <b>{@code authorities}</b> com prefixo <b>vazio</b>.
    *
-   * <p>
-   * Configura o {@link JwtAuthenticationConverter} para extrair roles/authorities
-   * do claim "authorities" do JWT sem adicionar prefixo (ex: "ROLE_").
-   * </p>
-   *
-   * <p>
-   * <b>Configuração:</b>
-   * </p>
    * <ul>
-   * <li>Nome do claim: "authorities" (customizado, não o padrão "scope")</li>
-   * <li>Prefixo de autoridade: "" (vazio, sem "ROLE_" adicional)</li>
+   * <li>Cada texto do claim vira uma {@code GrantedAuthority} <b>como está</b>
+   * (por exemplo, {@code ROLE_ADMIN}); assim {@code hasRole('ADMIN')}, que
+   * procura {@code ROLE_ADMIN}, funciona.</li>
+   * <li>O claim {@code scope} <b>não</b> é convertido em authorities (o nome do
+   * claim foi trocado).</li>
+   * <li>O principal do {@code Authentication} é o próprio {@code Jwt}; o nome
+   * ({@code getName()}) usa o claim padrão do conversor ({@code sub}), que não é
+   * o id nem o e-mail do usuário.</li>
    * </ul>
    *
    * <p>
-   * <b>Exemplo de JWT claim:</b>
+   * O bean é usado pelo {@code jwt()} da cadeia (o framework o localiza no
+   * contexto; os testes de integração de autorização confirmam o efeito).
    * </p>
    *
-   * <pre>
-   * {
-   *   "authorities": ["ROLE_ADMIN", "ROLE_USER"],
-   *   "username": "user123"
-   * }
-   * </pre>
-   *
-   * <p>
-   * As authorities são então disponibilizadas para validação via
-   * {@code @PreAuthorize("hasRole('ADMIN')")} nos controllers.
-   * </p>
-   *
-   * @return {@link JwtAuthenticationConverter} configurado para extrair
-   *         authorities
-   *
-   * @implNote
-   *           Este bean é consumido automaticamente pelo
-   *           {@code oauth2ResourceServer().jwt()}, garantindo que todos os
-   *           tokens
-   *           sejam processados com a configuração customizada.
-   *
-   * @apiNote
-   *          O conversor garante que claims de authorities do Authorization
-   *          Server
-   *          sejam corretamente mapeados para a estrutura de autoridades do
-   *          Spring Security.
+   * @return conversor de JWT para autenticação
    */
   @Bean
   public JwtAuthenticationConverter jwtAuthenticationConverter() {
@@ -287,46 +183,18 @@ public class ResourceServerConfig {
   }
 
   /**
-   * Configura a fonte de configuração CORS para a aplicação.
+   * Configuração de CORS aplicada a todos os caminhos ({@code /**}).
    *
    * <p>
-   * Define os origins permitidos, métodos HTTP, headers, e credenciais
-   * a partir de propriedades de configuração. Origins são carregados de
-   * {@code cors.origins} (separados por vírgula).
+   * Origens: {@code cors.origins} dividido por vírgula, usado como <em>padrões de
+   * origem</em> (aceitam curingas). Métodos permitidos: {@code POST, GET, PUT,
+   * DELETE, PATCH}. Cabeçalhos permitidos: apenas {@code Authorization} e
+   * {@code Content-Type}. Credenciais permitidas. {@code OPTIONS} não consta da
+   * lista de métodos; como o CORS confere o método <em>solicitado</em> no
+   * pré-voo, isso, em princípio, não impede o pré-voo (a confirmar em testes).
    * </p>
    *
-   * <p>
-   * <b>Configuração aplicada:</b>
-   * </p>
-   * <ul>
-   * <li>Origins: Configuráveis via propriedade (ex:
-   * "http://localhost:3000,https://example.com")</li>
-   * <li>Métodos: POST, GET, PUT, DELETE, PATCH</li>
-   * <li>Credenciais: Habilitadas (permite cookies e headers Authorization)</li>
-   * <li>Headers: Authorization, Content-Type</li>
-   * </ul>
-   *
-   * <p>
-   * <b>Exemplo de configuração (application.properties):</b>
-   * </p>
-   *
-   * <pre>
-   * cors.origins=http://localhost:3000,http://localhost:8080,https://app.example.com
-   * </pre>
-   *
-   * @return {@link CorsConfigurationSource} configurada com origins e métodos
-   *         permitidos
-   *
-   * @implNote
-   *           A configuração é aplicada a todos os caminhos ("/**").
-   *           Origins são convertidos em padrões de origem usando
-   *           setAllowedOriginPatterns(),
-   *           que suporta wildcards (ex: "http://*.example.com").
-   *
-   * @apiNote
-   *          CORS é fundamental para aplicações web. Certifique-se de que
-   *          apenas origins confiáveis estejam listados em produção.
-   *          Nunca use "*" para origins em produção sem validação adicional.
+   * @return fonte de configuração de CORS
    */
   @Bean
   CorsConfigurationSource corsConfigurationSource() {
@@ -345,38 +213,12 @@ public class ResourceServerConfig {
   }
 
   /**
-   * Registra um filtro CORS no pipeline de filtros de servlet.
+   * Registra um {@code CorsFilter} como filtro de servlet, com a maior
+   * precedência, usando a mesma configuração de
+   * {@link #corsConfigurationSource()}. Existe além do {@code http.cors(...)} da
+   * cadeia de segurança.
    *
-   * <p>
-   * Cria um bean {@link FilterRegistrationBean} que envolve o {@link CorsFilter}
-   * e o registra com a ordem mais alta ({@code HIGHEST_PRECEDENCE}),
-   * garantindo que requisições CORS preflight sejam processadas antes de
-   * qualquer outro filtro de segurança.
-   * </p>
-   *
-   * <p>
-   * <b>Razão da ordem alta:</b>
-   * </p>
-   * <ul>
-   * <li>Requisições preflight (OPTIONS) devem ser respondidas rapidamente</li>
-   * <li>Não devem ser processadas por filtros de autenticação/autorização</li>
-   * <li>Ordem alta garante execução antes de SecurityFilter</li>
-   * </ul>
-   *
-   * @return {@link FilterRegistrationBean} com o CorsFilter configurado
-   *
-   * @implNote
-   *           O {@code CorsFilter} é criado usando
-   *           {@link #corsConfigurationSource()}
-   *           para garantir consistência com a configuração de CORS do
-   *           SecurityFilterChain.
-   *           A ordem {@code Ordered.HIGHEST_PRECEDENCE} posiciona este filtro
-   *           no início do pipeline, antes de todos os outros filtros.
-   *
-   * @apiNote
-   *          Este bean é necessário para que o CORS funcione corretamente
-   *          em aplicações Spring Boot com Security. O filtro processa
-   *          requisições OPTIONS automaticamente.
+   * @return registro do filtro CORS
    */
   @Bean
   FilterRegistrationBean<CorsFilter> filterRegistrationBeanCorsFilter() {

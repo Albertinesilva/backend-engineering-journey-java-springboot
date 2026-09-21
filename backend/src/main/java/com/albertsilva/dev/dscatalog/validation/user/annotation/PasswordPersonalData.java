@@ -12,33 +12,21 @@ import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 /**
- * Valida se a senha informada não contém dados pessoais do usuário.
+ * Restrição de <b>classe</b> que aciona {@link PasswordPersonalDataValidator};
+ * só se aplica a tipos que implementam
+ * {@link com.albertsilva.dev.dscatalog.validation.user.contract.PasswordPersonalDataCandidate}
+ * ({@code UserCreateRequest} e {@code UserRegisterRequest}).
  *
  * <p>
- * Esta constraint atua em nível de classe ({@link ElementType#TYPE}),
- * pois necessita acessar simultaneamente múltiplos atributos do objeto,
- * como nome, sobrenome, email e senha.
+ * <b>Regra efetiva:</b> a senha (após {@code trim} e minúsculas) não pode
+ * <em>conter</em> o primeiro nome, o sobrenome nem a parte do e-mail antes do
+ * {@code @}, desde que cada um tenha ao menos 3 caracteres. No máximo uma
+ * violação é registrada, no campo {@code password}. Não consulta o banco.
  * </p>
  *
  * <p>
- * A validação impede que a senha contenha informações facilmente
- * associadas ao usuário, reduzindo o risco de utilização de senhas
- * previsíveis.
- * </p>
- *
- * <p>
- * Atualmente são verificadas:
- * </p>
- *
- * <ul>
- * <li>Primeiro nome</li>
- * <li>Sobrenome</li>
- * <li>Parte local do email (antes do "@")</li>
- * </ul>
- *
- * <p>
- * A implementação da validação é realizada por
- * {@link PasswordPersonalDataValidator}.
+ * <b>Metadados:</b> {@code @Target(TYPE)}, {@code @Retention(RUNTIME)},
+ * {@code @Documented}.
  * </p>
  */
 @Documented
@@ -48,28 +36,25 @@ import jakarta.validation.Payload;
 public @interface PasswordPersonalData {
 
   /**
-   * Mensagem padrão.
+   * Chave de mensagem padrão ({@code user.password.personalData}); é a mesma chave que o validator emite.
    *
-   * <p>
-   * Normalmente não é utilizada, pois o validator registra
-   * violações diretamente no campo {@code password}.
-   * </p>
-   *
-   * @return mensagem padrão
+   * @return chave de mensagem padrão da restrição
    */
   String message() default "{user.password.personalData}";
 
   /**
-   * Grupos de validação.
+   * Grupos de validação da restrição (padrão do Bean Validation). Nenhuma
+   * validação do projeto usa grupos.
    *
-   * @return grupos
+   * @return grupos de validação
    */
   Class<?>[] groups() default {};
 
   /**
-   * Payload da constraint.
+   * Metadados associados à restrição (padrão do Bean Validation). Não são
+   * usados pelo projeto.
    *
-   * @return payload
+   * @return payloads da restrição
    */
   Class<? extends Payload>[] payload() default {};
 }

@@ -9,57 +9,46 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Implementa a lógica de validação utilizada pela
- * annotation {@link ValidRoles}.
+ * Validator de {@link ValidRoles}, aplicado a {@code Set<Long>} com ids de
+ * roles.
  *
  * <p>
- * Este validator verifica se todos os identificadores
- * de roles informados existem na base de dados.
+ * <b>Comportamento:</b> {@code null} ou conjunto vazio ⇒ <b>válido</b>. Caso
+ * contrário, chama {@code RoleRepository.existsById} para cada id (uma
+ * consulta por id, interrompendo no primeiro inexistente); se algum não
+ * existir, registra {@code {role.invalid}} sem nó de propriedade (fica no
+ * campo anotado). Como o tipo é {@link Set}, ids duplicados não existem no
+ * objeto (a desserialização os colapsa) e a ordem é irrelevante. Um elemento
+ * {@code null} dentro do conjunto faria {@code existsById} lançar exceção (a
+ * confirmar em testes).
+ * </p>
  *
  * <p>
- * A validação é aplicada sobre coleções do tipo
- * {@link Set} contendo identificadores de roles.
- *
- * <p>
- * Caso uma ou mais roles informadas não existam,
- * uma mensagem de erro customizada é adicionada
- * ao contexto de validação.
+ * <b>Relação com {@code UserService}:</b> este validator aceita {@code null} e
+ * vazio; o service trata {@code null} como "manter as roles" na atualização e
+ * "sem roles" na criação, e conjunto vazio como "remover todas" na atualização
+ * e "sem roles" na criação. O service ainda compara a quantidade de roles
+ * encontradas com a de ids recebidos (validação repetida).
+ * </p>
  */
 public class ValidRolesValidator implements ConstraintValidator<ValidRoles, Set<Long>> {
 
-  /*
-   * Repositório utilizado para verificar a existência
-   * das roles na base de dados.
-   */
+  /** Repositório usado para verificar a existência de cada role. */
   private final RoleRepository repository;
 
-  /*
-   * Construtor que recebe o repositório de roles
-   * como dependência.
+  /**
+   * @param repository repositório de roles, injetado pelo Spring
    */
   public ValidRolesValidator(RoleRepository repository) {
     this.repository = repository;
   }
 
   /**
-   * Valida se todas as roles informadas existem
-   * na base de dados.
+   * Verifica se todos os ids informados existem como role.
    *
-   * <p>
-   * Caso a coleção seja {@code null} ou esteja vazia,
-   * a validação será considerada válida.
-   *
-   * <p>
-   * A verificação é realizada individualmente
-   * para cada identificador informado.
-   *
-   * @param value   coleção contendo os identificadores
-   *                das roles
-   * @param context contexto utilizado pelo Bean Validation
-   *                para registrar erros personalizados
-   * @return {@code true} caso todas as roles existam;
-   *         {@code false} caso uma ou mais roles
-   *         sejam inválidas
+   * @param value   ids de roles (pode ser {@code null} ou vazio)
+   * @param context contexto usado para registrar a violação {@code role.invalid}
+   * @return {@code true} se for nulo/vazio ou se todos os ids existirem
    */
   @Override
   public boolean isValid(Set<Long> value, ConstraintValidatorContext context) {

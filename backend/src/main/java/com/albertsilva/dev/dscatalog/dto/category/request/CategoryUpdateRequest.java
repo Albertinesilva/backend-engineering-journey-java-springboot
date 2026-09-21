@@ -7,36 +7,29 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * DTO utilizado para requisições de atualização
- * de categorias.
+ * Corpo da requisição de <b>atualização de categoria</b>
+ * ({@code PATCH /api/v1/categories/{id}}).
  *
  * <p>
- * Representa os dados fornecidos pelo cliente
- * durante o processo de atualização de uma categoria.
+ * Fluxo: {@code CategoryController.update} → {@code CategoryService.update} →
+ * {@code CategoryMapper.updateEntity}. As regras estruturais são as mesmas de
+ * {@link CategoryCreateRequest}; a unicidade do nome, excluindo a própria
+ * categoria (o {@code id} vem da URL), é verificada por
+ * {@link CategoryUpdateValid}.
+ * </p>
  *
  * <p>
- * Este DTO utiliza a annotation
- * {@link CategoryUpdateValid} para executar
- * validações contextuais relacionadas ao processo
- * de atualização.
+ * <b>Semântica de atualização:</b> o mapper só sobrescreve um campo quando ele
+ * é diferente de {@code null}. Como o nome é obrigatório, ele sempre é
+ * atualizado; {@code description} {@code null} mantém a descrição atual, e
+ * {@code ""} a substitui por texto vazio. Não há como limpar a descrição
+ * enviando {@code null}. O indicador {@code active} não é alterado por este
+ * request.
+ * </p>
  *
- * <p>
- * As validações aplicadas garantem:
- * <ul>
- * <li>Obrigatoriedade do nome da categoria</li>
- * <li>Tamanho mínimo e máximo permitido</li>
- * <li>Validação de caracteres permitidos</li>
- * <li>Validação do tamanho da descrição</li>
- * <li>Validações contextuais de atualização</li>
- * </ul>
- *
- * <p>
- * As regras de validação utilizam Bean Validation
- * através das annotations presentes nos atributos
- * do record.
- *
- * @param name        novo nome da categoria
- * @param description nova descrição da categoria
+ * @param name        novo nome (obrigatório; 3 a 80 caracteres; letras, dígitos
+ *                    e espaços)
+ * @param description nova descrição (opcional; {@code null} mantém a atual)
  */
 @CategoryUpdateValid
 public record CategoryUpdateRequest(

@@ -16,28 +16,48 @@ import com.albertsilva.dev.dscatalog.dto.user.request.UserUpdateRequest;
 import com.albertsilva.dev.dscatalog.dto.user.response.UserDetailsResponse;
 import com.albertsilva.dev.dscatalog.dto.user.response.UserResponse;
 
+/**
+ * Conversor manual (sem MapStruct) entre os DTOs de usuário e a entidade
+ * {@link User}. Componente sem estado, usado por {@code UserService} e
+ * {@code AccountService}.
+ *
+ * <p>
+ * <b>Entrada:</b> os dois {@code toEntity} copiam nome, e-mail e senha
+ * <b>como recebidos</b> (sem {@code trim}, sem conversão de caixa e
+ * <b>sem codificar a senha</b>: o service a codifica logo depois) e recebem as
+ * roles já resolvidas como entidades, sem ler {@code roleIds}. O
+ * {@code updateEntity} copia apenas nome, sobrenome e e-mail; senha e roles da
+ * atualização são tratadas por {@code UserService}. O fluxo
+ * {@code AccountService.updateAuthenticatedUser} <b>não usa</b> este mapper.
+ * </p>
+ *
+ * <p>
+ * <b>Saída:</b> as respostas nunca incluem a senha (nem o hash) nem
+ * {@code User.tokens}; percorrem {@code User.getRoles()} (carregada sob
+ * demanda, possível consulta adicional por usuário) e convertem cada role em
+ * {@link RoleResponse}.
+ * </p>
+ */
 @Component
 public class UserMapper {
 
-  /*
-   * *
-   * Converte um {@link UserCreateRequest} em uma entidade {@link User}.
+  /**
+   * Cria um novo {@link User} (ainda sem id) a partir do request de criação por
+   * administrador, com as roles informadas.
    *
    * <p>
-   * <b>Comportamento:</b>
+   * Copia {@code firstName}, {@code lastName}, {@code email} e {@code password}
+   * (<b>texto puro</b>, sem codificar) e adiciona as roles recebidas em
+   * {@code roles}, se não for {@code null}. {@code request.roleIds()} <b>não é
+   * lido</b>: a resolução dos ids em entidades é feita antes, por
+   * {@code UserService}. O indicador {@code active} não é definido (valor padrão
+   * {@code false}; o service chama {@code activate()}).
    * </p>
-   * <ul>
-   * <li>Cria uma nova instância de {@link User}</li>
-   * <li>Mapeia os campos básicos (firstName, lastName, email, password)</li>
-   * <li>Associa os papéis (roles) com base nos IDs fornecidos</li>
-   * </ul>
    *
-   * @param request dados recebidos na requisição de criação
-   * 
-   * @param roles conjunto de entidades {@link Role} associadas ao usuário
-   * 
-   * @return entidade pronta para persistência ou {@code null} se o request for
-   * nulo
+   * @param request dados de criação
+   * @param roles   roles já resolvidas (pode ser {@code null})
+   * @return nova entidade (não persistida) ou {@code null} se {@code request} for
+   *         {@code null}
    */
   public User toEntity(UserCreateRequest request, Set<Role> roles) {
 
@@ -58,25 +78,21 @@ public class UserMapper {
     return user;
   }
 
-  /*
-   * *
-   * Converte um {@link UserRegisterRequest} em uma entidade {@link User}.
+  /**
+   * Cria um novo {@link User} (ainda sem id) a partir do request de registro
+   * público, com as roles informadas.
    *
    * <p>
-   * <b>Comportamento:</b>
+   * Mesmo comportamento de {@link #toEntity(UserCreateRequest, Set)}: copia nome,
+   * e-mail e senha como recebidos (senha em texto puro), adiciona as roles
+   * recebidas e não define {@code active} (o {@code AccountService.register}
+   * chama {@code deactivate()} e passa apenas {@code ROLE_OPERATOR}).
    * </p>
-   * <ul>
-   * <li>Cria uma nova instância de {@link User}</li>
-   * <li>Mapeia os campos básicos (firstName, lastName, email, password)</li>
-   * <li>Associa os papéis (roles) com base nos IDs fornecidos</li>
-   * </ul>
    *
-   * @param request dados recebidos na requisição de registro
-   * 
-   * @param roles conjunto de entidades {@link Role} associadas ao usuário
-   * 
-   * @return entidade pronta para persistência ou {@code null} se o request for
-   * nulo
+   * @param request dados do registro
+   * @param roles   roles já resolvidas (pode ser {@code null})
+   * @return nova entidade (não persistida) ou {@code null} se {@code request} for
+   *         {@code null}
    */
   public User toEntity(UserRegisterRequest request, Set<Role> roles) {
 
@@ -97,25 +113,21 @@ public class UserMapper {
     return user;
   }
 
-  /*
-   * *
-   * *
-   * Atualiza uma entidade {@link User} com os dados de um
-   * {@link UserUpdateRequest}.
+  /**
+   * Aplica ao usuário os campos básicos do request de atualização:
+   * {@code firstName}, {@code lastName} e {@code email}.
    *
    * <p>
-   * <b>Comportamento:</b>
+   * Ao contrário de {@code CategoryMapper} e {@code ProductMapper}, <b>não
+   * verifica {@code null}</b>: os três valores sempre são gravados, mesmo que
+   * {@code null}, e o e-mail não é normalizado (o DTO exige valores não vazios).
+   * Uma entrada {@code request} ou {@code entity} {@code null} lança
+   * {@link NullPointerException}. <b>Não altera</b> senha, roles, {@code active}
+   * nem tokens: {@code UserService} trata senha e roles à parte.
    * </p>
-   * <ul>
-   * <li>Atualiza os campos básicos (firstName, lastName, email)</li>
-   * <li>Substitui os papéis (roles) pelos novos fornecidos</li>
-   * </ul>
    *
-   * @param request dados recebidos na requisição de atualização
-   * 
-   * @param entity entidade a ser atualizada
-   * 
-   * @param roles conjunto de entidades {@link Role} associadas ao usuário
+   * @param request dados de atualização
+   * @param entity  usuário a ser modificado
    */
   public void updateEntity(UserUpdateRequest request, User entity) {
 
@@ -125,25 +137,18 @@ public class UserMapper {
   }
 
   /**
-   * Converte uma entidade {@link User} em um DTO de resposta
-   * {@link UserResponse}.
+   * Converte o usuário em resposta: {@code id}, nomes, e-mail e roles como
+   * {@link RoleResponse}. Não inclui senha, {@code active} nem tokens.
    *
    * <p>
-   * <b>Comportamento:</b>
+   * Percorre {@code entity.getRoles()} (carregada sob demanda quando a entidade
+   * vem do banco). As roles são coletadas em um {@link LinkedHashSet}, que apenas
+   * preserva a ordem de iteração da coleção de origem (um {@code HashSet}, sem
+   * ordem definida).
    * </p>
-   * <ul>
-   * <li>Cria uma nova instância de {@link UserResponse}</li>
-   * <li>Mapeia os campos básicos do usuário (id, firstName, lastName e
-   * email)</li>
-   * <li>Converte as roles associadas ao usuário para um conjunto de
-   * {@link RoleResponse}</li>
-   * <li>Preserva a ordem das roles utilizando um {@link LinkedHashSet}</li>
-   * </ul>
    *
-   * @param entity entidade {@link User} a ser convertida
-   *
-   * @return DTO {@link UserResponse} correspondente à entidade informada,
-   *         ou {@code null} caso a entidade seja nula
+   * @param entity usuário
+   * @return resposta ou {@code null} se {@code entity} for {@code null}
    */
   public UserResponse toResponse(User entity) {
 
@@ -157,24 +162,13 @@ public class UserMapper {
     return new UserResponse(entity.getId(), entity.getFirstName(), entity.getLastName(), entity.getEmail(), roles);
   }
 
-  /*
-   * *
-   * Converte uma entidade {@link User} em um DTO de resposta detalhado
-   * {@link UserDetailsResponse}.
+  /**
+   * Converte o usuário em resposta detalhada: os campos de
+   * {@link #toResponse(User)} mais o indicador {@code active}. Percorre
+   * {@code entity.getRoles()} da mesma forma. Não inclui senha nem tokens.
    *
-   * <p>
-   * <b>Comportamento:</b>
-   * </p>
-   * <ul>
-   * <li>Cria uma nova instância de {@link UserDetailsResponse}</li>
-   * <li>Mapeia os campos básicos (id, firstName, lastName, email)</li>
-   * <li>Converte os papéis (roles) para um conjunto de {@link RoleResponse}
-   * contendo id e autoridade</li>
-   * </ul>
-   *
-   * @param entity entidade a ser convertida
-   * 
-   * @return DTO de resposta detalhado ou {@code null} se a entidade for nula
+   * @param entity usuário
+   * @return resposta ou {@code null} se {@code entity} for {@code null}
    */
   public UserDetailsResponse toDetailsResponse(User entity) {
 
@@ -190,29 +184,19 @@ public class UserMapper {
   }
 
   /**
-   * Converte uma página de entidades {@link User} em uma página de
-   * {@link UserResponse}.
-   *
-   * <p>
-   * <b>Comportamento:</b>
-   * </p>
-   * <ul>
-   * <li>Utiliza a função {@link #toResponse(User)} para mapear cada elemento</li>
-   * <li>Mantém as informações de paginação (total, páginas, etc.)</li>
-   * </ul>
+   * Converte uma página de usuários em página de {@link UserResponse} aplicando
+   * {@link #toResponse(User)} a cada elemento e preservando os metadados de
+   * paginação.
    *
    * @param entities página de entidades
-   * @return página de DTOs de resposta
+   * @return página de respostas
    */
   public Page<UserResponse> toResponsePage(Page<User> entities) {
     return entities.map(this::toResponse);
   }
 
   /**
-   * Converte uma entidade {@link Role} em {@link RoleResponse}.
-   *
-   * @param role entidade role
-   * @return DTO correspondente
+   * Converte uma {@link Role} em {@link RoleResponse} (id e authority).
    */
   private RoleResponse toRoleResponse(Role role) {
     return new RoleResponse(role.getId(), role.getAuthority());

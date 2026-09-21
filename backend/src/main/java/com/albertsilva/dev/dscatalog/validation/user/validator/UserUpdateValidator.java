@@ -16,30 +16,33 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Implementa a lógica de validação utilizada pela
- * annotation {@link UserUpdateValid}.
+ * Validator de {@link UserUpdateValid}: duas verificações sobre
+ * {@code UserUpdateRequest}.
+ *
+ * <ol>
+ * <li><b>E-mail único, excluindo o próprio usuário:</b> lê o id de
+ * {@code HttpServletRequest} (atributo de variáveis de URI do Spring MVC,
+ * chave {@code id}). Se o e-mail for {@code null}/em branco, se o mapa ou a
+ * chave {@code id} não existirem, ou se o id não for numérico
+ * ({@code NumberFormatException} capturada), a verificação é <b>ignorada</b>
+ * (sem violação). Caso contrário, normaliza o e-mail ({@code trim()} +
+ * {@code toLowerCase()}) e consulta
+ * {@code existsByEmailIgnoreCaseAndIdNot(email, id)}; violação em
+ * {@code email} com {@code {user.email.unique}}. O id <b>não</b> é verificado
+ * como existente: com id inexistente, qualquer e-mail já cadastrado é
+ * considerado duplicado.</li>
+ * <li><b>Senha sem dados pessoais:</b> só se a senha não for {@code null}
+ * nem em branco; mesma regra de {@link PasswordPersonalDataValidator}
+ * (substring, tokens de ao menos 3 caracteres, no
+ * máximo uma violação em {@code password}).</li>
+ * </ol>
  *
  * <p>
- * Este validator verifica se os dados fornecidos para
- * a atualização de um usuário existente atendem aos critérios
- * de segurança definidos pela aplicação.
- *
- * <p>
- * As validações realizadas incluem:
- * <ul>
- * <li>Verifica se o email é único na base de dados (ignorando o usuário
- * atual)</li>
- * <li>Verifica se a senha (se fornecida) não contém o primeiro nome do
- * usuário</li>
- * <li>Verifica se a senha (se fornecida) não contém o sobrenome do usuário</li>
- * <li>Verifica se a senha (se fornecida) não contém a parte local do email
- * (antes do @)</li>
- * </ul>
- *
- * <p>
- * As mensagens de erro são adicionadas manualmente
- * ao contexto de validação utilizando
- * {@link ConstraintValidatorContext}.
+ * Dependências: {@code UserRepository} e {@code HttpServletRequest}
+ * (injetado pelo Spring; o validator é criado como bean e recebe a requisição
+ * corrente). A lógica de dados pessoais é uma cópia da de
+ * {@link PasswordPersonalDataValidator}, e o e-mail original não é modificado.
+ * </p>
  */
 public class UserUpdateValidator implements ConstraintValidator<UserUpdateValid, UserUpdateRequest> {
 
@@ -77,18 +80,13 @@ public class UserUpdateValidator implements ConstraintValidator<UserUpdateValid,
   }
 
   /**
-   * Executa a validação completa dos dados de atualização de usuário.
+   * Executa a verificação de e-mail único (excluindo o usuário da URL) e a de
+   * dados pessoais na senha, acumulando todas as violações.
    *
-   * <p>
-   * O método valida se os dados fornecidos no DTO de atualização
-   * atendem aos critérios de segurança, incluindo verificações de
-   * unicidade de email e se a senha não contém informações pessoais.
-   *
-   * @param dto     objeto contendo os dados de atualização do usuário
-   * @param context contexto utilizado pelo Bean Validation
-   *                para registrar erros personalizados
-   * @return {@code true} se todos os dados são válidos;
-   *         {@code false} caso existam erros de validação
+   * @param dto     dados de atualização
+   * @param context contexto usado para registrar as violações nos campos
+   *                {@code email} e {@code password}
+   * @return {@code true} se nenhuma violação for encontrada
    */
   @Override
   public boolean isValid(UserUpdateRequest dto, ConstraintValidatorContext context) {
@@ -157,9 +155,8 @@ public class UserUpdateValidator implements ConstraintValidator<UserUpdateValid,
    * como nome, sobrenome ou parte local do email.
    *
    * <p>
-   * Caso a senha seja {@code null} ou vazia, a validação é ignorada,
-   * permitindo que a obrigatoriedade seja tratada por outras
-   * annotations como {@code @NotBlank}.
+   * Caso a senha seja {@code null} ou esteja em branco (vazia ou só com
+   * espaços), a verificação é ignorada.
    *
    * @param dto    objeto contendo os dados de atualização do usuário
    * @param errors lista responsável por armazenar

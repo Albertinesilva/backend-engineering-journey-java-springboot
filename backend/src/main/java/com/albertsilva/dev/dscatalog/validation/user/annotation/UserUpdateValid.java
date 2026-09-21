@@ -12,43 +12,27 @@ import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 /**
- * Valida se os dados fornecidos para a atualização de um usuário
- * existente atendem aos critérios de segurança definidos pela aplicação.
+ * Restrição de <b>classe</b> que aciona {@link UserUpdateValidator}; usada em
+ * {@code UserUpdateRequest}.
  *
  * <p>
- * Esta annotation executa validações em nível de classe
- * ({@link ElementType#TYPE}) e deve ser aplicada em classes
- * que representam requisições de atualização de usuário, como
- * {@link UserUpdateRequest}.
- *
- * <p>
- * A lógica de validação é implementada por
- * {@link UserUpdateValidator}.
- *
- * <p>
- * As validações incluem:
+ * <b>Regras efetivas:</b>
+ * </p>
  * <ul>
- * <li>Verifica se o email é único na base de dados (ignorando o usuário
- * atual)</li>
- * <li>Verifica se a senha (se fornecida) não contém o primeiro nome do
- * usuário</li>
- * <li>Verifica se a senha (se fornecida) não contém o sobrenome do usuário</li>
- * <li>Verifica se a senha (se fornecida) não contém a parte local do email
- * (antes do @)</li>
+ * <li>o e-mail (após {@code trim} e minúsculas) não pode pertencer a
+ * <b>outro</b> usuário; o id do usuário atual vem da variável {@code id} do
+ * caminho da URL e, se ela estiver ausente ou não for numérica, a verificação
+ * é ignorada — violação no campo {@code email};</li>
+ * <li>se a senha for informada e não estiver em branco, ela não pode conter o
+ * primeiro nome, o sobrenome nem a parte local do e-mail (tokens de ao menos 3
+ * caracteres) — violação no campo {@code password}. Repete a regra de
+ * {@link PasswordPersonalData}, mas para o DTO de atualização.</li>
  * </ul>
  *
  * <p>
- * Exemplo:
- *
- * <pre>{@code
- * @UserUpdateValid
- * public class UserUpdateRequest {
- *   private String firstName;
- *   private String lastName;
- *   private String email;
- *   private String password;
- * }
- * }</pre>
+ * <b>Consulta o banco e depende do contexto HTTP.</b> Metadados:
+ * {@code @Target(TYPE)}, {@code @Retention(RUNTIME)}, {@code @Documented}.
+ * </p>
  */
 @Documented
 @Constraint(validatedBy = UserUpdateValidator.class)
@@ -57,25 +41,25 @@ import jakarta.validation.Payload;
 public @interface UserUpdateValid {
 
   /**
-   * Mensagem padrão retornada quando a validação falha.
+   * Chave de mensagem padrão ({@code user.update.validation}). Essa chave <b>não existe</b> nos arquivos de mensagens e, na prática, nunca é emitida: o validator sempre substitui a violação padrão por chaves específicas.
    *
-   * @return mensagem padrão da validação
+   * @return chave de mensagem padrão da restrição
    */
   String message() default "{user.update.validation}";
 
   /**
-   * Define grupos de validação associados
-   * à constraint.
+   * Grupos de validação da restrição (padrão do Bean Validation). Nenhuma
+   * validação do projeto usa grupos.
    *
    * @return grupos de validação
    */
   Class<?>[] groups() default {};
 
   /**
-   * Permite associar metadados adicionais
-   * à validação.
+   * Metadados associados à restrição (padrão do Bean Validation). Não são
+   * usados pelo projeto.
    *
-   * @return payloads associados à constraint
+   * @return payloads da restrição
    */
   Class<? extends Payload>[] payload() default {};
 }

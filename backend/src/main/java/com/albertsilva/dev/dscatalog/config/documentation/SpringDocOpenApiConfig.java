@@ -9,9 +9,29 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Metadados do OpenAPI/Swagger (springdoc) da API: título, descrição, versão,
+ * licença, contato e o esquema de segurança {@code security} (HTTP Bearer/JWT),
+ * referenciado por {@code @SecurityRequirement(name = "security")} nos
+ * controllers.
+ *
+ * <p>
+ * <b>Caminhos:</b> definidos por perfil em {@code application-*.properties}
+ * ({@code /docs-asjcatalog} no perfil {@code test}; {@code /docs-dscatalog} no
+ * {@code dev}); a segurança só libera os caminhos {@code /docs-asjcatalog*} e
+ * {@code /swagger-ui/**}. Os controllers escaneados são os de
+ * {@code web.controller}. Não há propriedade que desabilite o springdoc em
+ * nenhum perfil.
+ * </p>
+ */
 @Configuration
 public class SpringDocOpenApiConfig {
 
+  /**
+   * @return definição OpenAPI com informações da API e o esquema de segurança
+   *         {@code security}. O e-mail de contato e a licença (Apache 2.0)
+   *         diferem dos declarados no {@code pom.xml}
+   */
   @Bean
   public OpenAPI openAPI() {
     return new OpenAPI()
@@ -25,6 +45,10 @@ public class SpringDocOpenApiConfig {
                 .url("https://github.com/Albertinesilva")));
   }
 
+  /**
+   * @return esquema HTTP {@code bearer} com formato {@code JWT}, chamado
+   *         {@code security}
+   */
   private SecurityScheme securityScheme() {
     return new SecurityScheme()
         .description("Insira um bearer token valido para prosseguir, exemplo: Bearer {token}")

@@ -39,7 +39,21 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 /**
- * Controller responsável pelas operações de catálogo de produtos da API.
+ * Endpoints de <b>produtos</b> ({@code /api/v1/products}), delegados a
+ * {@code ProductService}.
+ *
+ * <p>
+ * <b>Acesso:</b> {@code GET} em {@code /api/v1/products/**} é <b>público por
+ * URL</b> e os métodos de leitura não têm {@code @PreAuthorize}; o OpenAPI, no
+ * entanto, marca esses endpoints com exigência de Bearer. Escrita exige
+ * autenticação (URL) e {@code ADMIN} ou {@code OPERATOR}.
+ * </p>
+ *
+ * <p>
+ * Verbo de atualização: <b>{@code PUT}</b> (o corpo exige nome e
+ * {@code categoryIds}); alguns testes existentes usam {@code PATCH}, divergência
+ * registrada na documentação de baseline.
+ * </p>
  */
 @Tag(name = "Produtos", description = "Operações para consulta, cadastro e gestão de produtos do catálogo.")
 @RestController
@@ -50,10 +64,32 @@ public class ProductController {
 
   private final ProductService productService;
 
+  /**
+   * @param productService service de produtos
+   */
   public ProductController(ProductService productService) {
     this.productService = productService;
   }
 
+  /**
+   * <b>{@code POST /api/v1/products}</b> — cria um produto (ativo) e o vincula às
+   * categorias.
+   *
+   * <ul>
+   * <li><b>Acesso:</b> autenticado (URL) e {@code ADMIN} ou {@code OPERATOR}.</li>
+   * <li><b>Entrada:</b> {@link ProductCreateRequest} com {@code @Valid} (nome,
+   * {@code categoryIds} não vazio; {@code @ProductCreateValid}: nome único e
+   * categorias existentes). O campo {@code date} é validado, mas descartado.</li>
+   * <li><b>Fluxo:</b> {@code ProductService.create}.</li>
+   * <li><b>Sucesso:</b> {@code 201} com {@link ProductResponse} e
+   * {@code Location} = URL da requisição + {@code /{id}}.</li>
+   * <li><b>Erros:</b> {@code 422} (validação); {@code 404} (categoria não
+   * encontrada no service); {@code 403}; {@code 409}.</li>
+   * </ul>
+   *
+   * @param productCreateRequest dados do produto
+   * @return resposta {@code 201} com o produto criado
+   */
   @Operation(summary = "Cria um novo produto", description = "Cria um novo produto no catálogo e retorna o recurso criado. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Produto criado com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductResponse.class))),
@@ -78,6 +114,28 @@ public class ProductController {
     return ResponseEntity.created(uri).body(productResponse);
   }
 
+  /**
+   * <b>{@code GET /api/v1/products}</b> — lista paginada com filtros por nome e
+   * por categorias.
+   *
+   * <ul>
+   * <li><b>Acesso:</b> público por URL; sem {@code @PreAuthorize}.</li>
+   * <li><b>Parâmetros:</b> {@code name} (padrão {@code ""}); {@code categoryIds}
+   * (texto, padrão {@code "0"} = sem filtro; ids separados por vírgula); e
+   * {@code page}, {@code size}, {@code sort} do Spring Data (a ordenação só
+   * atinge as colunas {@code id} e {@code name}).</li>
+   * <li><b>Fluxo:</b> {@code ProductService.findAllPaged} (consulta nativa +
+   * {@code JOIN FETCH}); <b>não</b> usa {@code ProductService.search}.</li>
+   * <li><b>Sucesso:</b> {@code 200} com {@code Page<ProductResponse>}.</li>
+   * <li><b>Erros:</b> {@code categoryIds} não numérico gera
+   * {@code NumberFormatException} ({@code 500}, sem handler específico).</li>
+   * </ul>
+   *
+   * @param name        trecho do nome
+   * @param categoryIds ids de categorias separados por vírgula, ou {@code "0"}
+   * @param pageable    página, tamanho e ordenação
+   * @return resposta {@code 200} com a página de produtos
+   */
   @Operation(summary = "Lista produtos com paginação", description = "Retorna uma página de produtos filtrados por nome e categorias. Requer autenticação com Bearer Token.", security = @SecurityRequirement(name = "security"))
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Lista paginada de produtos", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ProductResponse.class)))),
@@ -103,6 +161,16 @@ public class ProductController {
     return ResponseEntity.ok(response);
   }
 
+  /**
+   * <b>{@code GET /api/v1/products/{id}}</b> — detalhes de um produto. Acesso:
+   * público por URL; sem {@code @PreAuthorize}. Fluxo:
+   * {@code ProductService.findById}. Sucesso: {@code 200} com
+   * {@link ProductDetailsResponse}. Erros: {@code 404}; id não numérico vira
+   * {@code 500}.
+   *
+   * @param id identificador do produto
+   * @return resposta {@code 200} com os detalhes
+   */
   @Operation(summary = "Busca um produto pelo ID", description = "Retorna os detalhes completos de um produto existente. Requer autenticação com Bearer Token.", security = @SecurityRequirement(name = "security"))
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Produto encontrado com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDetailsResponse.class))),
@@ -121,6 +189,28 @@ public class ProductController {
     return ResponseEntity.ok(response);
   }
 
+  /**
+   * <b>{@code PUT /api/v1/products/{id}}</b> — atualiza o produto e substitui suas
+   * categorias.
+   *
+   * <ul>
+   * <li><b>Acesso:</b> autenticado (URL) e {@code ADMIN} ou {@code OPERATOR}.</li>
+   * <li><b>Entrada:</b> {@code @PathVariable Long id} e {@link ProductUpdateRequest}
+   * com {@code @Valid} ({@code @ProductUpdateValid}: nome de outro produto, com o
+   * {@code id} da URL; categorias existentes). Nome e {@code categoryIds} são
+   * obrigatórios; descrição, preço e URL só sobrescrevem se não forem
+   * nulos.</li>
+   * <li><b>Fluxo:</b> {@code ProductService.update}.</li>
+   * <li><b>Sucesso:</b> {@code 200} com {@link ProductResponse}.</li>
+   * <li><b>Erros:</b> {@code 422}; {@code 404}; {@code 403}. Um {@code PATCH} para
+   * esta rota não tem mapeamento: {@code 405} do Spring, que o handler genérico
+   * converte em {@code 500}.</li>
+   * </ul>
+   *
+   * @param id                   identificador do produto
+   * @param productUpdateRequest novos dados
+   * @return resposta {@code 200} com o produto atualizado
+   */
   @Operation(summary = "Atualiza um produto", description = "Atualiza os dados de um produto existente. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Produto atualizado com sucesso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductResponse.class))),
@@ -144,6 +234,15 @@ public class ProductController {
     return ResponseEntity.ok(response);
   }
 
+  /**
+   * <b>{@code PATCH /api/v1/products/{id}/activate}</b> — marca o produto como
+   * ativo (sem corpo). Acesso: autenticado (URL) e {@code ADMIN} ou
+   * {@code OPERATOR}. Fluxo: {@code ProductService.activate}. Sucesso:
+   * {@code 204}. Erros: {@code 404}, {@code 403}.
+   *
+   * @param id identificador do produto
+   * @return resposta {@code 204}
+   */
   @Operation(summary = "Ativa um produto", description = "Ativa um produto existente no catálogo. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Produto ativado com sucesso"),
@@ -164,6 +263,16 @@ public class ProductController {
     return ResponseEntity.noContent().build();
   }
 
+  /**
+   * <b>{@code PATCH /api/v1/products/{id}/deactivate}</b> — marca o produto como
+   * inativo (sem corpo). Acesso: autenticado (URL) e {@code ADMIN} ou
+   * {@code OPERATOR}. Fluxo: {@code ProductService.deactivate}. Sucesso:
+   * {@code 204}. Erros: {@code 404}, {@code 403}. Produtos inativos continuam
+   * aparecendo na listagem.
+   *
+   * @param id identificador do produto
+   * @return resposta {@code 204}
+   */
   @Operation(summary = "Desativa um produto", description = "Desativa um produto existente no catálogo. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Produto desativado com sucesso"),
@@ -184,6 +293,16 @@ public class ProductController {
     return ResponseEntity.noContent().build();
   }
 
+  /**
+   * <b>{@code DELETE /api/v1/products/{id}}</b> — remove fisicamente o produto.
+   * Acesso: autenticado (URL) e {@code ADMIN} ou {@code OPERATOR}. Fluxo:
+   * {@code ProductService.delete}. Sucesso: {@code 204}. Erros: {@code 404};
+   * {@code 400} ({@code DatabaseException}, quando a violação é detectada dentro
+   * do método do service); {@code 409}; {@code 403}.
+   *
+   * @param id identificador do produto
+   * @return resposta {@code 204}
+   */
   @Operation(summary = "Remove um produto", description = "Remove um produto existente do catálogo. Requer autenticação com Bearer Token e permissão ADMIN ou OPERATOR.", security = @SecurityRequirement(name = "security"))
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Produto deletado com sucesso"),

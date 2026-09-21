@@ -7,29 +7,29 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * DTO utilizado para requisições de criação de categorias.
+ * Corpo da requisição de <b>criação de categoria</b>
+ * ({@code POST /api/v1/categories}).
  *
  * <p>
- * Representa os dados fornecidos pelo cliente
- * durante o processo de cadastro de uma nova
- * categoria no sistema.
+ * Fluxo: {@code CategoryController.create} → {@code CategoryService.create} →
+ * {@code CategoryMapper.toEntity}. Os dois campos correspondem a colunas de
+ * {@code Category}; o indicador {@code active} não faz parte do request (o
+ * service cria a categoria ativa).
+ * </p>
  *
  * <p>
- * As validações aplicadas garantem:
- * <ul>
- * <li>Obrigatoriedade do nome da categoria</li>
- * <li>Tamanho mínimo e máximo permitido</li>
- * <li>Validação de caracteres permitidos</li>
- * <li>Validação do tamanho da descrição</li>
- * </ul>
+ * <b>Validação estrutural (Bean Validation):</b> nome obrigatório, de 3 a 80
+ * caracteres, apenas letras (inclusive acentuadas), dígitos e espaços;
+ * descrição opcional. A unicidade do nome, sem diferenciar maiúsculas de
+ * minúsculas, é verificada pelo validator de classe
+ * {@link CategoryCreateValid}; o banco também impõe {@code UNIQUE}.
+ * </p>
  *
- * <p>
- * As regras de validação utilizam Bean Validation
- * através das annotations presentes nos atributos
- * do record.
- *
- * @param name        nome da categoria
- * @param description descrição da categoria
+ * @param name        nome da categoria (obrigatório; 3 a 80 caracteres; letras,
+ *                    dígitos e espaços)
+ * @param description descrição (opcional). {@code null} e {@code ""} são
+ *                    aceitos; se preenchida, deve ter de 3 a 255 caracteres e
+ *                    não pode conter quebras de linha
  */
 @CategoryCreateValid
 public record CategoryCreateRequest(

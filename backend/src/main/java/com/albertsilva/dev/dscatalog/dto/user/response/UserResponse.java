@@ -5,34 +5,30 @@ import java.util.Set;
 import com.albertsilva.dev.dscatalog.dto.role.response.RoleResponse;
 
 /**
- * DTO de resposta para operações relacionadas a usuários.
+ * Resposta de <b>usuário</b> sem o indicador de ativação.
  *
  * <p>
- * Esta classe é utilizada para transferir dados de usuários
- * do backend para o frontend, encapsulando as informações
- * relevantes do usuário, como ID, nome, email e roles.
+ * Produzida por {@code UserMapper.toResponse} e devolvida na criação
+ * ({@code POST /api/v1/users}), na listagem paginada e na atualização
+ * ({@code PUT /api/v1/users/{id}}), no registro
+ * ({@code POST /api/v1/accounts/register}) e nos endpoints do próprio perfil
+ * ({@code GET} e {@code PUT /api/v1/accounts/me}).
+ * </p>
  *
  * <p>
- * O DTO é imutável e utiliza um record para simplificar a
- * definição da classe e garantir a integridade dos dados.
+ * <b>Exposição de dados:</b> devolve identificador, nomes, e-mail e as roles
+ * (aninhadas como {@link RoleResponse}). <b>Não devolve</b> a senha (nem o
+ * hash), o indicador {@code active} (presente em {@link UserDetailsResponse}) nem
+ * tokens ({@code User.tokens} não é mapeado). Como o mapper percorre
+ * {@code User.getRoles()}, que é carregado sob demanda, listar usuários pode
+ * disparar uma consulta adicional por usuário.
+ * </p>
  *
- * <p>
- * Exemplo de uso:
- *
- * <pre>{@code
- * UserResponse user = new UserResponse(
- *     1L,
- *     "John",
- *     "Doe",
- *     "john.doe@example.com",
- *     Set.of(new RoleResponse(1L, "ROLE_USER")));
- * }</pre>
- *
- * @param id        Identificador único do usuário
- * @param firstName Primeiro nome do usuário
- * @param lastName  Sobrenome do usuário
- * @param email     Endereço de email do usuário
- * @param roles     Conjunto de roles associadas ao usuário
+ * @param id        identificador do usuário
+ * @param firstName primeiro nome
+ * @param lastName  sobrenome
+ * @param email     e-mail (também usado como nome de usuário)
+ * @param roles     roles do usuário (id e nome da autoridade)
  */
 public record UserResponse(
     Long id,

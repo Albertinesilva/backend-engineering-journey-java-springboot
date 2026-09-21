@@ -52,87 +52,66 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
 /**
- * Configuração do servidor de autorização OAuth2 para a aplicação.
+ * Configuração do <b>Authorization Server</b> (Spring Authorization Server),
+ * que roda no mesmo processo do Resource Server e emite os tokens usados pela
+ * API.
  *
  * <p>
- * Esta classe é responsável por configurar todos os componentes necessários
- * para implementar um servidor de autorização OAuth2 baseado em JWT,
- * permitindo autenticação e autorização de clientes na aplicação.
- * </p>
- *
- * <p>
- * <b>Responsabilidades principais:</b>
+ * <b>O que esta classe configura:</b>
  * </p>
  * <ul>
- * <li>Configurar o fluxo de autorização (Authorization Code Flow, Password
- * Grant)</li>
- * <li>Definir parâmetros de tokens JWT (formato, tempo de vida, claims
- * customizados)</li>
- * <li>Gerenciar clientes registrados e suas credenciais</li>
- * <li>Configurar geração e validação de JWT com RSA 2048</li>
- * <li>Customizar claims de autoridades e dados de usuário nos tokens</li>
+ * <li>a cadeia de filtros dos endpoints OAuth2 ({@code /oauth2/**} e
+ * {@code /.well-known/**}), registrando no <em>token endpoint</em> o conversor
+ * e o provider do grant {@code password} customizado
+ * ({@link CustomPasswordAuthenticationConverter} e
+ * {@link CustomPasswordAuthenticationProvider});</li>
+ * <li>um <b>único cliente registrado</b>, em memória, com os grants
+ * {@code password} e {@code refresh_token} e os escopos {@code read} e
+ * {@code write};</li>
+ * <li>as configurações de token: access token JWT autocontido, com validade
+ * lida de {@code security.jwt.duration} (segundos), e refresh token de 30 dias
+ * com rotação ({@code reuseRefreshTokens = false});</li>
+ * <li>o gerador de tokens (JWT, token de acesso opaco e refresh token) e o
+ * customizador que acrescenta ao JWT os claims {@code authorities},
+ * {@code userId} e {@code username};</li>
+ * <li>a chave RSA/JWK e o {@link JwtDecoder}, usados também pelo Resource
+ * Server ({@code ResourceServerConfig}).</li>
  * </ul>
  *
  * <p>
- * <b>Fluxo de autorização:</b>
- * </p>
- * <p>
- * A aplicação utiliza o grant type "password" (Resource Owner Password
- * Credentials)
- * adaptado com um conversor customizado
- * ({@link CustomPasswordAuthenticationConverter})
- * e provedor de autenticação customizado
- * ({@link CustomPasswordAuthenticationProvider}).
- * Este fluxo permite que clientes obtenham tokens JWT fornecendo credenciais de
- * usuário
- * diretamente, adequado para aplicações desktop ou mobile confiáveis.
+ * <b>Estado em memória:</b> o cliente, as autorizações (incluindo os refresh
+ * tokens), os consentimentos e o par de chaves RSA existem apenas na JVM em
+ * execução e são recriados a cada inicialização. Consequências técnicas: um
+ * reinício invalida todos os tokens emitidos, e duas instâncias da aplicação
+ * teriam chaves e autorizações diferentes.
  * </p>
  *
  * <p>
- * <b>Segurança de tokens:</b>
+ * <b>O que não está configurado:</b> {@code authorization_code},
+ * {@code client_credentials}, consentimento, URIs de redirecionamento, OpenID
+ * Connect, persistência das autorizações e qualquer mecanismo próprio de
+ * revogação ou de logout.
  * </p>
- * <ul>
- * <li>Algoritmo: RSA 2048 para assinatura e validação de JWT</li>
- * <li>Formato: Self-Contained (toda informação no token JWT)</li>
- * <li>Duração configurável via propriedade {@code security.jwt.duration}</li>
- * <li>Claims customizados: authorities e username do usuário autenticado</li>
- * </ul>
  *
  * <p>
- * <b>Gerenciamento de estado:</b>
+ * <b>Propriedades usadas:</b> {@code security.client-id},
+ * {@code security.client-secret} (valores sensíveis, com padrão de
+ * desenvolvimento em {@code application.properties}) e
+ * {@code security.jwt.duration}.
  * </p>
- * <p>
- * Utiliza repositórios em memória para armazenar autorizações e consentimentos
- * ({@link InMemoryOAuth2AuthorizationService} e
- * {@link InMemoryOAuth2AuthorizationConsentService}).
- * Para ambientes de produção com múltiplas instâncias, considere usar
- * implementações
- * baseadas em banco de dados.
- * </p>
- *
- * @implNote
- *           Os beans de autorização são registrados com @Order(2) no
- *           SecurityFilterChain,
- *           posicionando-se após a configuração H2 e antes da configuração de
- *           Resource Server.
- *           O cliente é registrado em memória com credenciais recuperadas de
- *           propriedades
- *           de configuração da aplicação.
- *
- * @apiNote
- *          Esta configuração implementa um OAuth2 Authorization Server seguindo
- *          as especificações de Spring Authorization Server, integrando-se com
- *          Spring Security para proteger endpoints e validar tokens JWT.
  */
 @Configuration
 public class AuthorizationServerConfig {
 
+  /** Identificador do cliente OAuth2 ({@code security.client-id}). */
   @Value("${security.client-id}")
   private String clientId;
 
+  /** Segredo do cliente OAuth2 ({@code security.client-secret}); dado sensível, nunca deve ser registrado em log. */
   @Value("${security.client-secret}")
   private String clientSecret;
 
+  /** Validade do access token, em segundos ({@code security.jwt.duration}). */
   @Value("${security.jwt.duration}")
   private Integer jwtDurationSeconds;
 
@@ -140,10 +119,12 @@ public class AuthorizationServerConfig {
   private final PasswordEncoder passwordEncoder;
 
   /**
-   * Construtor da configuração de servidor de autorização.
-   *
-   * @param userDetailsService serviço para carregar detalhes de usuários
-   * @param passwordEncoder    encoder para validação de senhas
+   * @param userDetailsService serviço que carrega o usuário no login (na
+   *                           aplicação, {@code UserService}); repassado ao
+   *                           provider do grant {@code password}
+   * @param passwordEncoder    codificador de senhas: usado para codificar o
+   *                           segredo do cliente e repassado ao provider, que o
+   *                           usa para conferir a senha do usuário
    */
   public AuthorizationServerConfig(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
     this.userDetailsService = userDetailsService;
@@ -151,34 +132,35 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Configura a cadeia de filtros de segurança para o servidor de autorização.
+   * Cadeia de filtros dos endpoints do Authorization Server ({@code @Order(2)}).
    *
    * <p>
-   * Este filtro intercita requisições aos endpoints OAuth2 ({@code /oauth2/**})
-   * e ao endpoint de descoberta OpenID Connect ({@code /.well-known/**}),
-   * aplicando as configurações do Authorization Server.
+   * <b>Escopo:</b> só atende requisições que casam com {@code /oauth2/**} ou
+   * {@code /.well-known/**}; as demais seguem para a cadeia do Resource Server
+   * ({@code @Order(3)}).
    * </p>
    *
    * <p>
-   * <b>Conversores e provedores customizados:</b>
+   * <b>Configuração:</b> aplica {@code OAuth2AuthorizationServerConfigurer} com os
+   * padrões e registra, no token endpoint, um
+   * {@link CustomPasswordAuthenticationConverter} e um
+   * {@link CustomPasswordAuthenticationProvider} (criados com {@code new}, não
+   * são beans), este último com {@link #authorizationService()},
+   * {@link #tokenGenerator()}, o {@code UserDetailsService} e o
+   * {@code PasswordEncoder}. Como são acrescentados ao token endpoint, os
+   * conversores e providers padrão do framework continuam ativos: é assim que o
+   * grant {@code refresh_token} é tratado, sem código próprio da aplicação.
+   * Também habilita {@code oauth2ResourceServer().jwt()} nesta cadeia.
    * </p>
-   * <ul>
-   * <li>{@link CustomPasswordAuthenticationConverter}: Converte requisições de
-   * token
-   * com grant type "password" para tokens de autenticação</li>
-   * <li>{@link CustomPasswordAuthenticationProvider}: Autentica usuários e gera
-   * tokens JWT</li>
-   * </ul>
    *
-   * @param http construtor de segurança HTTP do Spring
-   * @return {@link SecurityFilterChain} configurada para o Authorization Server
-   * @throws Exception se houver erro na configuração de segurança
+   * <p>
+   * Não há {@code authorizeHttpRequests} nesta cadeia: a autenticação do cliente
+   * no token endpoint é feita pelos filtros do próprio Authorization Server.
+   * </p>
    *
-   * @implNote
-   *           Este bean é registrado com {@code @Order(2)}, posicionando-se
-   *           após a configuração H2 ({@code @Order(1)}) e antes do Resource
-   *           Server
-   *           ({@code @Order(3)}).
+   * @param http construtor de segurança HTTP
+   * @return cadeia de filtros do Authorization Server
+   * @throws Exception se a configuração falhar
    */
   @Bean
   @Order(2)
@@ -199,20 +181,11 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Cria um serviço de autorização em memória.
+   * Armazenamento <b>em memória</b> das autorizações emitidas (cada login gera
+   * uma, com o access token, o refresh token e o principal). Não é persistido:
+   * os dados se perdem ao reiniciar e não são compartilhados entre instâncias.
    *
-   * <p>
-   * Este serviço armazena as autorizações concedidas durante o fluxo OAuth2.
-   * Utiliza uma implementação em memória adequada para desenvolvimento e testes;
-   * para produção com múltiplas instâncias, implemente uma versão baseada em
-   * banco de dados.
-   * </p>
-   *
-   * @return {@link OAuth2AuthorizationService} para gerenciar autorizações
-   *
-   * @apiNote
-   *          Integra-se com o Authorization Server para rastrear tokens emitidos
-   *          e seus escopos e claims associados.
+   * @return serviço de autorizações em memória
    */
   @Bean
   public OAuth2AuthorizationService authorizationService() {
@@ -220,16 +193,10 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Cria um serviço de consentimento de autorização em memória.
+   * Armazenamento em memória dos consentimentos. Mantido pelo framework, mas o
+   * cliente registrado não exige consentimento e nenhum fluxo do projeto o usa.
    *
-   * <p>
-   * Este serviço gerencia o consentimento dos usuários para que clientes acessem
-   * recursos específicos com determinados escopos. Também utiliza armazenamento
-   * em memória, adequado para desenvolvimento.
-   * </p>
-   *
-   * @return {@link OAuth2AuthorizationConsentService} para gerenciar
-   *         consentimentos
+   * @return serviço de consentimentos em memória
    */
   @Bean
   public OAuth2AuthorizationConsentService oAuth2AuthorizationConsentService() {
@@ -237,33 +204,22 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Registra e configura clientes OAuth2 autorizados a utilizar a aplicação.
+   * Registra, em memória, o <b>único</b> cliente OAuth2 da aplicação.
    *
-   * <p>
-   * Define um cliente único com credenciais recuperadas de propriedades de
-   * configuração.
-   * O cliente é configurado para utilizar o grant type "password" customizado,
-   * apropriado para aplicações React SPA → Browser que confiam no servidor de autorização.
-   * </p>
-   *
-   * <p>
-   * <b>Configuração do cliente:</b>
-   * </p>
    * <ul>
-   * <li>ID e segredo carregados de {@code security.client-id} e
-   * {@code security.client-secret}</li>
-   * <li>Segredo é codificado com o {@link PasswordEncoder} para segurança</li>
-   * <li>Escopos: "read" e "write" para controle de acesso baseado em escopos</li>
-   * <li>Grant type: "password" para fluxo de credenciais do proprietário de
-   * recurso</li>
+   * <li>identificador interno: UUID novo a cada inicialização;</li>
+   * <li>{@code clientId} e segredo vêm das propriedades; o segredo é codificado
+   * com o {@code PasswordEncoder} (BCrypt) na inicialização;</li>
+   * <li>escopos: {@code read} e {@code write};</li>
+   * <li>grants: {@code password} (grant customizado, criado como
+   * {@code new AuthorizationGrantType("password")}) e {@code refresh_token};</li>
+   * <li>usa os beans {@link #tokenSettings()} e {@link #clientSettings()};</li>
+   * <li>não declara método de autenticação do cliente (vale o padrão do
+   * framework; os testes de integração usam HTTP Basic), nem URIs de
+   * redirecionamento.</li>
    * </ul>
    *
-   * @return {@link RegisteredClientRepository} contendo clientes autorizados
-   *
-   * @implNote
-   *           Utiliza UUID aleatório como ID interno do cliente.
-   *           Para adicionar mais clientes, expanda este método com
-   *           {@code new InMemoryRegisteredClientRepository(client1, client2, ...)}
+   * @return repositório em memória com esse único cliente
    */
   @Bean
   public RegisteredClientRepository registeredClientRepository() {
@@ -289,29 +245,18 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Configura as propriedades dos tokens de acesso (JWT).
+   * Configurações dos tokens do cliente registrado.
    *
-   * <p>
-   * Define formato self-contained (JWT completo com claims) e tempo de vida
-   * do token recuperado de propriedade de configuração.
-   * </p>
-   *
-   * <p>
-   * <b>Configurações:</b>
-   * </p>
    * <ul>
-   * <li>Formato: {@link OAuth2TokenFormat#SELF_CONTAINED} (JWT com todas as
-   * informações)</li>
-   * <li>Tempo de vida: configurável via {@code security.jwt.duration} em
-   * segundos</li>
+   * <li>access token no formato {@code SELF_CONTAINED} (JWT);</li>
+   * <li>validade do access token: {@code security.jwt.duration} segundos (padrão
+   * de 86400 em {@code application.properties});</li>
+   * <li>validade do refresh token: <b>30 dias, fixa no código</b>;</li>
+   * <li>{@code reuseRefreshTokens = false}: a cada renovação, um novo refresh
+   * token é emitido e o anterior deixa de ser aceito.</li>
    * </ul>
    *
-   * @return {@link TokenSettings} com configurações de token
-   *
-   * @apiNote
-   *          O tempo de vida deve ser configurado considerando segurança
-   *          (tokens de longa duração aumentam exposição) versus UX (tokens
-   *          de curta duração requerem refresh frequente).
+   * @return configurações de token
    */
   @Bean
   public TokenSettings tokenSettings() {
@@ -326,16 +271,10 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Configura as propriedades dos clientes registrados.
+   * Configurações do cliente com os valores padrão do framework (sem exigir
+   * consentimento, sem PKCE obrigatório etc.).
    *
-   * <p>
-   * Atualmente utiliza configurações padrão do Spring Authorization Server.
-   * Pode ser expandida para customizações específicas como requisitos de
-   * autenticação
-   * adicionais ou restrições de redirecionamento.
-   * </p>
-   *
-   * @return {@link ClientSettings} com configurações de cliente
+   * @return configurações padrão de cliente
    */
   @Bean
   public ClientSettings clientSettings() {
@@ -343,14 +282,11 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Configura as propriedades gerais do servidor de autorização.
+   * Configurações do servidor com os valores padrão: caminhos padrão dos
+   * endpoints ({@code /oauth2/token}, {@code /oauth2/jwks} etc.) e emissor
+   * ({@code iss}) não fixado, resolvido a partir da requisição.
    *
-   * <p>
-   * Define configurações globais do Authorization Server, como endpoints
-   * de descoberta e informações públicas do servidor.
-   * </p>
-   *
-   * @return {@link AuthorizationServerSettings} com configurações do servidor
+   * @return configurações padrão do servidor
    */
   @Bean
   public AuthorizationServerSettings authorizationServerSettings() {
@@ -358,29 +294,18 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Cria o gerador de tokens OAuth2 com suporte a JWT.
+   * Monta o gerador de tokens usado pelo provider do grant {@code password} e
+   * pelo fluxo de refresh.
    *
    * <p>
-   * Integra um {@link JwtGenerator} e um {@link OAuth2AccessTokenGenerator}
-   * para gerar JWT assinados e tokens de acesso com claims customizados
-   * (autoridades e nome de usuário).
+   * É um {@code DelegatingOAuth2TokenGenerator} com: {@code JwtGenerator}
+   * (assina o JWT com o {@code NimbusJwtEncoder} e a chave de {@link #jwkSource()},
+   * aplicando {@link #tokenCustomizer()}); {@code OAuth2AccessTokenGenerator}
+   * (token opaco, não usado porque o formato é autocontido) e
+   * {@code OAuth2RefreshTokenGenerator} (refresh token opaco).
    * </p>
    *
-   * <p>
-   * <b>Processo de geração:</b>
-   * </p>
-   * <ol>
-   * <li>JWT é gerado com o {@link NimbusJwtEncoder} usando chave RSA privada</li>
-   * <li>Customizador de token injeta claims adicionais (authorities,
-   * username)</li>
-   * <li>Token de acesso é gerado e retornado ao cliente</li>
-   * </ol>
-   *
-   * @return {@link OAuth2TokenGenerator} capaz de gerar tokens OAuth2/JWT
-   *
-   * @implNote
-   *           O {@link DelegatingOAuth2TokenGenerator} permite múltiplos
-   *           geradores trabalharem em conjunto para criação de tokens complexos.
+   * @return gerador de tokens
    */
   @Bean
   public OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator() {
@@ -393,29 +318,34 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Customiza os claims do JWT com informações do usuário autenticado.
+   * Acrescenta claims customizados ao <b>access token</b> JWT.
    *
    * <p>
-   * Injeta as autoridades (roles) e nome de usuário no token JWT,
-   * permitindo que o Resource Server valide permissões sem consultar o banco de
-   * dados.
+   * <b>Origem dos dados:</b> o {@code principal} do contexto de geração é cast
+   * para {@code OAuth2ClientAuthenticationToken}, e seus {@code details} para
+   * {@link AuthenticatedUser} (colocado ali pelo provider do grant
+   * {@code password}). Nada é relido do banco neste ponto.
    * </p>
    *
    * <p>
-   * <b>Claims adicionados ao access_token:</b>
+   * <b>Claims acrescentados</b> (somente quando o tipo de token é
+   * {@code access_token}):
    * </p>
    * <ul>
-   * <li>{@code authorities}: Lista de autoridades/roles do usuário</li>
-   * <li>{@code username}: Nome de login do usuário autenticado</li>
+   * <li>{@code authorities}: lista de textos, uma por authority do usuário
+   * (por exemplo, {@code ROLE_ADMIN});</li>
+   * <li>{@code userId}: identificador numérico do usuário;</li>
+   * <li>{@code username}: valor de {@code username} informado no login.</li>
    * </ul>
    *
-   * @return {@link OAuth2TokenCustomizer} para customização de JWT
+   * <p>
+   * No fluxo de refresh, os mesmos dados são reaproveitados do principal guardado
+   * na autorização em memória (os testes de integração confirmam que os claims
+   * são mantidos), portanto refletem o estado do usuário <b>no momento do
+   * login</b>, e não o estado atual.
+   * </p>
    *
-   * @apiNote
-   *          Os claims adicionados tornam o token self-contained, eliminando
-   *          necessidade de consulta ao servidor para validação de permissões.
-   *          Cuidado: tokens contêm informações visíveis (não criptografadas),
-   *          apenas assinadas. Nunca adicione dados sensíveis como senhas.
+   * @return customizador de claims do JWT
    */
   @Bean
   public OAuth2TokenCustomizer<JwtEncodingContext> tokenCustomizer() {
@@ -435,15 +365,19 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Cria um decodificador de JWT para validação de tokens.
+   * Decodificador de JWT baseado na mesma {@code JWKSource} que assina os tokens
+   * ({@code OAuth2AuthorizationServerConfiguration.jwtDecoder}).
    *
    * <p>
-   * Utiliza o Resource Server do Spring Authorization para criar um decodificador
-   * que valida a assinatura de JWT usando a chave pública RSA.
+   * É o <b>único</b> bean {@link JwtDecoder}, portanto é o que as cadeias do
+   * Authorization Server e do Resource Server usam ({@code jwt(withDefaults())}).
+   * Valida a assinatura com as chaves em memória e, pelos validadores padrão, a
+   * expiração; não há configuração de validação de emissor nem de audiência, e
+   * o estado do usuário (ativo, senha) não é consultado.
    * </p>
    *
-   * @param jwkSource fonte de chaves JWK para validação de assinatura
-   * @return {@link JwtDecoder} para decodificar e validar tokens JWT
+   * @param jwkSource fonte das chaves de assinatura
+   * @return decodificador de JWT
    */
   @Bean
   public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
@@ -451,22 +385,18 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Cria a fonte de chaves JWK (JSON Web Key) para assinatura e validação de JWT.
+   * Fonte de chaves JWK com <b>uma única chave RSA</b> gerada na inicialização
+   * (ver {@code generateRsa}).
    *
    * <p>
-   * Gera um par de chaves RSA 2048, empacotando a chave pública em um conjunto
-   * JWK
-   * que pode ser publicado no endpoint de descoberta JWKS
-   * ({@code /.well-known/jwks.json})
-   * para que clientes externos validem tokens.
+   * A chave não é lida de arquivo nem de propriedade e não é persistida: a cada
+   * inicialização há uma nova chave (e um novo {@code kid}); tokens assinados
+   * antes de um reinício deixam de validar, e instâncias diferentes assinariam
+   * com chaves diferentes. A chave pública fica disponível no endpoint JWKS do
+   * Authorization Server (caminho padrão {@code /oauth2/jwks}).
    * </p>
    *
-   * @return {@link JWKSource} contendo o conjunto de chaves públicas
-   *
-   * @implNote
-   *           A chave privada é mantida internamente e usada apenas para
-   *           assinatura. A chave pública é publicada para que terceiros
-   *           possam validar a autenticidade dos tokens.
+   * @return fonte que seleciona a chave do conjunto em memória
    */
   @Bean
   public JWKSource<SecurityContext> jwkSource() {
@@ -476,18 +406,10 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Gera um par de chaves RSA com ID único para assinatura de JWT.
+   * Gera um par RSA (2048 bits) e o empacota como {@link RSAKey}, com a chave
+   * privada incluída e um {@code kid} aleatório (UUID).
    *
-   * <p>
-   * Cria uma chave RSA encapsulada em um {@link RSAKey} com ID único (UUID),
-   * pronta para ser usada pelo encoder JWT.
-   * </p>
-   *
-   * @return {@link RSAKey} contendo as chaves pública e privada RSA
-   *
-   * @implNote
-   *           Método privado que encapsula a geração de chave RSA,
-   *           delegando para {@link #generateRsaKey()}.
+   * @return chave RSA nova a cada chamada
    */
   private static RSAKey generateRsa() {
     KeyPair keyPair = generateRsaKey();
@@ -497,20 +419,11 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * Gera um par de chaves RSA 2048.
+   * Gera o par de chaves com {@link KeyPairGenerator} ({@code "RSA"}, 2048
+   * bits).
    *
-   * <p>
-   * Utiliza {@link KeyPairGenerator} para criar um par de chaves RSA
-   * com comprimento de 2048 bits, apropriado para produção.
-   * </p>
-   *
-   * @return {@link KeyPair} contendo a chave pública e privada RSA
-   * @throws IllegalStateException se houver erro ao gerar o par de chaves
-   *
-   * @implNote
-   *           RSA 2048 oferece segurança adequada para a maioria dos casos.
-   *           Para aplicações com requisitos de segurança extremamente altos,
-   *           considere RSA 4096, com impacto na performance.
+   * @return par de chaves RSA
+   * @throws IllegalStateException se a geração falhar
    */
   private static KeyPair generateRsaKey() {
     KeyPair keyPair;

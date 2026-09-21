@@ -20,34 +20,37 @@ import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException
 import jakarta.persistence.EntityNotFoundException;
 
 /**
- * Serviço responsável pelas operações de negócio relacionadas à entidade
- * {@link Category}.
+ * Serviço de aplicação das categorias ({@link Category}): listagem paginada,
+ * consulta, criação, atualização, ativação/desativação e exclusão.
  *
  * <p>
- * Gerencia categorias, centralizando regras de negócio,
- * validações, persistência e tratamento transacional.
+ * <b>Dependências:</b> {@code CategoryRepository} e {@code CategoryMapper}. Este
+ * service não chama validators: a unicidade do nome
+ * ({@code @CategoryCreateValid} / {@code @CategoryUpdateValid}) e o formato dos
+ * campos são validados antes, na camada web. O banco também impõe nome único.
  * </p>
  *
  * <p>
- * <b>Responsabilidades:</b>
+ * <b>Relação com produtos:</b> este service não acessa produtos.
+ * {@code Category.products} é o lado inverso do relacionamento (o dono é
+ * {@code Product}), e nenhuma regra deste service verifica se a categoria está
+ * em uso.
  * </p>
- * <ul>
- * <li>Operações de CRUD de categorias</li>
- * <li>Paginação e filtros de busca</li>
- * <li>Conversão entre entidades e DTOs</li>
- * <li>Tratamento de exceções de negócio</li>
- * <li>Garantia de integridade e consistência dos dados</li>
- * </ul>
  *
- * @implNote
- *           Atua como camada de serviço (Service Layer), intermediando
- *           Controller, Repository e Mapper dentro da arquitetura Spring Boot.
+ * <p>
+ * <b>Transações:</b> todos os métodos públicos são transacionais (leituras com
+ * {@code readOnly = true}); os métodos privados executam na transação do método
+ * público que os chamou. <b>Autorização:</b> não é feita aqui, e sim nos
+ * controllers ({@code @PreAuthorize}) e na configuração de segurança.
+ * <b>Exceção lançada:</b> {@link ResourceNotFoundException}
+ * ({@code error.category.notFound}).
+ * </p>
  *
- * @apiNote
- *          Esta implementação exemplifica conceitos fundamentais de aplicações
- *          corporativas,
- *          como Service Layer, arquitetura em camadas, DTO Pattern,
- *          persistência com JPA, paginação e regras de negócio centralizadas.
+ * <p>
+ * O indicador {@code active} é apenas gravado por {@link #create},
+ * {@link #activate(Long)} e {@link #deactivate(Long)}; nenhuma consulta ou
+ * regra deste service o utiliza para filtrar ou bloquear categorias.
+ * </p>
  */
 @Service
 public class CategoryService {
@@ -69,30 +72,19 @@ public class CategoryService {
   }
 
   /**
-   * Busca categorias com suporte a filtragem por nome e paginação.
+   * Lista categorias de forma paginada, com filtro opcional por nome.
    *
    * <p>
-   * Permite buscar categorias cujo nome contenha o termo fornecido,
-   * ignorando diferenças de maiúsculas/minúsculas.
+   * O termo recebe {@code trim}; nulo, vazio ou só com espaços significa "sem
+   * filtro" e usa {@code findAll(pageable)}. Com filtro, usa
+   * {@code findByNameContainingIgnoreCase}. A resposta ({@code id} e
+   * {@code name}) não acessa relacionamentos, então a conversão não dispara
+   * consultas adicionais.
    * </p>
    *
-   * <p>
-   * Se o parâmetro {@code name} for nulo ou vazio, retorna todas as categorias
-   * paginadas.
-   * </p>
-   *
-   * @param name     termo de busca para o nome da categoria (opcional)
-   * @param pageable informações de paginação e ordenação
-   * @return página de categorias que correspondem ao critério de busca
-   *
-   * @implNote
-   *           Utiliza métodos específicos do repositório para otimizar a busca
-   *           com filtro, evitando carregamento desnecessário de dados.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          filtragem eficiente, paginação, uso de Optional e boas práticas de
-   *          consulta em Spring Data JPA.
+   * @param name     termo procurado no nome (opcional)
+   * @param pageable página, tamanho e ordenação
+   * @return página de categorias
    */
   @Transactional(readOnly = true)
   public Page<CategoryResponse> search(String name, Pageable pageable) {
@@ -112,24 +104,13 @@ public class CategoryService {
   }
 
   /**
-   * Busca uma categoria pelo seu identificador.
-   *
-   * <p>
-   * Retorna os dados completos da categoria,
-   * garantindo validação segura da existência do registro.
-   * </p>
+   * Retorna os detalhes de uma categoria (nome, descrição e indicador
+   * {@code active}).
    *
    * @param id identificador da categoria
-   * @return dados da categoria
-   * @throws ResourceNotFoundException caso a categoria não exista
-   *
-   * @implNote
-   *           Utiliza {@code findById(id)}, realizando consulta imediata no
-   *           banco.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          Optional, tratamento de exceções e busca segura de entidades.
+   * @return detalhes da categoria
+   * @throws ResourceNotFoundException ({@code error.category.notFound}) se a
+   *                                   categoria não existir
    */
   @Transactional(readOnly = true)
   public CategoryDetailsResponse findById(Long id) {
@@ -137,23 +118,17 @@ public class CategoryService {
   }
 
   /**
-   * Insere uma nova categoria no sistema.
+   * Cria uma categoria <b>ativa</b>.
    *
    * <p>
-   * Converte o DTO de entrada em entidade
-   * e persiste os dados no banco.
+   * O mapper copia nome e descrição do DTO; a categoria é marcada como ativa
+   * e salva. A unicidade do nome é validada antes, por
+   * {@code @CategoryCreateValid}; uma violação da restrição única do banco
+   * ocorreria na gravação e não é tratada aqui.
    * </p>
    *
-   * @param categoryCreateRequest dados para criação da categoria
-   * @return categoria criada
-   *
-   * @implNote
-   *           Utiliza conversão DTO → Entity,
-   *           garantindo separação entre camada de apresentação e persistência.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          DTO Pattern, persistência e criação de entidades em APIs RESTful.
+   * @param categoryCreateRequest dados da nova categoria
+   * @return categoria criada ({@code id} e {@code name})
    */
   @Transactional
   public CategoryResponse create(CategoryCreateRequest categoryCreateRequest) {
@@ -166,30 +141,23 @@ public class CategoryService {
   }
 
   /**
-   * Atualiza parcialmente uma categoria existente.
+   * Atualiza nome e descrição de uma categoria.
    *
    * <p>
-   * Permite modificar apenas campos informados,
-   * preservando dados não enviados.
+   * Usa {@code getReferenceById} (referência preguiçosa): a existência só é
+   * verificada quando o proxy é acessado (pelo mapper ou por {@code save}),
+   * dentro do bloco {@code try}; se a categoria não existir, o
+   * {@code EntityNotFoundException} da JPA é convertido em
+   * {@link ResourceNotFoundException}. O {@code CategoryMapper.updateEntity}
+   * só sobrescreve campos não nulos do DTO. A unicidade do nome (excluindo a
+   * própria categoria) é validada antes, por {@code @CategoryUpdateValid}. O
+   * indicador {@code active} não é alterado.
    * </p>
    *
    * @param id                    identificador da categoria
-   * @param categoryUpdateRequest dados para atualização parcial
-   * @return categoria atualizada
-   * @throws ResourceNotFoundException caso a categoria não exista
-   *
-   * @implNote
-   *           Utiliza {@code getReferenceById(id)} para obter uma referência lazy
-   *           (proxy) da entidade, evitando consulta imediata ao banco.
-   *
-   *           <p>
-   *           O proxy será inicializado somente quando atributos forem acessados.
-   *           </p>
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          JPA Proxy, Lazy Loading, atualização parcial e Contexto de
-   *          Persistência.
+   * @param categoryUpdateRequest dados da atualização
+   * @return categoria atualizada ({@code id} e {@code name})
+   * @throws ResourceNotFoundException se a categoria não existir
    */
   @Transactional
   public CategoryResponse update(Long id, CategoryUpdateRequest categoryUpdateRequest) {
@@ -210,48 +178,26 @@ public class CategoryService {
   }
 
   /**
-   * Ativa uma categoria existente.
-   *
-   * <p>
-   * Altera o status da categoria para ativo,
-   * permitindo que ela seja exibida e utilizada.
-   * </p>
+   * Marca a categoria como ativa. Operação idempotente: se já estiver ativa,
+   * nada é alterado. Não chama {@code save}: a alteração da entidade
+   * gerenciada é gravada no commit.
    *
    * @param id identificador da categoria
-   * @throws ResourceNotFoundException caso a categoria não exista
-   *
-   * @implNote
-   *           Realiza atualização parcial do status da categoria,
-   *           mantendo as demais informações inalteradas.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          atualização parcial, status de entidade e regras de negócio.
+   * @throws ResourceNotFoundException se a categoria não existir
    */
   @Transactional
   public void activate(Long id) {
     changeStatus(id, true);
   }
 
-  /*
-   * Desativa uma categoria existente.
-   *
-   * <p>
-   * Altera o status da categoria para inativo,
-   * ocultando-a de listagens e impedindo sua utilização.
-   * </p>
+  /**
+   * Marca a categoria como inativa. Operação idempotente: se já estiver
+   * inativa, nada é alterado. Não chama {@code save}: a alteração da entidade
+   * gerenciada é gravada no commit. O indicador não oculta a categoria de
+   * {@code search} nem afeta os produtos associados.
    *
    * @param id identificador da categoria
-   * 
-   * @throws ResourceNotFoundException caso a categoria não exista
-   *
-   * @implNote
-   * Realiza atualização parcial do status da categoria,
-   * mantendo as demais informações inalteradas.
-   *
-   * @apiNote
-   * Esta implementação reforça conceitos importantes como:
-   * atualização parcial, status de entidade e regras de negócio.
+   * @throws ResourceNotFoundException se a categoria não existir
    */
   @Transactional
   public void deactivate(Long id) {
@@ -259,57 +205,21 @@ public class CategoryService {
   }
 
   /**
-   * Remove uma categoria existente do sistema.
+   * Remove fisicamente uma categoria.
    *
    * <p>
-   * Valida previamente a existência da entidade
-   * antes da exclusão.
+   * Carrega a categoria com {@code findById} (404 se não existir) e chama
+   * {@code delete}. Não há verificação de produtos vinculados: como
+   * {@code Category} é o lado inverso do relacionamento com {@code Product}, a
+   * JPA não remove os vínculos de {@code tb_product_category}. Se houver
+   * produtos associados, a violação da chave estrangeira tende a ser detectada
+   * no commit, depois do retorno do método, e propagada como
+   * {@code DataIntegrityViolationException} (não tratada aqui; o handler
+   * global a converte em resposta HTTP 409).
    * </p>
-   *
-   * <p>
-   * Possíveis cenários de erro:
-   * </p>
-   * <ul>
-   * <li>Categoria não encontrada →
-   * {@link ResourceNotFoundException}</li>
-   * <li>Violação de integridade referencial →
-   * tratada globalmente via {@code @RestControllerAdvice}</li>
-   * </ul>
    *
    * @param id identificador da categoria
-   * @throws ResourceNotFoundException caso a categoria não exista
-   *
-   * @implNote
-   *           Utiliza {@code findById(id)} para validar existência
-   *           e carregar a entidade em uma única consulta,
-   *           evitando redundância de operações como {@code existsById(id)}.
-   *
-   *           <p>
-   *           Não utiliza {@code flush()} manual,
-   *           permitindo sincronização natural com o banco
-   *           durante o commit da transação.
-   *           </p>
-   *
-   *           <p>
-   *           Não utiliza {@code Propagation.SUPPORTS},
-   *           pois operações de escrita devem ocorrer
-   *           dentro de transação ativa para garantir
-   *           consistência e integridade dos dados.
-   *           </p>
-   *
-   *           <p>
-   *           O tratamento de exceções como
-   *           {@code DataIntegrityViolationException}
-   *           permanece centralizado globalmente,
-   *           garantindo padronização e confiabilidade
-   *           nas respostas da API.
-   *           </p>
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          exclusão segura, integridade de dados,
-   *          controle transacional, otimização de consultas
-   *          e tratamento centralizado de exceções.
+   * @throws ResourceNotFoundException se a categoria não existir
    */
   @Transactional
   public void delete(Long id) {
@@ -341,25 +251,16 @@ public class CategoryService {
   }
 
   /**
-   * Altera o status de uma categoria para ativo ou inativo.
+   * Define o indicador {@code active} da categoria, se for diferente do atual.
    *
    * <p>
-   * Realiza a mudança de status da categoria, ativando ou desativando-a
-   * conforme o parâmetro fornecido.
+   * Carrega a categoria com {@code findById}; se o valor já for o desejado,
+   * apenas retorna. Não chama {@code save}: a mudança é gravada no commit.
    * </p>
    *
    * @param id     identificador da categoria
-   * @param active novo status da categoria (true para ativo, false para inativo)
-   * @throws ResourceNotFoundException caso a categoria não exista
-   *
-   * @implNote
-   *           Centraliza a lógica de alteração de status em um método privado,
-   *           evitando duplicação de código entre os métodos de ativação e
-   *           desativação.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          centralização de lógica, DRY Principle e manutenção facilitada.
+   * @param active valor desejado ({@code true} = ativa)
+   * @throws ResourceNotFoundException se a categoria não existir
    */
   private void changeStatus(Long id, boolean active) {
     Category entity = findEntityById(id);

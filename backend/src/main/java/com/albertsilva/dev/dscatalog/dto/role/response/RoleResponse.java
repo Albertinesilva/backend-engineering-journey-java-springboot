@@ -1,26 +1,19 @@
 package com.albertsilva.dev.dscatalog.dto.role.response;
 
 /**
- * DTO de resposta para informações de Role.
+ * Representação de uma role dentro das respostas de usuário
+ * ({@link com.albertsilva.dev.dscatalog.dto.user.response.UserResponse} e
+ * {@link com.albertsilva.dev.dscatalog.dto.user.response.UserDetailsResponse}).
  *
  * <p>
- * Este record representa os dados de uma Role que serão
- * retornados em respostas de API. Ele contém os seguintes campos:
+ * Não é devolvida sozinha por nenhum endpoint; é criada por
+ * {@code UserMapper} a partir de {@code Role.getId()} e
+ * {@code Role.getAuthority()}.
+ * </p>
  *
- * <ul>
- * <li>{@code id}: Identificador único da Role</li>
- * <li>{@code authority}: Nome da autoridade (ex: "ROLE_ADMIN")</li>
- * </ul>
- *
- * <p>
- * Exemplo de uso:
- *
- * <pre>{@code
- * RoleResponse role = new RoleResponse(1L, "ROLE_USER");
- * }</pre>
- *
- * @param id        Identificador único da Role
- * @param authority Nome da autoridade (ex: "ROLE_ADMIN")
+ * @param id        identificador da role
+ * @param authority nome da autoridade, já com o prefixo {@code ROLE_} (por
+ *                  exemplo, {@code ROLE_ADMIN})
  */
 public record RoleResponse(
         Long id,

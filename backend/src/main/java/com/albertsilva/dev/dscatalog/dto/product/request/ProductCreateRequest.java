@@ -13,55 +13,41 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 /**
- * DTO utilizado para requisições de criação
- * de produtos.
+ * Corpo da requisição de <b>criação de produto</b>
+ * ({@code POST /api/v1/products}).
  *
  * <p>
- * Representa os dados fornecidos pelo cliente
- * durante o processo de cadastro de um novo produto
- * no sistema.
+ * Fluxo: {@code ProductController.create} → {@code ProductService.create} →
+ * {@code ProductMapper.toEntity} (que copia nome, descrição, preço e URL da
+ * imagem) e {@code ProductService.syncCategories} (que resolve
+ * {@code categoryIds}). O produto é criado ativo pelo service.
+ * </p>
  *
  * <p>
- * Este DTO utiliza a annotation
- * {@link ProductCreateValid} para executar
- * validações contextuais relacionadas ao processo
- * de criação do produto.
+ * <b>Campos que não chegam à entidade:</b> {@code date} é validado
+ * ({@code @PastOrPresent}), mas {@code ProductMapper.toEntity} não o copia e
+ * nenhum outro código o utiliza: o valor enviado é descartado.
+ * {@code categoryIds} não é copiado pelo mapper; é resolvido no service.
+ * </p>
  *
  * <p>
- * As validações aplicadas garantem:
- * <ul>
- * <li>Obrigatoriedade do nome do produto</li>
- * <li>Tamanho mínimo e máximo permitido</li>
- * <li>Validação de caracteres permitidos</li>
- * <li>Validação do preço</li>
- * <li>Validação da URL da imagem</li>
- * <li>Validação da data</li>
- * <li>Validação das categorias associadas</li>
- * </ul>
+ * <b>Validação estrutural (Bean Validation):</b> nome obrigatório (3 a 100
+ * caracteres; letras, dígitos, espaços, hífen e parênteses); demais campos
+ * opcionais, mas, quando presentes, com formato exigido. Note que
+ * {@code @Positive}, {@code @Size}, {@code @Pattern} e {@code @PastOrPresent}
+ * aceitam {@code null}: <b>o preço não é obrigatório neste DTO</b>. A
+ * unicidade do nome e a existência das categorias são verificadas por
+ * {@link ProductCreateValid}.
+ * </p>
  *
- * <p>
- * As categorias relacionadas ao produto são
- * enviadas apenas pelos seus identificadores.
- *
- * <p>
- * Exemplo:
- * 
- * <pre>{@code
- * "categoryIds": [1, 2, 3]
- * }</pre>
- *
- * <p>
- * As regras de validação utilizam Bean Validation
- * através das annotations presentes nos atributos
- * do record.
- *
- * @param name        nome do produto
- * @param description descrição do produto
- * @param price       preço do produto
- * @param imgUrl      URL da imagem do produto
- * @param date        data associada ao produto
- * @param categoryIds lista contendo os identificadores
- *                    das categorias do produto
+ * @param name        nome do produto (obrigatório; 3 a 100 caracteres)
+ * @param description descrição (opcional; se informada, 3 a 200 caracteres)
+ * @param price       preço (opcional; se informado, deve ser maior que zero)
+ * @param imgUrl      URL da imagem (opcional; se informada, deve começar com
+ *                    {@code http://} ou {@code https://})
+ * @param date        data (opcional; {@code null} ou passada/presente).
+ *                    <b>Não é persistida</b>
+ * @param categoryIds identificadores das categorias (obrigatório, não vazio)
  */
 @ProductCreateValid
 public record ProductCreateRequest(

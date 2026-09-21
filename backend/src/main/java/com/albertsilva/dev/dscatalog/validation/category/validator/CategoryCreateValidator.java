@@ -12,29 +12,22 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Implementa as regras de validação utilizadas durante
- * o processo de criação de categorias.
+ * Validator de {@link CategoryCreateValid}: uma única verificação sobre
+ * {@code CategoryCreateRequest}.
  *
  * <p>
- * Este validator é associado à annotation
- * {@link CategoryCreateValid} e executa validações
- * contextuais em nível de classe.
- *
- * <p>
- * Atualmente, a validação garante que não exista
- * outra categoria cadastrada com o mesmo nome.
- *
- * <p>
- * As mensagens de erro geradas durante a validação
- * são armazenadas em uma lista de {@link FieldMessage}
- * e adicionadas manualmente ao contexto de validação.
+ * Se o nome for {@code null} ou em branco, nada é verificado. Caso contrário,
+ * normaliza o nome ({@code trim()} + {@code toLowerCase()}) e consulta
+ * {@code CategoryRepository.existsByNameIgnoreCase}; se existir, registra
+ * {@code {category.name.unique}} no campo {@code name}. O nome do DTO não é
+ * modificado (o mapper o grava como recebido). Consulta o banco; não usa HTTP
+ * nem autenticação. Usa {@code FieldMessage} (pacote de exceções da camada web)
+ * como estrutura de acúmulo.
+ * </p>
  */
 public class CategoryCreateValidator implements ConstraintValidator<CategoryCreateValid, CategoryCreateRequest> {
 
-  /*
-   * Repositório utilizado para verificar a existência
-   * de categorias com o mesmo nome durante a validação.
-   */
+  /** Repositório usado para verificar a existência de categoria com o mesmo nome. */
   private final CategoryRepository repository;
 
   /**
@@ -49,19 +42,12 @@ public class CategoryCreateValidator implements ConstraintValidator<CategoryCrea
   }
 
   /**
-   * Executa as validações relacionadas ao processo
-   * de criação de categorias.
+   * Verifica se já existe categoria com o nome informado.
    *
-   * <p>
-   * As regras de validação são aplicadas de forma
-   * contextual utilizando os dados presentes no DTO.
-   *
-   * @param dto     objeto contendo os dados da categoria
-   *                que será validada
-   * @param context contexto utilizado pelo Bean Validation
-   *                para registrar erros personalizados
-   * @return {@code true} caso nenhuma inconsistência seja encontrada;
-   *         {@code false} caso existam erros de validação
+   * @param dto     dados de criação
+   * @param context contexto usado para registrar a violação no campo
+   *                {@code name}
+   * @return {@code true} se o nome estiver livre (ou em branco)
    */
   @Override
   public boolean isValid(CategoryCreateRequest dto, ConstraintValidatorContext context) {
@@ -82,7 +68,7 @@ public class CategoryCreateValidator implements ConstraintValidator<CategoryCrea
    * <p>
    * Antes da verificação, o nome é normalizado:
    * <ul>
-   * <li>Removendo espaços extras</li>
+   * <li>{@code trim()} (remove espaços apenas nas extremidades)</li>
    * <li>Convertendo para letras minúsculas</li>
    * </ul>
    *

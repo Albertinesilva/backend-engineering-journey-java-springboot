@@ -12,67 +12,66 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Implementa a lógica de validação utilizada pela
- * annotation {@link ValidEmail}.
+ * Validator de {@link ValidEmail}: confere o <b>formato</b> do e-mail e a
+ * <b>existência de registro MX</b> para o domínio, por consulta DNS.
  *
  * <p>
- * Este validator verifica se o endereço de email possui
- * um formato válido e se o domínio possui registros
- * MX (Mail Exchange) válidos no servidor DNS.
+ * <b>Comportamento (em ordem):</b>
+ * </p>
+ * <ol>
+ * <li>{@code null} ou em branco ({@code isBlank()}) ⇒ <b>válido</b> (a
+ * obrigatoriedade é de {@code @NotBlank});</li>
+ * <li>normaliza <em>apenas para validar</em>: {@code trim()} e
+ * {@code toLowerCase()} (este sem {@code Locale});</li>
+ * <li>a expressão regular {@code EMAIL_PATTERN} deve casar com o valor
+ * inteiro; senão ⇒ inválido;</li>
+ * <li>o domínio (texto após o {@code @}) deve ter ao menos um registro MX;
+ * senão ⇒ inválido.</li>
+ * </ol>
  *
  * <p>
- * O processo de validação é realizado em duas etapas:
- * <ul>
- * <li>Validação de formato através de expressão regular</li>
- * <li>Validação da existência de registros MX do domínio</li>
- * </ul>
+ * Em qualquer falha registra a mensagem {@code {user.email.invalid}}, sem
+ * distinguir "formato inválido" de "domínio sem MX" (nem de "DNS
+ * indisponível"). O valor original do DTO <b>não</b> é alterado: quem persiste
+ * o e-mail (mapper/service) recebe o texto como foi enviado, inclusive com
+ * espaços nas pontas ou letras maiúsculas.
+ * </p>
  *
  * <p>
- * Caso a validação de registros MX falhe por motivos
- * de conectividade ou DNS indisponível, a validação
- * retorna {@code false}. O validator também normaliza
- * o email para minúsculas e remove espaços em branco
- * antes de validar.
+ * <b>Efeito externo:</b> cada validação de e-mail que passa pelo formato faz
+ * uma consulta DNS <b>síncrona</b>, na thread da requisição. Não há injeção de
+ * dependências, banco de dados nem acesso a HTTP/autenticação.
+ * </p>
  */
 public class ValidEmailValidator implements ConstraintValidator<ValidEmail, String> {
 
   /**
-   * Expressão regular utilizada para validar
-   * o formato básico do endereço de email.
+   * Expressão regular do formato, aplicada ao e-mail já normalizado:
+   * {@code ^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$}.
    *
    * <p>
-   * O padrão aceita:
-   * <ul>
-   * <li>Caracteres alfanuméricos, +, _, ., -</li>
-   * <li>Um símbolo @</li>
-   * <li>Domínio com caracteres alfanuméricos, ., -</li>
-   * <li>Extensão com no mínimo 2 caracteres alfabéticos</li>
-   * </ul>
+   * Aceita somente caracteres ASCII (sem IDN nem acentos); a parte local aceita
+   * letras, dígitos e {@code + _ . -}, sem limite de tamanho e sem restrição
+   * quanto a pontos consecutivos ou nas extremidades; o domínio aceita letras,
+   * dígitos, {@code .} e {@code -}, e termina em um sufixo de pelo menos 2 letras.
+   * </p>
    */
   private static final String EMAIL_PATTERN = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
   /**
-   * Executa a validação completa do endereço de email fornecido.
+   * Valida o e-mail conforme descrito na documentação da classe.
    *
    * <p>
-   * Caso o email seja {@code null} ou vazio, a validação
-   * será considerada válida, permitindo que a obrigatoriedade
-   * seja tratada por outras annotations como {@code @NotBlank}.
+   * {@code null} e valores em branco são considerados válidos. A validação usa
+   * {@code value.trim().toLowerCase()}, mas o valor original não é modificado.
+   * Falha de formato e ausência de MX (ou falha na consulta) produzem a mesma
+   * mensagem, {@code {user.email.invalid}}.
+   * </p>
    *
-   * <p>
-   * O processo de validação segue as etapas:
-   * <ol>
-   * <li>Normaliza o email para minúsculas</li>
-   * <li>Valida o formato através de expressão regular</li>
-   * <li>Extrai o domínio do email</li>
-   * <li>Verifica a existência de registros MX para o domínio</li>
-   * </ol>
-   *
-   * @param value   endereço de email a ser validado
-   * @param context contexto utilizado pelo Bean Validation
-   *                para registrar erros personalizados
-   * @return {@code true} se o email possui formato válido
-   *         e registros MX válidos; {@code false} caso contrário
+   * @param value   e-mail informado (pode ser {@code null})
+   * @param context contexto usado para registrar a violação personalizada
+   * @return {@code true} se for nulo/em branco ou tiver formato válido e MX;
+   *         {@code false} caso contrário
    */
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {
@@ -129,18 +128,21 @@ public class ValidEmailValidator implements ConstraintValidator<ValidEmail, Stri
   }
 
   /**
-   * Verifica a existência de registros MX (Mail Exchange) para
-   * o domínio fornecido através de consulta ao servidor DNS.
+   * Consulta o DNS (via JNDI, provedor {@code com.sun.jndi.dns.DnsContextFactory},
+   * sem servidor, timeout ou tentativas configurados no código) e verifica se o
+   * domínio possui ao menos um registro do tipo MX.
    *
    * <p>
-   * O método utiliza a API JNDI para realizar consultas DNS
-   * e verifica se o domínio possui ao menos um registro MX válido.
-   * Caso ocorra qualquer erro durante a consulta (DNS indisponível,
-   * domínio inválido, etc.), o método retorna {@code false}.
+   * Só o tipo MX é considerado: não há alternativa para domínios que aceitam
+   * e-mail apenas por registro A/AAAA. <b>Qualquer {@link Exception}</b> (domínio
+   * inexistente, DNS indisponível, tempo esgotado etc.) resulta em {@code false},
+   * o que faz uma falha de rede tornar inválido um e-mail que talvez fosse
+   * válido. O contexto JNDI é fechado no bloco {@code finally}.
+   * </p>
    *
-   * @param domain domínio a ser consultado no servidor DNS
-   * @return {@code true} se o domínio possui registros MX;
-   *         {@code false} caso não possua ou em caso de erro
+   * @param domain domínio a consultar
+   * @return {@code true} se houver ao menos um registro MX; {@code false} se não
+   *         houver ou se ocorrer qualquer erro
    */
   private boolean hasMxRecord(String domain) {
 

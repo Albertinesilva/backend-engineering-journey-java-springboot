@@ -12,26 +12,21 @@ import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 /**
- * Valida se os identificadores de roles informados
- * existem na base de dados.
+ * Restrição de <b>campo</b> que aciona {@link ValidRolesValidator}; aplicada a
+ * atributos {@code Set<Long>} com ids de roles ({@code UserCreateRequest} e
+ * {@code UserUpdateRequest}).
  *
  * <p>
- * Esta annotation executa validações em nível
- * de campo ({@link ElementType#FIELD}) e pode ser
- * aplicada em coleções contendo identificadores
- * de roles.
+ * <b>Regra efetiva:</b> conjunto {@code null} ou vazio é <b>válido</b>; caso
+ * contrário, cada id deve existir em {@code tb_role} (uma consulta
+ * {@code existsById} por id). Um id inexistente invalida o conjunto inteiro,
+ * com a mensagem {@code role.invalid}. <b>Consulta o banco.</b>
+ * </p>
  *
  * <p>
- * A lógica de validação é implementada por
- * {@link ValidRolesValidator}.
- *
- * <p>
- * Exemplo:
- * 
- * <pre>{@code
- * @ValidRoles
- * private Set<Long> roleIds;
- * }</pre>
+ * <b>Metadados:</b> {@code @Target(FIELD)}, {@code @Retention(RUNTIME)},
+ * {@code @Documented}.
+ * </p>
  */
 @Documented
 @Constraint(validatedBy = ValidRolesValidator.class)
@@ -40,25 +35,25 @@ import jakarta.validation.Payload;
 public @interface ValidRoles {
 
   /**
-   * Mensagem padrão retornada quando a validação falha.
+   * Chave de mensagem padrão ({@code role.invalid}); é a mesma chave que o validator emite.
    *
-   * @return mensagem padrão da validação
+   * @return chave de mensagem padrão da restrição
    */
   String message() default "{role.invalid}";
 
   /**
-   * Define grupos de validação associados
-   * à constraint.
+   * Grupos de validação da restrição (padrão do Bean Validation). Nenhuma
+   * validação do projeto usa grupos.
    *
    * @return grupos de validação
    */
   Class<?>[] groups() default {};
 
   /**
-   * Permite associar metadados adicionais
-   * à validação.
+   * Metadados associados à restrição (padrão do Bean Validation). Não são
+   * usados pelo projeto.
    *
-   * @return payloads associados à constraint
+   * @return payloads da restrição
    */
   Class<? extends Payload>[] payload() default {};
 }

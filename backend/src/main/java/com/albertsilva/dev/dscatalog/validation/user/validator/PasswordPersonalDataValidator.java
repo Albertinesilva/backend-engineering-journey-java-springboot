@@ -11,35 +11,25 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Implementa a lógica de validação utilizada pela annotation
- * {@link PasswordPersonalData}.
+ * Validator de {@link PasswordPersonalData}: impede que a senha <em>contenha</em>
+ * dados pessoais do próprio candidato a usuário.
  *
  * <p>
- * Este validator garante que a senha informada não contenha dados
- * pessoais do próprio usuário, reduzindo o uso de senhas previsíveis
- * e fáceis de serem descobertas.
+ * <b>Comportamento:</b> candidato {@code null} ou senha {@code null} ⇒
+ * <b>válido</b>. A senha é normalizada ({@code trim()} + {@code toLowerCase()})
+ * e comparada, por <b>substring</b> ({@code contains}), com três valores, também
+ * normalizados: primeiro nome, sobrenome e a parte do e-mail antes do
+ * <b>primeiro</b> {@code @} (só se o e-mail contiver {@code @}). Valores
+ * {@code null} ou com menos de 3 caracteres são
+ * ignorados. Nomes compostos (com espaço) são comparados inteiros e, como a senha
+ * forte não aceita espaços, tendem a nunca casar.
  * </p>
  *
  * <p>
- * Atualmente são analisados:
- * </p>
- * <ul>
- * <li>Primeiro nome</li>
- * <li>Sobrenome</li>
- * <li>Parte local do email (antes do "@")</li>
- * </ul>
- *
- * <p>
- * A validação é aplicada a qualquer DTO que implemente o contrato
- * {@link PasswordPersonalDataCandidate}, tornando a regra reutilizável
- * em diferentes fluxos da aplicação.
- * </p>
- *
- * <p>
- * As violações são registradas diretamente no atributo
- * {@code password}, permitindo que o Bean Validation resolva as
- * mensagens através do {@code MessageSource}, respeitando o locale
- * da requisição.
+ * <b>Violação:</b> no máximo <b>uma</b>, {@code {user.password.personalData}},
+ * associada ao campo {@code password} (mesmo que mais de um dado case). Não
+ * consulta banco, HTTP nem autenticação. Usa {@code FieldMessage}, do pacote de
+ * exceções da camada web, como estrutura de acúmulo.
  * </p>
  */
 public class PasswordPersonalDataValidator
@@ -51,6 +41,14 @@ public class PasswordPersonalDataValidator
      */
     private static final int MIN_TOKEN_LENGTH = 3;
 
+    /**
+     * Verifica se a senha contém nome, sobrenome ou prefixo do e-mail do candidato.
+     *
+     * @param candidate dados do usuário (pode ser {@code null})
+     * @param context   contexto usado para registrar a violação no campo
+     *                  {@code password}
+     * @return {@code true} se nenhum dado pessoal for encontrado na senha
+     */
     @Override
     public boolean isValid(PasswordPersonalDataCandidate candidate, ConstraintValidatorContext context) {
 

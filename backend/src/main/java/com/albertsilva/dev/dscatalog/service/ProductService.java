@@ -30,33 +30,44 @@ import com.albertsilva.dev.dscatalog.util.IdentifiableUtils;
 import jakarta.persistence.EntityNotFoundException;
 
 /**
- * Serviço responsável pelas operações de negócio relacionadas à entidade
- * {@link Product}.
+ * Serviço de aplicação dos produtos ({@link Product}): listagens paginadas,
+ * consulta, criação, atualização, ativação/desativação e exclusão, incluindo o
+ * vínculo do produto com categorias.
  *
  * <p>
- * Gerencia produtos e sua relação com categorias, centralizando
- * regras de negócio, validações e associações entre entidades.
+ * <b>Dependências:</b> {@code ProductRepository}, {@code CategoryRepository}
+ * (para resolver as categorias de um produto), {@code ProductMapper}
+ * (conversão entre DTOs, entidade e respostas) e {@code IdentifiableUtils}.
+ * Este service não chama validators: a validação dos DTOs de entrada
+ * ({@code @Valid}), que inclui a unicidade do nome e a existência das
+ * categorias, ocorre antes, na camada web.
  * </p>
  *
  * <p>
- * <b>Responsabilidades:</b>
+ * <b>Transações:</b> todos os métodos públicos são transacionais (leituras
+ * com {@code readOnly = true}, escritas com transação de escrita). Os métodos
+ * privados não têm anotação e executam dentro da transação do método público
+ * que os chamou. Erros não tratados ({@code RuntimeException}) revertem a
+ * transação.
  * </p>
- * <ul>
- * <li>Operações de CRUD de produtos</li>
- * <li>Gerenciamento de relacionamento entre produtos e categorias</li>
- * <li>Conversão entre entidades e DTOs</li>
- * <li>Garantia de integridade e consistência dos dados</li>
- * </ul>
  *
- * @implNote
- *           Atua como camada de serviço (Service Layer), intermediando
- *           Controller, Repository e Mapper dentro da arquitetura Spring Boot.
+ * <p>
+ * <b>Autorização:</b> não é feita aqui. As regras de acesso ficam nos
+ * controllers ({@code @PreAuthorize}) e na configuração de segurança.
+ * </p>
  *
- * @apiNote
- *          Esta implementação exemplifica conceitos fundamentais de aplicações
- *          corporativas,
- *          como Service Layer, arquitetura em camadas, DTO Pattern,
- *          persistência com JPA e regras de negócio centralizadas.
+ * <p>
+ * <b>Exceções:</b> {@link ResourceNotFoundException} (produto ou categoria
+ * inexistente) e {@link DatabaseException} (exclusão). A conversão em resposta
+ * HTTP é feita por {@code ControllerExceptionHandler}.
+ * </p>
+ *
+ * <p>
+ * <b>Comportamento atual do indicador {@code active}:</b> é apenas gravado por
+ * {@link #create}, {@link #activate(Long)} e {@link #deactivate(Long)};
+ * nenhuma consulta ou regra deste service o utiliza para filtrar ou bloquear
+ * produtos.
+ * </p>
  */
 @Service
 public class ProductService {
@@ -82,30 +93,33 @@ public class ProductService {
   }
 
   /**
-   * Busca produtos com suporte a filtragem por nome e paginação.
+   * Lista produtos por consulta derivada do Spring Data, com filtro opcional
+   * por nome.
    *
    * <p>
-   * Permite buscar produtos cujo nome contenha o termo fornecido,
-   * ignorando diferenças de maiúsculas/minúsculas.
+   * O termo recebe {@code trim}; nulo, vazio ou só com espaços significa "sem
+   * filtro" e usa {@code findAll(pageable)}. Com filtro, usa
+   * {@code findByNameContainingIgnoreCase}. Diferentemente de
+   * {@link #findAllPaged(String, String, Pageable)}, não filtra por categoria,
+   * inclui produtos sem categoria e aceita ordenação por qualquer propriedade
+   * da entidade.
    * </p>
    *
    * <p>
-   * Se o parâmetro {@code name} for nulo ou vazio, retorna todos os produtos
-   * paginados.
+   * A conversão para resposta acessa as categorias de cada produto, que são
+   * carregadas sob demanda (padrão N+1 provável, dentro da transação de
+   * leitura).
    * </p>
    *
-   * @param name     termo de busca para o nome do produto (opcional)
-   * @param pageable informações de paginação e ordenação
-   * @return página de produtos que correspondem ao critério de busca
+   * <p>
+   * <b>Uso atual:</b> nenhum controller nem outro componente de
+   * {@code src/main} chama este método (apenas testes); a listagem HTTP de
+   * produtos usa {@code findAllPaged}.
+   * </p>
    *
-   * @implNote
-   *           Utiliza métodos específicos do repositório para otimizar a busca
-   *           com filtro, evitando carregamento desnecessário de dados.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          filtragem eficiente, paginação, uso de Optional e boas práticas de
-   *          consulta em Spring Data JPA.
+   * @param name     termo procurado no nome (opcional)
+   * @param pageable página, tamanho e ordenação
+   * @return página de produtos convertidos para {@link ProductResponse}
    */
   @Transactional(readOnly = true)
   public Page<ProductResponse> search(String name, Pageable pageable) {
@@ -124,33 +138,52 @@ public class ProductService {
   }
 
   /**
-   * Busca produtos com suporte a filtragem por nome e categorias, além de
-   * paginação.
+   * Lista produtos com filtro por nome e por categorias e com paginação; é a
+   * consulta usada pela listagem HTTP de produtos.
    *
    * <p>
-   * Permite buscar produtos cujo nome contenha o termo fornecido e que estejam
-   * associados a categorias específicas.
+   * <b>Sequência:</b>
    * </p>
+   * <ol>
+   * <li>converte {@code categoryId} em lista de ids: {@code "0"} resulta em
+   * lista vazia (é o valor padrão do controller); qualquer outro valor é
+   * dividido por vírgula e cada parte é convertida com
+   * {@code Long.parseLong}</li>
+   * <li>{@code searchProducts} (SQL nativo) devolve uma página de
+   * {@link ProductProjection} (id e nome) já filtrada, ordenada e paginada</li>
+   * <li>coleta os ids da página e chama {@code searchProductsWithCategories}
+   * (JPQL com {@code JOIN FETCH}), que carrega os produtos com as
+   * categorias</li>
+   * <li>{@code IdentifiableUtils.reorderByReference} recoloca os produtos na
+   * ordem da página; ids sem produto correspondente são descartados</li>
+   * <li>converte cada produto com {@code productMapper.toResponse} e monta um
+   * {@code PageImpl} com o total informado pela consulta nativa</li>
+   * </ol>
    *
    * <p>
-   * O parâmetro {@code categoryId} pode conter um ou mais IDs de categorias,
-   * separados por vírgula. Se for "0" ou nulo, não aplica filtro por categoria.
+   * <b>Comportamento observado no código:</b>
    * </p>
+   * <ul>
+   * <li>{@code name} é repassado como recebido (sem {@code trim} nem
+   * tratamento de nulo/vazio); o controller usa {@code ""} por padrão</li>
+   * <li>não há filtro por {@code active}: produtos inativos são listados</li>
+   * <li>só aparecem produtos com ao menos uma categoria (a consulta nativa usa
+   * {@code INNER JOIN})</li>
+   * <li>{@code searchProductsWithCategories} é chamado mesmo quando a página
+   * não tem ids (lista vazia); não há tratamento específico desse caso</li>
+   * <li>{@code categoryId} nulo causa {@link NullPointerException} e valor não
+   * numérico causa {@link NumberFormatException}; nenhuma das duas é tratada
+   * aqui</li>
+   * <li>a ordenação do {@code Pageable} é aplicada pela consulta nativa, sobre
+   * as colunas {@code id} e {@code name}</li>
+   * </ul>
    *
-   * @param name       termo de busca para o nome do produto (opcional)
-   * @param categoryId IDs de categorias para filtrar (opcional)
-   * @param pageable   informações de paginação e ordenação
-   * @return página de produtos que correspondem aos critérios de busca
-   *
-   * @implNote
-   *           Utiliza consultas personalizadas no repositório para otimizar a
-   *           busca com múltiplos filtros, evitando carregamento desnecessário
-   *           de dados.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          filtragem avançada, paginação, uso de Optional e boas práticas de
-   *          consulta em Spring Data JPA.
+   * @param name       trecho do nome do produto
+   * @param categoryId ids de categorias separados por vírgula, ou {@code "0"}
+   *                   para não filtrar por categoria
+   * @param pageable   página, tamanho e ordenação
+   * @return página de {@link ProductResponse}, com as categorias de cada
+   *         produto
    */
   @Transactional(readOnly = true)
   public Page<ProductResponse> findAllPaged(String name, String categoryId, Pageable pageable) {
@@ -172,24 +205,18 @@ public class ProductService {
   }
 
   /**
-   * Busca um produto pelo seu identificador.
+   * Retorna os detalhes de um produto, incluindo suas categorias.
    *
    * <p>
-   * Retorna os detalhes completos do produto,
-   * incluindo categorias associadas.
+   * Carrega o produto com {@code findById} e converte com
+   * {@code toDetailsResponse}; as categorias são carregadas sob demanda durante
+   * a conversão, dentro da transação de leitura.
    * </p>
    *
    * @param id identificador do produto
-   * @return detalhes completos do produto
-   * @throws ResourceNotFoundException caso o produto não exista
-   *
-   * @implNote
-   *           Utiliza {@code findById(id)}, realizando consulta imediata no
-   *           banco.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          Optional, tratamento de exceções e busca segura de entidades.
+   * @return detalhes do produto
+   * @throws ResourceNotFoundException ({@code error.product.notFound}) se o
+   *                                   produto não existir
    */
   @Transactional(readOnly = true)
   public ProductDetailsResponse findById(Long id) {
@@ -197,28 +224,26 @@ public class ProductService {
   }
 
   /**
-   * Insere um novo produto no sistema.
+   * Cria um produto ativo e o vincula às categorias informadas.
    *
    * <p>
-   * Além dos dados básicos, realiza o vínculo
-   * com categorias utilizando seus respectivos IDs.
+   * Sequência: o mapper converte o DTO (copia nome, descrição, preço e URL da
+   * imagem); o produto é marcado como ativo; as categorias são resolvidas por
+   * {@code syncCategories}; o produto é salvo. As datas são preenchidas pelos
+   * callbacks JPA. O campo {@code date} do request não é usado.
    * </p>
    *
    * <p>
-   * O frontend envia apenas IDs das categorias,
-   * enquanto o backend resolve o relacionamento completo.
+   * <b>Regras fora deste método:</b> a unicidade do nome e a existência das
+   * categorias são validadas antes, pelo validator {@code ProductCreateValid}.
+   * O banco também impõe nome único; uma violação ocorreria na gravação e
+   * não é tratada aqui.
    * </p>
    *
    * @param productCreateRequest dados para criação do produto
-   * @return produto criado
-   *
-   * @implNote
-   *           Utiliza conversão DTO → Entity e mapeamento controlado
-   *           de categorias para garantir integridade relacional.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          DTO Pattern, relacionamento ManyToMany e persistência.
+   * @return produto criado, com suas categorias
+   * @throws ResourceNotFoundException ({@code error.product.categories.notFound})
+   *                                   se alguma categoria não existir
    */
   @Transactional
   public ProductResponse create(ProductCreateRequest productCreateRequest) {
@@ -232,36 +257,38 @@ public class ProductService {
   }
 
   /**
-   * Atualiza parcialmente um produto existente.
+   * Atualiza um produto existente e, se informado, substitui suas categorias.
    *
    * <p>
-   * Permite modificar atributos básicos e,
-   * opcionalmente, substituir as categorias associadas.
+   * Usa {@code getReferenceById}, que devolve uma referência preguiçosa: a
+   * existência do produto só é verificada quando o proxy é acessado (pelo
+   * mapper, por {@code syncCategories} ou por {@code save}), sempre dentro do
+   * bloco {@code try}. Se o produto não existir, o
+   * {@code EntityNotFoundException} da JPA é convertido em
+   * {@link ResourceNotFoundException}.
    * </p>
    *
+   * <ul>
+   * <li>campos nulos do DTO não sobrescrevem os valores atuais (regra do
+   * {@code ProductMapper.updateEntity})</li>
+   * <li>{@code categoryIds} diferente de nulo: as categorias são substituídas
+   * ({@code syncCategories}); uma lista vazia remove todas (o DTO exige lista
+   * não vazia com {@code @NotEmpty}, mas este service não)</li>
+   * <li>{@code categoryIds} nulo: as categorias atuais são mantidas</li>
+   * </ul>
+   *
    * <p>
-   * Quando {@code categoryIds} é informado,
-   * as categorias atuais são removidas e substituídas
-   * pelas novas categorias fornecidas.
+   * A unicidade do nome é validada antes, por {@code ProductUpdateValid}. O
+   * {@code save} é chamado mesmo sobre a entidade já gerenciada.
    * </p>
    *
    * @param id  identificador do produto
-   * @param dto dados para atualização parcial
+   * @param dto dados para atualização
    * @return produto atualizado
-   * @throws ResourceNotFoundException caso o produto não exista
-   *
-   * @implNote
-   *           Utiliza {@code getReferenceById(id)} para obter uma referência lazy
-   *           (proxy) da entidade, evitando consulta imediata ao banco.
-   *
-   *           <p>
-   *           O proxy é carregado apenas quando atributos da entidade
-   *           são acessados, reduzindo consultas desnecessárias.
-   *           </p>
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          JPA Proxy, Lazy Loading, Performance e Contexto de Persistência.
+   * @throws ResourceNotFoundException se o produto ({@code error.product.notFound})
+   *                                   ou alguma categoria
+   *                                   ({@code error.product.categories.notFound})
+   *                                   não existir
    */
   @Transactional
   public ProductResponse update(Long id, ProductUpdateRequest dto) {
@@ -287,23 +314,17 @@ public class ProductService {
   }
 
   /**
-   * Ativa um produto existente.
+   * Marca o produto como ativo. Operação idempotente: se já estiver ativo,
+   * nada é alterado.
    *
    * <p>
-   * Altera o status do produto para ativo,
-   * permitindo que ele seja exibido e comercializado.
+   * Não chama {@code save}: a alteração da entidade gerenciada é gravada no
+   * commit da transação. O indicador é apenas armazenado; nenhuma listagem ou
+   * regra deste service o considera.
    * </p>
    *
    * @param id identificador do produto
-   * @throws ResourceNotFoundException caso o produto não exista
-   *
-   * @implNote
-   *           Realiza atualização parcial do status do produto,
-   *           mantendo as demais informações inalteradas.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          atualização parcial, status de entidade e regras de negócio.
+   * @throws ResourceNotFoundException se o produto não existir
    */
   @Transactional
   public void activate(Long id) {
@@ -311,23 +332,18 @@ public class ProductService {
   }
 
   /**
-   * Desativa um produto existente.
+   * Marca o produto como inativo. Operação idempotente: se já estiver inativo,
+   * nada é alterado.
    *
    * <p>
-   * Altera o status do produto para inativo,
-   * ocultando-o de listagens e impedindo comercialização.
+   * Não chama {@code save}: a alteração da entidade gerenciada é gravada no
+   * commit da transação. O indicador é apenas armazenado; nenhuma listagem ou
+   * regra deste service o considera (produtos inativos continuam aparecendo em
+   * {@code findAllPaged}).
    * </p>
    *
    * @param id identificador do produto
-   * @throws ResourceNotFoundException caso o produto não exista
-   *
-   * @implNote
-   *           Realiza atualização parcial do status do produto,
-   *           mantendo as demais informações inalteradas.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          atualização parcial, status de entidade e regras de negócio.
+   * @throws ResourceNotFoundException se o produto não existir
    */
   @Transactional
   public void deactivate(Long id) {
@@ -335,24 +351,28 @@ public class ProductService {
   }
 
   /**
-   * Remove um produto existente do sistema.
+   * Remove fisicamente um produto.
    *
    * <p>
-   * Valida previamente a existência da entidade
-   * antes da exclusão.
+   * Carrega o produto com {@code findById} (404 se não existir), remove-o com
+   * {@code delete} e converte {@code DataIntegrityViolationException} em
+   * {@link DatabaseException}. As linhas de {@code tb_product_category} desse
+   * produto são removidas pela própria JPA, pois {@code Product} é o lado dono
+   * do relacionamento.
+   * </p>
+   *
+   * <p>
+   * Atenção: o {@code try/catch} envolve apenas a chamada a {@code delete}.
+   * Como a remoção costuma ser sincronizada com o banco no commit, depois do
+   * retorno do método, uma violação de integridade nesse momento pode não
+   * passar por este {@code catch}.
    * </p>
    *
    * @param id identificador do produto
-   * @throws ResourceNotFoundException caso o produto não exista
-   * @throws DatabaseException         em caso de violação de integridade
-   *
-   * @implNote
-   *           Garante segurança ao validar existência antes do delete
-   *           e trata exceções de integridade referencial.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          exclusão segura, integridade de dados e tratamento de exceções.
+   * @throws ResourceNotFoundException se o produto não existir
+   * @throws DatabaseException         se a exclusão violar a integridade dos
+   *                                   dados (quando detectada dentro do
+   *                                   método)
    */
   @Transactional
   public void delete(Long id) {
@@ -391,35 +411,29 @@ public class ProductService {
   }
 
   /**
-   * Realiza o mapeamento entre produto e categorias.
+   * Substitui as categorias do produto pelas informadas.
+   *
+   * <ol>
+   * <li>limpa o conjunto atual de categorias ({@code clear()}), antes de
+   * qualquer validação</li>
+   * <li>se a lista for nula ou vazia, termina: o produto fica sem
+   * categorias</li>
+   * <li>busca todas as categorias com {@code findAllById} (uma consulta)</li>
+   * <li>se a quantidade encontrada for diferente da quantidade de ids
+   * recebidos, lança {@link ResourceNotFoundException}</li>
+   * </ol>
    *
    * <p>
-   * Remove categorias antigas e substitui
-   * pelas categorias informadas.
+   * A verificação é por quantidade: {@code findAllById} tende a devolver cada
+   * categoria uma única vez, então ids repetidos na lista resultariam em
+   * exceção mesmo com todas as categorias existentes. Quando a exceção é
+   * lançada, a transação é revertida, e o {@code clear()} não é persistido.
    * </p>
    *
-   * <p>
-   * Valida se todos os IDs recebidos existem
-   * antes de concluir a associação.
-   * </p>
-   *
-   * @param entity      produto a ser associado
-   * @param categoryIds lista de IDs de categorias
-   * @throws ResourceNotFoundException caso alguma categoria não exista
-   *
-   * @implNote
-   *           Utiliza {@code findAllById} para buscar todas as categorias
-   *           em lote, evitando múltiplas consultas (N+1 problem).
-   *
-   *           <p>
-   *           Essa abordagem melhora performance
-   *           e garante consistência relacional.
-   *           </p>
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          mapeamento de relacionamentos em JPA, performance JPA, N+1 queries e
-   *          relacionamentos eficientes.
+   * @param entity      produto que receberá as categorias
+   * @param categoryIds ids das categorias
+   * @throws ResourceNotFoundException se alguma categoria não existir
+   *                                   ({@code error.product.categories.notFound})
    */
   private void syncCategories(Product entity, List<Long> categoryIds) {
     entity.getCategories().clear();
@@ -442,25 +456,17 @@ public class ProductService {
   }
 
   /**
-   * Altera o status de um produto para ativo ou inativo.
+   * Define o indicador {@code active} do produto, se for diferente do atual.
    *
    * <p>
-   * Realiza a mudança de status do produto, ativando ou desativando-o
-   * conforme o parâmetro fornecido.
+   * Carrega o produto com {@code findById}; se o valor já for o desejado,
+   * apenas registra em log e retorna. Não chama {@code save}: a mudança é
+   * gravada no commit.
    * </p>
    *
    * @param id     identificador do produto
-   * @param active novo status do produto (true para ativo, false para inativo)
-   * @throws ResourceNotFoundException caso o produto não exista
-   *
-   * @implNote
-   *           Centraliza a lógica de alteração de status em um método privado,
-   *           evitando duplicação de código entre os métodos de ativação e
-   *           desativação.
-   *
-   * @apiNote
-   *          Esta implementação reforça conceitos importantes como:
-   *          centralização de lógica, DRY Principle e manutenção facilitada.
+   * @param active valor desejado ({@code true} = ativo)
+   * @throws ResourceNotFoundException se o produto não existir
    */
   private void changeStatus(Long id, boolean active) {
     Product entity = findEntityById(id);

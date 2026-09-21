@@ -21,6 +21,44 @@ import com.albertsilva.dev.dscatalog.repository.EmailRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+/**
+ * Serviço que monta e envia os e-mails transacionais do sistema (ativação de
+ * conta e recuperação de senha) e grava um registro de cada envio em
+ * {@code tb_email}. É chamado apenas por {@code AccountService}, por meio dos
+ * métodos {@code ...Async}.
+ *
+ * <p>
+ * <b>Dependências externas:</b> {@code JavaMailSender} (SMTP configurado por
+ * {@code spring.mail.*}), {@code SpringTemplateEngine} (templates Thymeleaf
+ * {@code activate_user_by_email_template} e
+ * {@code reset_password_email_template}) e {@code EmailRepository}. Os links
+ * enviados usam a propriedade {@code frontend.url}.
+ * </p>
+ *
+ * <p>
+ * <b>Métodos {@code ...Async}:</b> anotados com {@code @Async} e retornando
+ * {@link CompletableFuture}. O projeto não possui {@code @EnableAsync} em
+ * nenhuma classe; portanto, provavelmente a anotação não tem efeito e o envio
+ * ocorre na thread e na transação de quem chama (o comportamento em execução
+ * não foi verificado). Os wrappers capturam qualquer {@link Exception}, a
+ * registram em log e a devolvem no futuro; como {@code AccountService} descarta
+ * esse futuro, falhas de envio são apenas logadas.
+ * </p>
+ *
+ * <p>
+ * <b>Transações:</b> nenhum método declara {@code @Transactional}. O
+ * {@code save} do registro usa a transação de quem chama, se existir; caso
+ * contrário, o próprio repositório abre uma para a gravação.
+ * </p>
+ *
+ * <p>
+ * <b>Registro em {@code tb_email}:</b> só é gravado depois de o envio ter
+ * sucesso. O status fica sempre {@code PENDING} (nenhum código o altera), o
+ * remetente registrado é fixo ({@code asjcatalog@gmail.com}, diferente do
+ * {@code From} da mensagem) e o conteúdo registrado é apenas um rótulo fixo
+ * ("Confirmação de Cadastro" ou "Redefinição de Senha"), não o corpo HTML.
+ * </p>
+ */
 @Service
 public class EmailService {
 
@@ -29,6 +67,7 @@ public class EmailService {
   @Value("${frontend.url}")
   private String frontendUrl;
 
+  /** Valor de {@code backend.url}. Injetado, mas não utilizado por nenhum método desta classe. */
   @Value("${backend.url}")
   private String backendUrl;
 
@@ -52,24 +91,22 @@ public class EmailService {
   }
 
   /**
-   * Envia um e-mail de ativação de conta de forma assíncrona.
+   * Envia o e-mail de ativação e devolve o resultado em um
+   * {@link CompletableFuture}.
    *
    * <p>
-   * Este método delega o envio do e-mail para uma thread separada,
-   * evitando bloquear a requisição principal durante operações de rede
-   * com o servidor SMTP.
+   * Chama {@link #sendActivationEmail(String, String, String)}. Qualquer
+   * {@link Exception} (falha de template, de montagem da mensagem, de SMTP ou
+   * de gravação do registro) é registrada em log e devolvida como futuro
+   * falho; em caso de sucesso, devolve um futuro concluído. Anotado com
+   * {@code @Async}, mas sem {@code @EnableAsync} no projeto a anotação
+   * provavelmente não tem efeito (ver documentação da classe).
    * </p>
    *
-   * <p>
-   * Em caso de falha no envio, o erro é registrado em log e propagado
-   * através do {@link CompletableFuture}.
-   * </p>
-   *
-   * @param name            nome do destinatário
+   * @param name            nome do destinatário (usado na saudação)
    * @param email           endereço de e-mail do destinatário
-   * @param activationToken token utilizado para ativação da conta
-   * @return um {@link CompletableFuture} representando a execução assíncrona
-   *         do envio do e-mail
+   * @param activationToken valor do token de ativação, embutido no link
+   * @return futuro concluído em caso de sucesso, ou falho com a exceção ocorrida
    */
   @Async
   public CompletableFuture<Void> sendActivationEmailAsync(String name, String email, String activationToken) {
@@ -88,12 +125,18 @@ public class EmailService {
   }
 
   /**
-   * Envia um e-mail para recuperação de senha de forma assíncrona.
+   * Envia o e-mail de recuperação de senha e devolve o resultado em um
+   * {@link CompletableFuture}. Segue o mesmo contrato de
+   * {@link #sendActivationEmailAsync(String, String, String)}: qualquer
+   * {@link Exception} é registrada em log e devolvida como futuro falho.
+   *
+   * <p>
+   * O {@code User} é usado apenas para ler e-mail e primeiro nome.
+   * </p>
    *
    * @param user  usuário que solicitou a recuperação de senha
-   * @param token token temporário de recuperação
-   * @return um {@link CompletableFuture} representando a execução assíncrona do
-   *         envio do e-mail
+   * @param token valor do token de recuperação, embutido no link
+   * @return futuro concluído em caso de sucesso, ou falho com a exceção ocorrida
    */
   @Async
   public CompletableFuture<Void> sendPasswordRecoveryEmailAsync(User user, String token) {
@@ -113,24 +156,25 @@ public class EmailService {
   }
 
   /**
-   * Envia um e-mail de ativação de conta.
+   * Monta e envia, de forma síncrona, o e-mail de ativação.
    *
    * <p>
-   * O conteúdo da mensagem é gerado a partir de um template Thymeleaf,
-   * contendo informações personalizadas do usuário e um link para
-   * confirmação da conta.
-   * </p>
-   *
-   * <p>
-   * Após o envio bem-sucedido, um registro do e-mail é persistido
-   * para fins de auditoria e rastreabilidade.
+   * Renderiza o template {@code activate_user_by_email_template} com o nome, o
+   * título, o texto e o link {@code frontend.url + "/activate-account?token=" +
+   * token}; monta a mensagem HTML (assunto "Confirmação de Cadastro", remetente
+   * {@code nao-responder@asjcatalog.com.br}, logo inline); envia por
+   * {@code JavaMailSender}; e, depois do envio, grava um registro em
+   * {@code tb_email} (ver documentação da classe). Se algo falhar antes da
+   * gravação, nenhum registro é criado.
    * </p>
    *
    * @param name            nome do destinatário
    * @param email           endereço de e-mail do destinatário
-   * @param activationToken token utilizado para ativação da conta
-   * @throws MessagingException caso ocorra falha na criação ou envio
-   *                            da mensagem de e-mail
+   * @param activationToken valor do token de ativação
+   * @throws MessagingException se a criação ou o preenchimento da mensagem
+   *                            falhar (falhas de envio do
+   *                            {@code JavaMailSender} são exceções não
+   *                            verificadas)
    */
   public void sendActivationEmail(String name, String email, String activationToken) throws MessagingException {
     MimeMessage message = emailSender.createMimeMessage();
@@ -159,17 +203,21 @@ public class EmailService {
   }
 
   /**
-   * Envia um e-mail para recuperação de senha.
+   * Monta e envia, de forma síncrona, o e-mail de recuperação de senha.
    *
    * <p>
-   * O e-mail contém instruções e um token temporário que permitirá
-   * ao usuário redefinir sua senha dentro do prazo de validade definido
-   * para o token.
+   * Renderiza o template {@code reset_password_email_template} com o nome, o
+   * token, o título e o link {@code frontend.url + "/reset-password?token=" +
+   * token}; monta a mensagem HTML (assunto "Redefinição de Senha", mesmo
+   * remetente e logo inline); envia; e grava o registro em {@code tb_email}. A
+   * variável {@code texto}, referenciada pelo template, não é definida por este
+   * método.
    * </p>
    *
-   * @param user  usuário que solicitou a recuperação de senha
-   * @param token token temporário de recuperação
-   * @throws MessagingException
+   * @param user  usuário que solicitou a recuperação (e-mail e primeiro nome)
+   * @param token valor do token de recuperação
+   * @throws MessagingException se a criação ou o preenchimento da mensagem
+   *                            falhar
    */
   public void sendPasswordRecoveryEmail(User user, String token) throws MessagingException {
 
@@ -198,14 +246,15 @@ public class EmailService {
   }
 
   /**
-   * Persiste informações do e-mail enviado.
+   * Grava em {@code tb_email} o registro de um e-mail já enviado.
    *
    * <p>
-   * Este registro pode ser utilizado para auditoria, monitoramento
-   * ou rastreamento de mensagens enviadas pelo sistema.
+   * Cria a entidade {@code Email} a partir do DTO (status inicial
+   * {@code PENDING}, data de criação atual) e a salva. Não atualiza o status
+   * depois.
    * </p>
    *
-   * @param dataRegisterMail dados do e-mail enviado
+   * @param dataRegisterMail remetente, destinatário e conteúdo a registrar
    */
   private void registerEmailLog(EmailRegisterRequest dataRegisterMail) {
     Email email = new Email(dataRegisterMail);

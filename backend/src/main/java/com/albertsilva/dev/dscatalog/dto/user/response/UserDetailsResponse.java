@@ -5,33 +5,20 @@ import java.util.Set;
 import com.albertsilva.dev.dscatalog.dto.role.response.RoleResponse;
 
 /**
- * DTO de resposta para detalhes de um usuário.
+ * Resposta de <b>detalhe de usuário</b> ({@code GET /api/v1/users/{id}}).
  *
  * <p>
- * Este record representa os dados detalhados de um usuário que serão
- * retornados em respostas de API. Ele contém os seguintes campos:
+ * Produzida por {@code UserMapper.toDetailsResponse}. Tem os campos de
+ * {@link UserResponse} e acrescenta o indicador {@code active}. Continua sem
+ * expor senha ou hash e tokens.
+ * </p>
  *
- * <ul>
- * <li>{@code id}: Identificador único do usuário</li>
- * <li>{@code firstName}: Primeiro nome do usuário</li>
- * <li>{@code lastName}: Sobrenome do usuário</li>
- * <li>{@code email}: Endereço de email do usuário</li>
- * <li>{@code roles}: Conjunto de roles associadas ao usuário</li>
- * </ul>
- *
- * <p>
- * Exemplo de uso:
- *
- * <pre>{@code
- * Set<RoleResponse> roles = Set.of(new RoleResponse(1L, "ROLE_USER"));
- * UserDetailsResponse user = new UserDetailsResponse(1L, "John", "Doe", "john.doe@example.com", roles);
- * }</pre>
- *
- * @param id        Identificador único do usuário
- * @param firstName Primeiro nome do usuário
- * @param lastName  Sobrenome do usuário
- * @param email     Endereço de email do usuário
- * @param roles     Conjunto de roles associadas ao usuário
+ * @param id        identificador do usuário
+ * @param firstName primeiro nome
+ * @param lastName  sobrenome
+ * @param email     e-mail (também usado como nome de usuário)
+ * @param roles     roles do usuário (id e nome da autoridade)
+ * @param active    indica se a conta está ativa
  */
 public record UserDetailsResponse(
     Long id,

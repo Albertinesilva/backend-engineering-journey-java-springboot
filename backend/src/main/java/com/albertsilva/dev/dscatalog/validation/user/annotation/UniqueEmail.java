@@ -12,34 +12,21 @@ import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 /**
- * Valida se o endereço de email é único no banco de dados
- * e não está registrado por outro usuário.
+ * Restrição de <b>campo</b> que aciona {@link UniqueEmailValidator}; aplicada ao
+ * e-mail em {@code UserCreateRequest} e {@code UserRegisterRequest} (fluxos de
+ * <b>criação</b>; não se aplica a atualização).
  *
  * <p>
- * Esta annotation executa validações em nível de campo
- * ({@link ElementType#FIELD}) e deve ser aplicada em atributos
- * do tipo {@link String} que representam endereços de email.
+ * <b>Regra efetiva:</b> o e-mail (após {@code trim} e minúsculas) não pode
+ * existir em nenhum usuário, sem diferenciar maiúsculas de minúsculas
+ * ({@code UserRepository.existsByEmailIgnoreCase}). {@code null} e valores em
+ * branco são válidos. <b>Consulta o banco.</b>
+ * </p>
  *
  * <p>
- * A lógica de validação é implementada por
- * {@link UniqueEmailValidator}, que consulta o banco de dados
- * para verificar a unicidade do email.
- *
- * <p>
- * A validação:
- * <ul>
- * <li>Normaliza o email para minúsculas</li>
- * <li>Remove espaços em branco</li>
- * <li>Verifica se não existe outro usuário com o mesmo email</li>
- * </ul>
- *
- * <p>
- * Exemplo:
- *
- * <pre>{@code
- * @UniqueEmail
- * private String email;
- * }</pre>
+ * <b>Metadados:</b> {@code @Target(FIELD)}, {@code @Retention(RUNTIME)},
+ * {@code @Documented}.
+ * </p>
  */
 @Documented
 @Constraint(validatedBy = UniqueEmailValidator.class)
@@ -48,25 +35,25 @@ import jakarta.validation.Payload;
 public @interface UniqueEmail {
 
     /**
-     * Mensagem padrão retornada quando a validação falha.
+     * Chave de mensagem padrão ({@code user.email.unique}); é a mesma chave que o validator emite.
      *
-     * @return mensagem padrão da validação
+     * @return chave de mensagem padrão da restrição
      */
     String message() default "{user.email.unique}";
 
     /**
-     * Define grupos de validação associados
-     * à constraint.
+     * Grupos de validação da restrição (padrão do Bean Validation). Nenhuma
+     * validação do projeto usa grupos.
      *
      * @return grupos de validação
      */
     Class<?>[] groups() default {};
 
     /**
-     * Permite associar metadados adicionais
-     * à validação.
+     * Metadados associados à restrição (padrão do Bean Validation). Não são
+     * usados pelo projeto.
      *
-     * @return payloads associados à constraint
+     * @return payloads da restrição
      */
     Class<? extends Payload>[] payload() default {};
 }

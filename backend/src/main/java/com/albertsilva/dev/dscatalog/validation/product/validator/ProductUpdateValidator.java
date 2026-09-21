@@ -17,45 +17,37 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Implementa as regras de validação utilizadas durante
- * o processo de atualização de produtos.
+ * Validator de {@link ProductUpdateValid}: duas verificações sobre
+ * {@code ProductUpdateRequest}, sempre executadas (acumulam violações).
+ *
+ * <ol>
+ * <li><b>Nome não pertencente a outro produto:</b> se o nome for
+ * {@code null}/em branco, ou se {@code HttpServletRequest} não tiver o atributo
+ * de variáveis de URI ou a chave {@code id}, <b>nada é verificado</b>. Caso
+ * contrário, converte o {@code id} com {@code Long.parseLong} (<b>sem tratar
+ * {@code NumberFormatException}</b>) e consulta
+ * {@code existsByNameIgnoreCaseAndIdNot(nomeNormalizado, id)}; violação em
+ * {@code name} com {@code {product.name.unique}}. O id não é verificado como
+ * existente.</li>
+ * <li><b>Categorias existentes:</b> idêntica à de {@link ProductCreateValidator}
+ * (uma consulta {@code existsById} por id; violação em {@code categoryIds}).</li>
+ * </ol>
  *
  * <p>
- * Este validator é associado à annotation
- * {@link ProductUpdateValid} e executa validações
- * contextuais em nível de classe.
- *
- * <p>
- * Atualmente, a validação garante:
- * <ul>
- * <li>Que não exista outro produto cadastrado
- * com o mesmo nome</li>
- * <li>Que todas as categorias informadas existam
- * na base de dados</li>
- * </ul>
- *
- * <p>
- * Durante a atualização, o produto atualmente
- * sendo editado é desconsiderado na verificação
- * de unicidade do nome.
- *
- * <p>
- * O identificador do produto é obtido diretamente
- * da URI da requisição HTTP através do
- * {@link HandlerMapping#URI_TEMPLATE_VARIABLES_ATTRIBUTE}.
- *
- * <p>
- * As mensagens de erro geradas durante a validação
- * são armazenadas em uma lista de {@link FieldMessage}
- * e adicionadas manualmente ao contexto de validação.
+ * Depende de uma variável de caminho chamada {@code id} e de execução dentro de
+ * uma requisição MVC. Consulta o banco. Usa {@code FieldMessage} (pacote de
+ * exceções da camada web) como estrutura de acúmulo.
+ * </p>
  */
 public class ProductUpdateValidator implements ConstraintValidator<ProductUpdateValid, ProductUpdateRequest> {
 
-  // Repositórios necessários para as validações
-  // O HttpServletRequest é utilizado para acessar os parâmetros da URI durante a
-  // validação
+  /** Repositório de produtos, usado na verificação de nome de outro produto. */
   private final ProductRepository productRepository;
+
+  /** Repositório de categorias, usado na verificação de existência dos ids. */
   private final CategoryRepository categoryRepository;
+
+  /** Requisição HTTP corrente, de onde se lê a variável de caminho {@code id}. */
   private final HttpServletRequest request;
 
   /**
@@ -74,20 +66,13 @@ public class ProductUpdateValidator implements ConstraintValidator<ProductUpdate
   }
 
   /**
-   * Executa as validações relacionadas ao processo
-   * de atualização de produtos.
+   * Verifica se o nome pertence a outro produto (id da URL) e se as categorias
+   * existem, acumulando as violações.
    *
-   * <p>
-   * As regras de validação são aplicadas utilizando
-   * os dados presentes no DTO e informações obtidas
-   * da requisição HTTP.
-   *
-   * @param dto     objeto contendo os dados do produto
-   *                que será validado
-   * @param context contexto utilizado pelo Bean Validation
-   *                para registrar erros personalizados
-   * @return {@code true} caso nenhuma inconsistência seja encontrada;
-   *         {@code false} caso existam erros de validação
+   * @param dto     dados de atualização
+   * @param context contexto usado para registrar as violações nos campos
+   *                {@code name} e {@code categoryIds}
+   * @return {@code true} se nenhuma violação for encontrada
    */
   @Override
   public boolean isValid(ProductUpdateRequest dto, ConstraintValidatorContext context) {
@@ -113,7 +98,7 @@ public class ProductUpdateValidator implements ConstraintValidator<ProductUpdate
    * <p>
    * Antes da validação, o nome informado é normalizado:
    * <ul>
-   * <li>Removendo espaços extras</li>
+   * <li>{@code trim()} (remove espaços apenas nas extremidades)</li>
    * <li>Convertendo para letras minúsculas</li>
    * </ul>
    *

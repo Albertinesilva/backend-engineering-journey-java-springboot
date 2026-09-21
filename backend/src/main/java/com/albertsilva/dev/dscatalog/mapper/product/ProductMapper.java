@@ -12,54 +12,47 @@ import com.albertsilva.dev.dscatalog.dto.product.response.ProductDetailsResponse
 import com.albertsilva.dev.dscatalog.dto.product.response.ProductResponse;
 
 /**
- * Componente responsável pela conversão entre DTOs e entidade {@link Product}.
+ * Conversor manual (sem MapStruct) entre os DTOs de produto e a entidade
+ * {@link Product}. Componente sem estado, usado apenas por
+ * {@code ProductService}.
  *
  * <p>
- * Este mapper trata a transformação de dados entre a API e o modelo de domínio,
- * incluindo o tratamento de relacionamentos com categorias.
+ * <b>Categorias:</b> na <b>entrada</b> (criação/atualização) este mapper
+ * <b>não trata categorias</b>: {@code categoryIds} é resolvido e aplicado por
+ * {@code ProductService.syncCategories}. Na <b>saída</b>, ele percorre
+ * {@code Product.getCategories()} e as converte: em
+ * {@link ProductResponse} como
+ * {@link com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse}
+ * (id e nome) e em {@link ProductDetailsResponse} como
+ * {@link com.albertsilva.dev.dscatalog.dto.category.response.CategoryDetailsResponse}
+ * (id, nome, descrição e {@code active}). Como a coleção é carregada sob
+ * demanda, a conversão só evita consultas adicionais quando o produto foi
+ * carregado com {@code JOIN FETCH} (caso de {@code findAllPaged}).
  * </p>
  *
  * <p>
- * <b>Importante para entendimento:</b>
- * </p>
- * <ul>
- * <li>Na ENTRADA (create/update), as categorias são representadas apenas por
- * IDs</li>
- * <li>Na SAÍDA (response), as categorias são retornadas como objetos
- * completos</li>
- * </ul>
- *
- * <p>
- * Esse padrão evita excesso de dados nas requisições e mantém respostas ricas
- * para o cliente.
+ * Os métodos de conversão devolvem {@code null} para entrada {@code null}; o
+ * mapper não normaliza valores.
  * </p>
  */
 @Component
 public class ProductMapper {
 
   /**
-   * Converte um {@link ProductCreateRequest} em uma entidade {@link Product}.
+   * Cria um novo {@link Product} (ainda sem id) a partir do request de criação.
    *
    * <p>
-   * <b>Comportamento:</b>
+   * Copia {@code name}, {@code description}, {@code price} e {@code imgUrl}.
+   * <b>Não copia</b> {@code date} (o campo do request é descartado) nem
+   * {@code categoryIds}, e <b>não define</b> {@code active}: a instância fica
+   * com o valor padrão do campo ({@code false}) até que
+   * {@code ProductService.create} o defina como {@code true}. As datas são
+   * preenchidas pelos callbacks JPA.
    * </p>
-   * <ul>
-   * <li>Mapeia os campos básicos do produto</li>
-   * <li>Define {@code active = false} caso não seja informado</li>
-   * <li><b>Não trata categorias diretamente</b> (apenas IDs são recebidos)</li>
-   * </ul>
    *
-   * <p>
-   * <b>Importante:</b>
-   * </p>
-   * <ul>
-   * <li>O relacionamento com categorias deve ser tratado na camada de
-   * serviço</li>
-   * <li>Isso ocorre porque é necessário buscar as categorias no banco</li>
-   * </ul>
-   *
-   * @param request dados da requisição de criação
-   * @return entidade pronta para persistência ou {@code null} se request for nulo
+   * @param request dados de criação
+   * @return nova entidade (não persistida) ou {@code null} se {@code request} for
+   *         {@code null}
    */
   public Product toEntity(ProductCreateRequest request) {
     if (request == null) {
@@ -76,28 +69,21 @@ public class ProductMapper {
   }
 
   /**
-   * Atualiza uma entidade {@link Product} com base em um
-   * {@link ProductUpdateRequest}.
+   * Aplica o request de atualização a um produto existente, <b>somente nos
+   * campos diferentes de {@code null}</b>.
    *
    * <p>
-   * <b>Comportamento:</b>
+   * {@code name}, {@code description}, {@code price} e {@code imgUrl} são
+   * tratados de forma independente: cada um só é sobrescrito se o valor recebido
+   * não for {@code null}; portanto, {@code null} mantém o valor atual e não é
+   * possível limpar um campo por esta via. {@code categoryIds} não é tratado
+   * aqui (ver {@code ProductService.syncCategories}), e {@code active} e as datas
+   * não são alterados. Se {@code request} ou {@code entity} for {@code null},
+   * nada é feito.
    * </p>
-   * <ul>
-   * <li>Atualiza apenas os campos não nulos</li>
-   * <li>Permite atualização parcial (PATCH-like)</li>
-   * <li><b>Não atualiza categorias diretamente</b></li>
-   * </ul>
-   *
-   * <p>
-   * <b>Importante:</b>
-   * </p>
-   * <ul>
-   * <li>A atualização das categorias deve ser feita no service</li>
-   * <li>Evita inconsistência e garante integridade relacional</li>
-   * </ul>
    *
    * @param request dados de atualização
-   * @param entity  entidade a ser atualizada
+   * @param entity  produto a ser modificado
    */
   public void updateEntity(ProductUpdateRequest request, Product entity) {
     if (request == null || entity == null) {
@@ -123,26 +109,18 @@ public class ProductMapper {
   }
 
   /**
-   * Converte uma entidade {@link Product} em um {@link ProductResponse}.
+   * Converte o produto em resposta <b>resumida</b>: {@code id}, {@code name},
+   * {@code description}, {@code price}, {@code imgUrl} e a lista de categorias
+   * (cada uma como id e nome).
    *
    * <p>
-   * <b>Comportamento:</b>
+   * Percorre {@code entity.getCategories()}; se a coleção ainda não estiver
+   * inicializada, ela é carregada nesse momento (uma consulta adicional por
+   * produto, padrão N+1). Datas e {@code active} não são expostos.
    * </p>
-   * <ul>
-   * <li>Retorna dados básicos do produto</li>
-   * <li>Não inclui categorias (lista vazia)</li>
-   * </ul>
    *
-   * <p>
-   * <b>Uso:</b>
-   * </p>
-   * <ul>
-   * <li>Listagens simples (ex: GET /products)</li>
-   * <li>Evita payload pesado</li>
-   * </ul>
-   *
-   * @param entity entidade de produto
-   * @return DTO simplificado
+   * @param entity produto
+   * @return resposta ou {@code null} se {@code entity} for {@code null}
    */
   public ProductResponse toResponse(Product entity) {
     if (entity == null) {
@@ -159,26 +137,18 @@ public class ProductMapper {
   }
 
   /**
-   * Converte uma entidade {@link Product} em um {@link ProductDetailsResponse}.
+   * Converte o produto em resposta <b>detalhada</b>: todos os campos de
+   * {@link #toResponse(Product)} mais {@code createdAt}, {@code updatedAt} e
+   * {@code active}, com as categorias em forma detalhada (id, nome, descrição e
+   * {@code active}).
    *
    * <p>
-   * <b>Comportamento:</b>
+   * Percorre {@code entity.getCategories()}, com o mesmo efeito de carregamento
+   * sob demanda descrito em {@link #toResponse(Product)}.
    * </p>
-   * <ul>
-   * <li>Retorna todos os dados do produto</li>
-   * <li>Inclui categorias como objetos completos</li>
-   * </ul>
    *
-   * <p>
-   * <b>Importante para o júnior:</b>
-   * </p>
-   * <ul>
-   * <li>Na resposta, categorias vêm como objetos (id, name, etc.)</li>
-   * <li>Isso é diferente da requisição, que usa apenas IDs</li>
-   * </ul>
-   *
-   * @param entity entidade de produto
-   * @return DTO detalhado
+   * @param entity produto
+   * @return resposta ou {@code null} se {@code entity} for {@code null}
    */
   public ProductDetailsResponse toDetailsResponse(Product entity) {
     if (entity == null)
@@ -201,10 +171,12 @@ public class ProductMapper {
   }
 
   /**
-   * Converte uma página de produtos em uma página de respostas simplificadas.
+   * Converte uma página de produtos em página de {@link ProductResponse}
+   * aplicando {@link #toResponse(Product)} a cada elemento e preservando os
+   * metadados de paginação.
    *
    * @param entities página de entidades
-   * @return página de DTOs
+   * @return página de respostas resumidas
    */
   public Page<ProductResponse> toResponsePage(Page<Product> entities) {
     return entities.map(this::toResponse);

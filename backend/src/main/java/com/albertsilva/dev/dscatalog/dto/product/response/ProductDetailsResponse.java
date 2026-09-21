@@ -6,43 +6,25 @@ import java.util.List;
 import com.albertsilva.dev.dscatalog.dto.category.response.CategoryDetailsResponse;
 
 /**
- * DTO de resposta detalhada para produto.
+ * Resposta <b>detalhada</b> de produto.
  *
  * <p>
- * Retorna o produto com suas categorias associadas.
+ * Produzida por {@code ProductMapper.toDetailsResponse} para
+ * {@code GET /api/v1/products/{id}}. Em relação a {@link ProductResponse},
+ * acrescenta as datas, o indicador {@code active} e devolve cada categoria como
+ * {@link com.albertsilva.dev.dscatalog.dto.category.response.CategoryDetailsResponse}
+ * (id, nome, descrição e {@code active}).
  * </p>
  *
- * <p>
- * <b>Diferença chave:</b>
- * </p>
- * <ul>
- * <li>Aqui as categorias são objetos completos</li>
- * <li>Ideal para telas de detalhe (ex: GET /products/{id})</li>
- * </ul>
- *
- * <p>
- * <b>Exemplo de retorno:</b>
- * </p>
- * 
- * <pre>
- * {
- *   "id": 1,
- *   "name": "Notebook",
- *   "categories": [
- *     { "id": 1, "name": "Eletrônicos" }
- *   ]
- * }
- * </pre>
- *
- * @param id          identificador
+ * @param id          identificador do produto
  * @param name        nome
- * @param description descrição
- * @param price       preço
- * @param imgUrl      imagem
- * @param createdAt   data de criação
- * @param updatedAt   data da última atualização
- * @param active      status do produto
- * @param categories  categorias completas
+ * @param description descrição (pode ser {@code null})
+ * @param price       preço (pode ser {@code null})
+ * @param imgUrl      URL da imagem (pode ser {@code null})
+ * @param createdAt   instante de criação (preenchido na persistência)
+ * @param updatedAt   instante da última atualização
+ * @param active      indica se o produto está ativo
+ * @param categories  categorias do produto, em forma detalhada
  */
 public record ProductDetailsResponse(
     Long id,
