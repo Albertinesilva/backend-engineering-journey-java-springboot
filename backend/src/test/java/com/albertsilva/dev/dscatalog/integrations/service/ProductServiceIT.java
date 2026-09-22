@@ -106,9 +106,12 @@ class ProductServiceIT {
         // Assert
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertEquals("Macbook Pro", result.getContent().get(0).name());
-        assertEquals("PC Gamer", result.getContent().get(1).name());
-        assertEquals("PC Gamer Alfa", result.getContent().get(2).name());
+        assertEquals("Air Fryer 5L Digital", result.getContent().get(0).name());
+        // Nome lido do repositório (id 155) em vez de literal com "ô": o compilador deste ambiente
+        // corrompe literais Java com "ô"/"ê" mesmo com o projeto configurado para UTF-8; o valor
+        // persistido é lido corretamente via JDBC, então a comparação permanece exata.
+        assertEquals(repository.findById(155L).orElseThrow().getName(), result.getContent().get(1).name());
+        assertEquals(repository.findById(162L).orElseThrow().getName(), result.getContent().get(2).name());
       }
 
       @Test
@@ -147,12 +150,12 @@ class ProductServiceIT {
         // Assert
         assertEquals(COUNT_TOTAL_PRODUCTS, result.getTotalElements());
         assertEquals(10, result.getContent().size());
-        assertEquals("Macbook Pro", result.getContent().get(0).name());
+        assertEquals("Air Fryer 5L Digital", result.getContent().get(0).name());
         result.getContent().forEach(product -> assertFalse(product.categories().isEmpty()));
 
         Set<String> categoryNames = result.getContent().get(0).categories().stream().map(CategoryResponse::name)
             .collect(Collectors.toSet());
-        assertEquals(Set.of("Electronics", "Computers"), categoryNames);
+        assertEquals(Set.of("Home Appliances"), categoryNames);
       }
 
       @Test
@@ -166,8 +169,11 @@ class ProductServiceIT {
         Page<ProductResponse> result = service.findAllPaged("", "2", pageRequest);
 
         // Assert
-        assertEquals(2, result.getTotalElements());
-        assertEquals(List.of("Rails for Dummies", "The Lord of the Rings"),
+        assertEquals(27, result.getTotalElements());
+        assertEquals(List.of("Clean Architecture", "Clean Code", "Continuous Delivery",
+            "Design Patterns: Elements of Reusable Object-Oriented Software", "Designing Data-Intensive Applications",
+            "Domain-Driven Design: Tackling Complexity in the Heart of Software", "Effective Java", "Eloquent JavaScript",
+            "Enterprise Integration Patterns", "Growing Object-Oriented Software, Guided by Tests"),
             result.getContent().stream().map(ProductResponse::name).toList());
       }
 
@@ -175,15 +181,17 @@ class ProductServiceIT {
       @DisplayName("findAllPaged should not repeat a product that belongs to more than one informed category")
       void findAllPagedShouldNotRepeatProductThatBelongsToMoreThanOneInformedCategory() {
 
-        // Arrange
+        // Arrange: "Carregador Veicular Inteligente" pertence simultaneamente às categorias 1 (Electronics)
+        // e 12 (Automotive); a combinação não pode devolvê-lo duas vezes.
         PageRequest pageRequest = PageRequest.of(0, 30, Sort.by("name"));
 
         // Act
-        Page<ProductResponse> result = service.findAllPaged("", "1,3", pageRequest);
+        Page<ProductResponse> result = service.findAllPaged("", "1,12", pageRequest);
 
         // Assert
-        assertEquals(23, result.getTotalElements());
-        assertEquals(1, result.getContent().stream().filter(product -> "Macbook Pro".equals(product.name())).count());
+        assertEquals(2, result.getTotalElements());
+        assertEquals(1, result.getContent().stream()
+            .filter(product -> "Carregador Veicular Inteligente".equals(product.name())).count());
       }
 
       @Test
@@ -198,7 +206,7 @@ class ProductServiceIT {
 
         // Assert
         assertEquals(1, result.getTotalElements());
-        assertEquals("Rails for Dummies", result.getContent().get(0).name());
+        assertEquals("Ruby on Rails For Dummies", result.getContent().get(0).name());
       }
 
       @Test
@@ -212,7 +220,10 @@ class ProductServiceIT {
         Page<ProductResponse> result = service.findAllPaged("", "0", pageRequest);
 
         // Assert
-        assertEquals(List.of("The Lord of the Rings", "Smart TV", "Rails for Dummies"),
+        // 3º nome lido do repositório (id 121) pelo mesmo motivo do teste de ordenação ascendente:
+        // literal Java com "ê" é corrompido pelo compilador deste ambiente mesmo com UTF-8 configurado.
+        String thirdName = repository.findById(121L).orElseThrow().getName();
+        assertEquals(List.of("xUnit Test Patterns", "Webcam Full HD Stream", thirdName),
             result.getContent().stream().map(ProductResponse::name).toList());
       }
 

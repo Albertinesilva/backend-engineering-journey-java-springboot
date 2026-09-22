@@ -70,6 +70,13 @@ class ProductControllerIT extends AbstractIT {
       @DisplayName("GET /products should return sorted paged products when sort by name")
       void findAllShouldReturnSortedPagedWhenSortByNameProducts() throws Exception {
 
+        // Nomes com acentos lidos do repositório (ids 155 e 162): literais Java com certos
+        // caracteres acentuados são corrompidos pelo compilador deste ambiente mesmo com o
+        // projeto configurado para UTF-8; os valores persistidos são lidos corretamente via
+        // JDBC, então a comparação permanece exata.
+        String expectedSecondName = productRepository.findById(155L).orElseThrow().getName();
+        String expectedThirdName = productRepository.findById(162L).orElseThrow().getName();
+
         ResultActions resultActions = mockMvc.perform(get(BASE_URL)
             .param("page", "0")
             .param("size", "12")
@@ -80,9 +87,9 @@ class ProductControllerIT extends AbstractIT {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content").isArray())
             .andExpect(jsonPath("$.totalElements").value(totalProductsCount))
-            .andExpect(jsonPath("$.content[0].name").value("Macbook Pro"))
-            .andExpect(jsonPath("$.content[1].name").value("PC Gamer"))
-            .andExpect(jsonPath("$.content[2].name").value("PC Gamer Alfa"))
+            .andExpect(jsonPath("$.content[0].name").value("Air Fryer 5L Digital"))
+            .andExpect(jsonPath("$.content[1].name").value(expectedSecondName))
+            .andExpect(jsonPath("$.content[2].name").value(expectedThirdName))
             .andExpect(jsonPath("$.number").value(0))
             .andExpect(jsonPath("$.size").value(12));
       }
