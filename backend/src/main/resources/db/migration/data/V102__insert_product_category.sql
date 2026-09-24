@@ -1,4 +1,40 @@
 -- =========================
+-- ELECTRONICS
+-- =========================
+INSERT INTO tb_product_category (product_id, category_id) VALUES (2, 1); -- Smart TV
+INSERT INTO tb_product_category (product_id, category_id) VALUES (37, 1); -- Smartphone Orion X 256GB
+INSERT INTO tb_product_category (product_id, category_id) VALUES (38, 1); -- Smartphone Orion Lite 128GB
+INSERT INTO tb_product_category (product_id, category_id) VALUES (39, 1); -- Smartphone Pulse Pro 512GB
+INSERT INTO tb_product_category (product_id, category_id) VALUES (40, 1); -- Smartphone Essential 64GB
+INSERT INTO tb_product_category (product_id, category_id) VALUES (41, 1); -- Tablet Slate 11 128GB
+INSERT INTO tb_product_category (product_id, category_id) VALUES (42, 1); -- Tablet Slate Pro 12.9
+INSERT INTO tb_product_category (product_id, category_id) VALUES (43, 1); -- Tablet Kids Explorer 8
+INSERT INTO tb_product_category (product_id, category_id) VALUES (50, 1); -- Headset Gamer Surround 7.1
+INSERT INTO tb_product_category (product_id, category_id) VALUES (51, 1); -- Headset Office Bluetooth NC
+INSERT INTO tb_product_category (product_id, category_id) VALUES (52, 1); -- Fone de Ouvido Studio Pro
+INSERT INTO tb_product_category (product_id, category_id) VALUES (69, 1); -- TV OLED 65 4K Lumen
+INSERT INTO tb_product_category (product_id, category_id) VALUES (70, 1); -- TV QLED 55 4K Prisma
+INSERT INTO tb_product_category (product_id, category_id) VALUES (71, 1); -- Smart TV LED 43 Full HD
+INSERT INTO tb_product_category (product_id, category_id) VALUES (72, 1); -- Smart TV 32 HD Essencial
+INSERT INTO tb_product_category (product_id, category_id) VALUES (73, 1); -- Projetor Full HD Cine Home
+INSERT INTO tb_product_category (product_id, category_id) VALUES (74, 1); -- Câmera Mirrorless Zeta 24MP
+INSERT INTO tb_product_category (product_id, category_id) VALUES (75, 1); -- Câmera Compacta Travel Zoom
+INSERT INTO tb_product_category (product_id, category_id) VALUES (76, 1); -- Câmera de Ação 4K Trail
+INSERT INTO tb_product_category (product_id, category_id) VALUES (77, 1); -- Fone de Ouvido Bluetooth Air
+INSERT INTO tb_product_category (product_id, category_id) VALUES (78, 1); -- Caixa de Som Portátil Boom
+INSERT INTO tb_product_category (product_id, category_id) VALUES (79, 1); -- Soundbar 2.1 Cinema
+INSERT INTO tb_product_category (product_id, category_id) VALUES (80, 1); -- Smartwatch Pulse Fit
+INSERT INTO tb_product_category (product_id, category_id) VALUES (81, 1); -- Smartband Active 5
+INSERT INTO tb_product_category (product_id, category_id) VALUES (82, 1); -- Console Nexus Edição Digital
+INSERT INTO tb_product_category (product_id, category_id) VALUES (83, 1); -- Console Portátil Handy Play
+INSERT INTO tb_product_category (product_id, category_id) VALUES (84, 1); -- Controle Sem Fio Nexus Pro
+INSERT INTO tb_product_category (product_id, category_id) VALUES (85, 1); -- Lâmpada Inteligente Wi-Fi RGB
+INSERT INTO tb_product_category (product_id, category_id) VALUES (86, 1); -- Tomada Inteligente Wi-Fi 10A
+INSERT INTO tb_product_category (product_id, category_id) VALUES (87, 1); -- Câmera de Segurança Wi-Fi 360
+INSERT INTO tb_product_category (product_id, category_id) VALUES (139, 1); -- Carregador Veicular Inteligente
+INSERT INTO tb_product_category (product_id, category_id) VALUES (158, 1); -- Drone Infantil com Câmera
+
+-- =========================
 -- BOOKS
 -- =========================
 INSERT INTO tb_product_category (product_id, category_id) VALUES (1, 2); -- Eloquent JavaScript
@@ -30,14 +66,9 @@ INSERT INTO tb_product_category (product_id, category_id) VALUES (111, 2); -- Re
 INSERT INTO tb_product_category (product_id, category_id) VALUES (112, 2); -- Head First Design Patterns
 
 -- =========================
--- ELECTRONICS
--- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (139, 1); -- Carregador Veicular Inteligente
-INSERT INTO tb_product_category (product_id, category_id) VALUES (158, 1); -- Drone Infantil com Câmera
-
--- =========================
 -- COMPUTERS
 -- =========================
+INSERT INTO tb_product_category (product_id, category_id) VALUES (3, 3); -- Macbook Pro
 INSERT INTO tb_product_category (product_id, category_id) VALUES (4, 3); -- PC Gamer
 INSERT INTO tb_product_category (product_id, category_id) VALUES (6, 3); -- PC Gamer Ex
 INSERT INTO tb_product_category (product_id, category_id) VALUES (7, 3); -- PC Gamer X
@@ -59,6 +90,12 @@ INSERT INTO tb_product_category (product_id, category_id) VALUES (22, 3); -- PC 
 INSERT INTO tb_product_category (product_id, category_id) VALUES (23, 3); -- PC Gamer Min
 INSERT INTO tb_product_category (product_id, category_id) VALUES (24, 3); -- PC Gamer Boo
 INSERT INTO tb_product_category (product_id, category_id) VALUES (25, 3); -- PC Gamer Foo
+INSERT INTO tb_product_category (product_id, category_id) VALUES (26, 3); -- Notebook Aurora Pro 14
+INSERT INTO tb_product_category (product_id, category_id) VALUES (27, 3); -- Notebook Aurora Ultra 15
+INSERT INTO tb_product_category (product_id, category_id) VALUES (28, 3); -- Notebook Business Vertex 14
+INSERT INTO tb_product_category (product_id, category_id) VALUES (29, 3); -- Notebook Gamer Titan 16
+INSERT INTO tb_product_category (product_id, category_id) VALUES (30, 3); -- Notebook Developer Nimbus 15
+INSERT INTO tb_product_category (product_id, category_id) VALUES (31, 3); -- Notebook Essential Lite 14
 
 -- =========================
 -- HOME APPLIANCES
@@ -90,15 +127,34 @@ INSERT INTO tb_product_category (product_id, category_id) VALUES (126, 7); -- Ca
 INSERT INTO tb_product_category (product_id, category_id) VALUES (163, 7); -- Jaqueta Corta-Vento Impermeável
 
 -- =========================
+-- SHOES
+-- =========================
+INSERT INTO tb_product_category (product_id, category_id) VALUES (120, 8); -- Tênis de Corrida Aero Boost
+INSERT INTO tb_product_category (product_id, category_id) VALUES (121, 8); -- Tênis de Corrida Trail Grip
+
+-- =========================
 -- SPORTS
 -- =========================
 INSERT INTO tb_product_category (product_id, category_id) VALUES (113, 9); -- Bicicleta Mountain Bike Aro 29 Trail
 INSERT INTO tb_product_category (product_id, category_id) VALUES (114, 9); -- Bicicleta Speed Carbon Road Pro
+INSERT INTO tb_product_category (product_id, category_id) VALUES (115, 9); -- Bicicleta Urbana Aro 26 Cidade
+INSERT INTO tb_product_category (product_id, category_id) VALUES (116, 9); -- Bicicleta Elétrica City Motion
+INSERT INTO tb_product_category (product_id, category_id) VALUES (117, 9); -- Capacete de Ciclismo Aero
+INSERT INTO tb_product_category (product_id, category_id) VALUES (118, 9); -- Ciclocomputador GPS Route
+INSERT INTO tb_product_category (product_id, category_id) VALUES (119, 9); -- Luvas de Ciclismo Gel
+INSERT INTO tb_product_category (product_id, category_id) VALUES (120, 9); -- Tênis de Corrida Aero Boost
+INSERT INTO tb_product_category (product_id, category_id) VALUES (121, 9); -- Tênis de Corrida Trail Grip
+INSERT INTO tb_product_category (product_id, category_id) VALUES (122, 9); -- Esteira Elétrica Dobrável 12 km/h
+INSERT INTO tb_product_category (product_id, category_id) VALUES (123, 9); -- Kit Halteres Ajustáveis 20 kg
+INSERT INTO tb_product_category (product_id, category_id) VALUES (124, 9); -- Tapete de Yoga Antiderrapante
 INSERT INTO tb_product_category (product_id, category_id) VALUES (125, 9); -- Squeeze Térmica 900ml
+INSERT INTO tb_product_category (product_id, category_id) VALUES (126, 9); -- Camiseta Dry Fit Running
 
 -- =========================
 -- HEALTH
 -- =========================
+INSERT INTO tb_product_category (product_id, category_id) VALUES (122, 10); -- Esteira Elétrica Dobrável 12 km/h
+INSERT INTO tb_product_category (product_id, category_id) VALUES (124, 10); -- Tapete de Yoga Antiderrapante
 INSERT INTO tb_product_category (product_id, category_id) VALUES (162, 10); -- Balança Digital Corporal Bluetooth
 
 -- =========================
@@ -111,6 +167,12 @@ INSERT INTO tb_product_category (product_id, category_id) VALUES (139, 12); -- C
 -- =========================
 INSERT INTO tb_product_category (product_id, category_id) VALUES (160, 13); -- Kit de Ferramentas de Jardinagem
 INSERT INTO tb_product_category (product_id, category_id) VALUES (161, 13); -- Mangueira Retrátil 20m
+
+-- =========================
+-- OFFICE SUPPLIES
+-- =========================
+INSERT INTO tb_product_category (product_id, category_id) VALUES (65, 15); -- Suporte Ergonômico para Notebook
+INSERT INTO tb_product_category (product_id, category_id) VALUES (147, 15); -- Organizador de Cabos Kit 30 Peças
 
 -- =========================
 -- NOTEBOOKS
@@ -251,150 +313,77 @@ INSERT INTO tb_product_category (product_id, category_id) VALUES (87, 33); -- C�
 INSERT INTO tb_product_category (product_id, category_id) VALUES (155, 33); -- Aspirador Robô Inteligente
 
 -- =========================
--- JAVA
--- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (88, 34); -- Head First Java
-INSERT INTO tb_product_category (product_id, category_id) VALUES (89, 34); -- Java Concurrency in Practice
-INSERT INTO tb_product_category (product_id, category_id) VALUES (90, 34); -- Spring Boot in Action
-INSERT INTO tb_product_category (product_id, category_id) VALUES (91, 34); -- Spring Security in Action
-INSERT INTO tb_product_category (product_id, category_id) VALUES (92, 34); -- Spring in Action
-INSERT INTO tb_product_category (product_id, category_id) VALUES (99, 34); -- Effective Java
-
--- =========================
--- SPRING FRAMEWORK
--- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (90, 35); -- Spring Boot in Action
-INSERT INTO tb_product_category (product_id, category_id) VALUES (91, 35); -- Spring Security in Action
-INSERT INTO tb_product_category (product_id, category_id) VALUES (92, 35); -- Spring in Action
-
--- =========================
--- BACKEND DEVELOPMENT
--- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (5, 36); -- Ruby on Rails For Dummies
-INSERT INTO tb_product_category (product_id, category_id) VALUES (90, 36); -- Spring Boot in Action
-INSERT INTO tb_product_category (product_id, category_id) VALUES (94, 36); -- Patterns of Enterprise Application Architecture
-
--- =========================
--- FRONTEND DEVELOPMENT
--- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (1, 37); -- Eloquent JavaScript
-INSERT INTO tb_product_category (product_id, category_id) VALUES (93, 37); -- HTML and CSS: Design and Build Websites
-INSERT INTO tb_product_category (product_id, category_id) VALUES (95, 37); -- JavaScript: The Good Parts
-
--- =========================
--- DEVOPS
--- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (107, 38); -- Continuous Delivery
-INSERT INTO tb_product_category (product_id, category_id) VALUES (108, 38); -- The DevOps Handbook
-INSERT INTO tb_product_category (product_id, category_id) VALUES (109, 38); -- Pro Git
-
--- =========================
--- DATABASES
--- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (100, 39); -- Designing Data-Intensive Applications
-
--- =========================
--- SOFTWARE ARCHITECTURE
--- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (94, 41); -- Patterns of Enterprise Application Architecture
-INSERT INTO tb_product_category (product_id, category_id) VALUES (97, 41); -- Design Patterns: Elements of Reusable Object-Oriented Software
-INSERT INTO tb_product_category (product_id, category_id) VALUES (100, 41); -- Designing Data-Intensive Applications
-INSERT INTO tb_product_category (product_id, category_id) VALUES (102, 41); -- Clean Architecture
-INSERT INTO tb_product_category (product_id, category_id) VALUES (103, 41); -- Enterprise Integration Patterns
-INSERT INTO tb_product_category (product_id, category_id) VALUES (110, 41); -- Domain-Driven Design: Tackling Complexity in the Heart of Software
-INSERT INTO tb_product_category (product_id, category_id) VALUES (112, 41); -- Head First Design Patterns
-
--- =========================
--- SOFTWARE TESTING
--- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (101, 42); -- Growing Object-Oriented Software, Guided by Tests
-INSERT INTO tb_product_category (product_id, category_id) VALUES (104, 42); -- xUnit Test Patterns
-INSERT INTO tb_product_category (product_id, category_id) VALUES (105, 42); -- Test-Driven Development: By Example
-
--- =========================
--- SOFTWARE ENGINEERING
--- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (96, 43); -- Clean Code
-INSERT INTO tb_product_category (product_id, category_id) VALUES (106, 43); -- The Clean Coder
-INSERT INTO tb_product_category (product_id, category_id) VALUES (111, 43); -- Refactoring: Improving the Design of Existing Code
-
--- =========================
--- ALGORITHMS AND DATA STRUCTURES
--- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (98, 44); -- Introduction to Algorithms
-
--- =========================
 -- BICYCLES
 -- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (113, 45); -- Bicicleta Mountain Bike Aro 29 Trail
-INSERT INTO tb_product_category (product_id, category_id) VALUES (114, 45); -- Bicicleta Speed Carbon Road Pro
-INSERT INTO tb_product_category (product_id, category_id) VALUES (115, 45); -- Bicicleta Urbana Aro 26 Cidade
-INSERT INTO tb_product_category (product_id, category_id) VALUES (116, 45); -- Bicicleta Elétrica City Motion
+INSERT INTO tb_product_category (product_id, category_id) VALUES (113, 34); -- Bicicleta Mountain Bike Aro 29 Trail
+INSERT INTO tb_product_category (product_id, category_id) VALUES (114, 34); -- Bicicleta Speed Carbon Road Pro
+INSERT INTO tb_product_category (product_id, category_id) VALUES (115, 34); -- Bicicleta Urbana Aro 26 Cidade
+INSERT INTO tb_product_category (product_id, category_id) VALUES (116, 34); -- Bicicleta Elétrica City Motion
 
 -- =========================
 -- CYCLING ACCESSORIES
 -- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (117, 46); -- Capacete de Ciclismo Aero
-INSERT INTO tb_product_category (product_id, category_id) VALUES (118, 46); -- Ciclocomputador GPS Route
-INSERT INTO tb_product_category (product_id, category_id) VALUES (119, 46); -- Luvas de Ciclismo Gel
+INSERT INTO tb_product_category (product_id, category_id) VALUES (117, 35); -- Capacete de Ciclismo Aero
+INSERT INTO tb_product_category (product_id, category_id) VALUES (118, 35); -- Ciclocomputador GPS Route
+INSERT INTO tb_product_category (product_id, category_id) VALUES (119, 35); -- Luvas de Ciclismo Gel
 
 -- =========================
 -- RUNNING
 -- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (120, 47); -- Tênis de Corrida Aero Boost
-INSERT INTO tb_product_category (product_id, category_id) VALUES (121, 47); -- Tênis de Corrida Trail Grip
-INSERT INTO tb_product_category (product_id, category_id) VALUES (126, 47); -- Camiseta Dry Fit Running
+INSERT INTO tb_product_category (product_id, category_id) VALUES (120, 36); -- Tênis de Corrida Aero Boost
+INSERT INTO tb_product_category (product_id, category_id) VALUES (121, 36); -- Tênis de Corrida Trail Grip
+INSERT INTO tb_product_category (product_id, category_id) VALUES (126, 36); -- Camiseta Dry Fit Running
 
 -- =========================
 -- FITNESS EQUIPMENT
 -- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (122, 48); -- Esteira Elétrica Dobrável 12 km/h
-INSERT INTO tb_product_category (product_id, category_id) VALUES (123, 48); -- Kit Halteres Ajustáveis 20 kg
-INSERT INTO tb_product_category (product_id, category_id) VALUES (124, 48); -- Tapete de Yoga Antiderrapante
+INSERT INTO tb_product_category (product_id, category_id) VALUES (122, 37); -- Esteira Elétrica Dobrável 12 km/h
+INSERT INTO tb_product_category (product_id, category_id) VALUES (123, 37); -- Kit Halteres Ajustáveis 20 kg
+INSERT INTO tb_product_category (product_id, category_id) VALUES (124, 37); -- Tapete de Yoga Antiderrapante
 
 -- =========================
 -- CARS
 -- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (127, 49); -- Carro Hatch Compacto 1.0 Flex
-INSERT INTO tb_product_category (product_id, category_id) VALUES (128, 49); -- Carro Sedan Executivo 2.0
-INSERT INTO tb_product_category (product_id, category_id) VALUES (129, 49); -- SUV Urbana Híbrida
-INSERT INTO tb_product_category (product_id, category_id) VALUES (130, 49); -- Picape Cabine Dupla Diesel
-INSERT INTO tb_product_category (product_id, category_id) VALUES (131, 49); -- Carro Elétrico Compacto City
+INSERT INTO tb_product_category (product_id, category_id) VALUES (127, 38); -- Carro Hatch Compacto 1.0 Flex
+INSERT INTO tb_product_category (product_id, category_id) VALUES (128, 38); -- Carro Sedan Executivo 2.0
+INSERT INTO tb_product_category (product_id, category_id) VALUES (129, 38); -- SUV Urbana Híbrida
+INSERT INTO tb_product_category (product_id, category_id) VALUES (130, 38); -- Picape Cabine Dupla Diesel
+INSERT INTO tb_product_category (product_id, category_id) VALUES (131, 38); -- Carro Elétrico Compacto City
 
 -- =========================
 -- MOTORCYCLES
 -- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (132, 50); -- Motocicleta Street 160cc
-INSERT INTO tb_product_category (product_id, category_id) VALUES (133, 50); -- Motocicleta Trail 300cc
-INSERT INTO tb_product_category (product_id, category_id) VALUES (134, 50); -- Scooter Elétrica Urban
-INSERT INTO tb_product_category (product_id, category_id) VALUES (135, 50); -- Capacete Integral Pro Safe
+INSERT INTO tb_product_category (product_id, category_id) VALUES (132, 39); -- Motocicleta Street 160cc
+INSERT INTO tb_product_category (product_id, category_id) VALUES (133, 39); -- Motocicleta Trail 300cc
+INSERT INTO tb_product_category (product_id, category_id) VALUES (134, 39); -- Scooter Elétrica Urban
+INSERT INTO tb_product_category (product_id, category_id) VALUES (135, 39); -- Capacete Integral Pro Safe
 
 -- =========================
 -- AUTOMOTIVE TOOLS
 -- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (136, 51); -- Kit de Ferramentas Automotivo 120 Peças
-INSERT INTO tb_product_category (product_id, category_id) VALUES (137, 51); -- Macaco Hidráulico Jacaré 2T
-INSERT INTO tb_product_category (product_id, category_id) VALUES (138, 51); -- Compressor de Ar Portátil 12V
-INSERT INTO tb_product_category (product_id, category_id) VALUES (140, 51); -- Scanner OBD2 Bluetooth
+INSERT INTO tb_product_category (product_id, category_id) VALUES (136, 40); -- Kit de Ferramentas Automotivo 120 Peças
+INSERT INTO tb_product_category (product_id, category_id) VALUES (137, 40); -- Macaco Hidráulico Jacaré 2T
+INSERT INTO tb_product_category (product_id, category_id) VALUES (138, 40); -- Compressor de Ar Portátil 12V
+INSERT INTO tb_product_category (product_id, category_id) VALUES (140, 40); -- Scanner OBD2 Bluetooth
 
 -- =========================
 -- WATCHES
 -- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (141, 52); -- Relógio Analógico Clássico Aço
-INSERT INTO tb_product_category (product_id, category_id) VALUES (142, 52); -- Relógio Automático Skeleton
-INSERT INTO tb_product_category (product_id, category_id) VALUES (143, 52); -- Relógio Digital Esportivo Resistente
+INSERT INTO tb_product_category (product_id, category_id) VALUES (141, 41); -- Relógio Analógico Clássico Aço
+INSERT INTO tb_product_category (product_id, category_id) VALUES (142, 41); -- Relógio Automático Skeleton
+INSERT INTO tb_product_category (product_id, category_id) VALUES (143, 41); -- Relógio Digital Esportivo Resistente
 
 -- =========================
 -- LIGHTING
 -- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (85, 53); -- Lâmpada Inteligente Wi-Fi RGB
-INSERT INTO tb_product_category (product_id, category_id) VALUES (144, 53); -- Luminária de Mesa LED Articulada
-INSERT INTO tb_product_category (product_id, category_id) VALUES (145, 53); -- Pendente Industrial Preto
-INSERT INTO tb_product_category (product_id, category_id) VALUES (146, 53); -- Fita LED 5m RGB com Controle
+INSERT INTO tb_product_category (product_id, category_id) VALUES (85, 42); -- Lâmpada Inteligente Wi-Fi RGB
+INSERT INTO tb_product_category (product_id, category_id) VALUES (144, 42); -- Luminária de Mesa LED Articulada
+INSERT INTO tb_product_category (product_id, category_id) VALUES (145, 42); -- Pendente Industrial Preto
+INSERT INTO tb_product_category (product_id, category_id) VALUES (146, 42); -- Fita LED 5m RGB com Controle
 
 -- =========================
 -- HOME ORGANIZATION
 -- =========================
-INSERT INTO tb_product_category (product_id, category_id) VALUES (147, 54); -- Organizador de Cabos Kit 30 Peças
-INSERT INTO tb_product_category (product_id, category_id) VALUES (148, 54); -- Caixa Organizadora Empilhável 40L
-INSERT INTO tb_product_category (product_id, category_id) VALUES (149, 54); -- Estante Modular 5 Nichos
+INSERT INTO tb_product_category (product_id, category_id) VALUES (147, 43); -- Organizador de Cabos Kit 30 Peças
+INSERT INTO tb_product_category (product_id, category_id) VALUES (148, 43); -- Caixa Organizadora Empilhável 40L
+INSERT INTO tb_product_category (product_id, category_id) VALUES (149, 43); -- Estante Modular 5 Nichos
