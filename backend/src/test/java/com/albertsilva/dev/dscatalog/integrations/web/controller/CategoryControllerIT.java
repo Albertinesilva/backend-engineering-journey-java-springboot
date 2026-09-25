@@ -76,9 +76,9 @@ class CategoryControllerIT extends AbstractIT {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content").isArray())
             .andExpect(jsonPath("$.totalElements").value(totalCategoriesCount))
-            .andExpect(jsonPath("$.content[0].name").value("Algorithms and Data Structures"))
-            .andExpect(jsonPath("$.content[1].name").value("Audio"))
-            .andExpect(jsonPath("$.content[2].name").value("Automotive"))
+            .andExpect(jsonPath("$.content[0].name").value("Audio"))
+            .andExpect(jsonPath("$.content[1].name").value("Automotive"))
+            .andExpect(jsonPath("$.content[2].name").value("Automotive Tools"))
             .andExpect(jsonPath("$.number").value(0))
             .andExpect(jsonPath("$.size").value(12));
       }

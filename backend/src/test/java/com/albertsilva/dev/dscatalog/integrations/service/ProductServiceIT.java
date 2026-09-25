@@ -181,17 +181,22 @@ class ProductServiceIT {
       @DisplayName("findAllPaged should not repeat a product that belongs to more than one informed category")
       void findAllPagedShouldNotRepeatProductThatBelongsToMoreThanOneInformedCategory() {
 
-        // Arrange: "Carregador Veicular Inteligente" pertence simultaneamente às categorias 1 (Electronics)
-        // e 12 (Automotive); a combinação não pode devolvê-lo duas vezes.
+        // Arrange: "Câmera de Segurança Wi-Fi 360" (id 87) pertence simultaneamente às categorias 29 (Cameras)
+        // e 33 (Smart Home); a combinação não pode devolvê-lo duas vezes. Produtos esperados: 74, 75, 76 (Cameras),
+        // 85, 86 (Smart Home), 87 (ambas) e 155 (Smart Home).
         PageRequest pageRequest = PageRequest.of(0, 30, Sort.by("name"));
 
         // Act
-        Page<ProductResponse> result = service.findAllPaged("", "1,12", pageRequest);
+        Page<ProductResponse> result = service.findAllPaged("", "29,33", pageRequest);
 
         // Assert
-        assertEquals(2, result.getTotalElements());
+        assertEquals(7, result.getTotalElements());
+        assertEquals(Set.of(74L, 75L, 76L, 85L, 86L, 87L, 155L),
+            result.getContent().stream().map(ProductResponse::id).collect(Collectors.toSet()));
+        // Nome lido do repositório (id 87) para evitar literal com acento (ver comentário em ordenação por nome).
+        String sharedProductName = repository.findById(87L).orElseThrow().getName();
         assertEquals(1, result.getContent().stream()
-            .filter(product -> "Carregador Veicular Inteligente".equals(product.name())).count());
+            .filter(product -> sharedProductName.equals(product.name())).count());
       }
 
       @Test
