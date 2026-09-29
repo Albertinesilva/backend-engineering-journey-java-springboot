@@ -10,12 +10,14 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.albertsilva.dev.dscatalog.domain.recovery.Email;
 import com.albertsilva.dev.dscatalog.domain.recovery.enums.EmailStatus;
 import com.albertsilva.dev.dscatalog.dto.email.request.EmailRegisterRequest;
 
 @DataJpaTest
+@ActiveProfiles("test")
 @DisplayName("EmailRepository Tests")
 class EmailRepositoryTest {
 

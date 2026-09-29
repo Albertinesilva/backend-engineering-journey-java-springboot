@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.albertsilva.dev.dscatalog.domain.recovery.Token;
 import com.albertsilva.dev.dscatalog.domain.recovery.enums.TokenType;
@@ -19,6 +20,7 @@ import com.albertsilva.dev.dscatalog.domain.user.User;
 import com.albertsilva.dev.dscatalog.factory.UserFactory;
 
 @DataJpaTest
+@ActiveProfiles("test")
 @DisplayName("TokenRepository Tests")
 class TokenRepositoryTest {
 

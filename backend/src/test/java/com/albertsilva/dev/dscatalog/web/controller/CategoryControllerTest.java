@@ -38,6 +38,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -55,6 +56,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(value = CategoryController.class, excludeAutoConfiguration = { SecurityAutoConfiguration.class })
 @Import(ControllerExceptionHandler.class)
+@ActiveProfiles("test")
 @DisplayName("Tests for CategoryController")
 class CategoryControllerTest {
 

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.albertsilva.dev.dscatalog.domain.catalog.Category;
 import com.albertsilva.dev.dscatalog.domain.catalog.Product;
@@ -18,6 +19,7 @@ import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
 import com.albertsilva.dev.dscatalog.factory.ProductFactory;
 
 @DataJpaTest
+@ActiveProfiles("test")
 @DisplayName("ProductRepository Tests")
 class ProductRepositoryTest {
 

@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.albertsilva.dev.dscatalog.domain.catalog.Category;
 import com.albertsilva.dev.dscatalog.domain.catalog.Product;
@@ -22,6 +23,7 @@ import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
 import com.albertsilva.dev.dscatalog.factory.ProductFactory;
 
 @DataJpaTest
+@ActiveProfiles("test")
 @DisplayName("CategoryRepository Tests")
 class CategoryRepositoryTest {
 

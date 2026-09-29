@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.albertsilva.dev.dscatalog.dto.user.request.UserCreateRequest;
 import com.albertsilva.dev.dscatalog.dto.user.request.UserUpdateRequest;
@@ -32,6 +33,7 @@ import jakarta.transaction.Transactional;
 
 @SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 @DisplayName("UserService Integration Tests")
 class UserServiceIT {
 

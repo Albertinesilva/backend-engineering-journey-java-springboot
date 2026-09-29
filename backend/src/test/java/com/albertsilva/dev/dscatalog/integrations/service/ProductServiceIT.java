@@ -22,6 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse;
 import com.albertsilva.dev.dscatalog.dto.product.request.ProductCreateRequest;
@@ -37,6 +38,7 @@ import jakarta.transaction.Transactional;
 
 @SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 @DisplayName("ProductService Integration Tests")
 class ProductServiceIT {
 

@@ -21,6 +21,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.albertsilva.dev.dscatalog.dto.category.request.CategoryCreateRequest;
@@ -34,6 +35,7 @@ import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException
 
 @SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 @DisplayName("CategoryService Integration Tests")
 class CategoryServiceIT {
 
