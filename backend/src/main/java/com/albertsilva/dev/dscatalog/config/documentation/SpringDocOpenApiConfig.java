@@ -29,8 +29,7 @@ public class SpringDocOpenApiConfig {
 
   /**
    * @return definição OpenAPI com informações da API e o esquema de segurança
-   *         {@code security}. O e-mail de contato e a licença (Apache 2.0)
-   *         diferem dos declarados no {@code pom.xml}
+   *         {@code security}
    */
   @Bean
   public OpenAPI openAPI() {
@@ -40,8 +39,8 @@ public class SpringDocOpenApiConfig {
             .description(
                 "RESTful API para gerenciamento de catálogo de produtos, categorias e usuários, com suporte a autenticação e autorização via JWT.")
             .version("v1")
-            .license(new License().name("Apache 2.0").url("https://www.apache.org/licenses/LICENSE-2.0"))
-            .contact(new Contact().name("Albert Silva de Jesus").email("albertinesilva,17@gmail.com")
+            .license(new License().name("MIT").url("https://opensource.org/licenses/MIT"))
+            .contact(new Contact().name("Albert Silva de Jesus").email("albertinesilva.17@gmail.com")
                 .url("https://github.com/Albertinesilva")));
   }
 

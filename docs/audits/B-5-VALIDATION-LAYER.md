@@ -1,5 +1,7 @@
 # ASJCatalog Backend — B-5: Camada de Validação
 
+> **Registro de auditoria — 2026-09-21.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
+
 > **Fase:** B-5 — análise e documentação (JavaDoc) de `validation`.
 > **Pré-requisitos:** [B-0](B-0-BACKEND-INVENTORY.md), [B-1](B-1-DOMAIN-LAYER.md), [B-2](B-2-REPOSITORY-LAYER.md), [B-3](B-3-SERVICE-LAYER.md), [B-4](B-4-DTO-MAPPER-LAYER.md).
 > **Escopo alterado:** somente comentários JavaDoc em `src/main/java/**/validation/**` (23 arquivos) e esta documentação, com notas pontuais nos documentos anteriores. Nenhuma lógica, regra, regex, mensagem, annotation, query ou comportamento de DNS foi alterado.

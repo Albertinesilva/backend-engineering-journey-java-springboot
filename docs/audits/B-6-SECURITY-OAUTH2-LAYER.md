@@ -1,5 +1,7 @@
 # ASJCatalog Backend — B-6: Security / OAuth2
 
+> **Registro de auditoria — 2026-09-21.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
+
 > **Fase:** B-6 — análise e documentação (JavaDoc) de `security`.
 > **Pré-requisitos:** [B-0](B-0-BACKEND-INVENTORY.md) a [B-5](B-5-VALIDATION-LAYER.md).
 > **Escopo alterado:** somente comentários JavaDoc nos 8 arquivos de `src/main/java/**/security/**` e esta documentação, com notas pontuais nos documentos anteriores. Nenhuma linha de código executável, configuração, claim, authority, TTL, filter chain ou comportamento foi alterada.

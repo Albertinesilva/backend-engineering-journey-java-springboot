@@ -1,5 +1,7 @@
 # ASJCatalog Backend — B-8: Configuração e Infraestrutura
 
+> **Registro de auditoria — 2026-09-21.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
+
 > **Fase:** B-8 — análise e documentação de configuração, banco, migrations, e-mail/templates, logging, Springdoc, Jackson/MVC, transações e assincronismo.
 > **Pré-requisitos:** [B-0](B-0-BACKEND-INVENTORY.md) a [B-7](B-7-WEB-LAYER.md).
 > **Alterações desta fase:** um único JavaDoc novo em `src/main` (`DscatalogApplication`), este documento e notas curtas de refinamento em B-0, B-3, B-6 e B-7. Nenhuma propriedade, migration, template, dependência, teste ou comportamento foi alterado.

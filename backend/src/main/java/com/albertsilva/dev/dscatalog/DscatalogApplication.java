@@ -16,10 +16,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  * <p>
  * <b>Configuração externa:</b> o perfil ativo é definido em
- * {@code application.properties} por {@code ${APP_PROFILE:test}}, ou seja,
- * sem a variável de ambiente {@code APP_PROFILE} o perfil é {@code test}
- * (H2 em memória). Os detalhes de cada perfil estão em
- * {@code docs/backend/B-8-CONFIG-INFRASTRUCTURE.md}.
+ * {@code application.properties} por {@code ${APP_PROFILE:dev}}, ou seja,
+ * sem a variável de ambiente {@code APP_PROFILE} o perfil é {@code dev}
+ * (PostgreSQL). Os detalhes de cada perfil estão em
+ * {@code backend/src/main/resources}, nos arquivos
+ * {@code application.properties} e
+ * {@code application-{dev,test,prod}.properties}.
  * </p>
  *
  * <p>

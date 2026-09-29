@@ -1,5 +1,7 @@
 # ASJCatalog Backend — B-2: Camada de Persistência (Repositories e Projections)
 
+> **Registro de auditoria — 2026-09-21.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
+
 > **Fase:** B-2 — análise e documentação (JavaDoc) de `repository` e `projection`.
 > **Pré-requisitos:** [B-0-BACKEND-INVENTORY.md](B-0-BACKEND-INVENTORY.md) e [B-1-DOMAIN-LAYER.md](B-1-DOMAIN-LAYER.md).
 > **Escopo alterado:** somente comentários JavaDoc em `src/main/java/**/repository/**` e `src/main/java/**/projection/**`, mais esta documentação. Nenhuma query, mapping, assinatura, nome, parâmetro ou tipo de retorno foi alterado.

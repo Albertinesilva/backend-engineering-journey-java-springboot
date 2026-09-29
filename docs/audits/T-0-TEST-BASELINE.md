@@ -1,5 +1,7 @@
 # T-0 — Baseline e diagnóstico da camada de testes
 
+> **Registro de auditoria — 2026-09-21.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
+
 > Fase de **diagnóstico**. Nada foi corrigido: nenhum teste, código de produção, `pom.xml` ou recurso foi alterado. O único arquivo criado é este documento.
 >
 > Rótulos: **[FATO]** confirmado por leitura de código/histórico ou por execução nesta fase; **[INFERÊNCIA]** conclusão razoável a partir de fatos; **[HIPÓTESE]** ainda não comprovada.

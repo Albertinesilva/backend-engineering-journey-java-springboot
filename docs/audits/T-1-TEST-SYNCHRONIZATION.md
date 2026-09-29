@@ -1,5 +1,7 @@
 # T-1 — Sincronização e recuperação da suíte de testes
 
+> **Registro de auditoria — 2026-09-21.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
+
 > Fase de **sincronização**: o código de produção atual é a referência; somente `src/test/**` foi alterado. Nenhuma decisão de contrato foi tomada e nenhum comportamento de produção foi tocado.
 >
 > Rótulos: **[FATO]** verificado por leitura ou execução nesta fase; **[INFERÊNCIA]**; **[HIPÓTESE]**.
