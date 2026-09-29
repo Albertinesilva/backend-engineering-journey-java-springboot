@@ -25,9 +25,9 @@ Confirmado pelo código:
 Evidência principal:
 
 - [backend/pom.xml](../backend/pom.xml)
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/resource/config/ResourceServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/resource/config/ResourceServerConfig.java)
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/security/config/SecurityBeansConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/config/SecurityBeansConfig.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/resource/config/ResourceServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/resource/config/ResourceServerConfig.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/config/SecurityBeansConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/config/SecurityBeansConfig.java)
 
 ## 3. Arquitetura
 
@@ -69,15 +69,15 @@ JwtAuthenticationConverter
 
 ### 3.3. Evidências da arquitetura
 
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/resource/config/ResourceServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/resource/config/ResourceServerConfig.java)
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/resource/config/ResourceServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/resource/config/ResourceServerConfig.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java)
 
 ## 4. Client Authentication Contract
 
 ### 4.1. Cliente registrado
 
-Confirmado pelo código em [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java).
+Confirmado pelo código em [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java).
 
 O cliente registra:
 
@@ -126,7 +126,7 @@ Endpoint real confirmado:
 
 ### 5.2. Parâmetros do grant customizado
 
-Confirmado pelo código em [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationConverter.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationConverter.java):
+Confirmado pelo código em [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationConverter.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationConverter.java):
 
 - `grant_type` obrigatório
 - `username` obrigatório
@@ -135,7 +135,7 @@ Confirmado pelo código em [backend/src/main/java/com/albertsilva/dev/dscatalog/
 
 ### 5.3. Forma de autenticação do cliente
 
-Confirmado por teste em [backend/src/test/java/com/albertsilva/dev/dscatalog/utils/TokenUtil.java](../backend/src/test/java/com/albertsilva/dev/dscatalog/utils/TokenUtil.java):
+Confirmado por teste em [backend/src/test/java/com/albertsilva/dev/asjcatalog/utils/TokenUtil.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/utils/TokenUtil.java):
 
 ```java
 mockMvc.perform(post("/oauth2/token")
@@ -166,7 +166,7 @@ grant_type=password&username=user@email.com&password=secret
 
 ### 6.1. `CustomPasswordAuthenticationConverter`
 
-Arquivo: [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationConverter.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationConverter.java)
+Arquivo: [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationConverter.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationConverter.java)
 
 Responsabilidade:
 
@@ -184,7 +184,7 @@ Comportamento real:
 
 ### 6.2. `CustomPasswordAuthenticationToken`
 
-Arquivo: [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationToken.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationToken.java)
+Arquivo: [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationToken.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationToken.java)
 
 Responsabilidade:
 
@@ -195,7 +195,7 @@ Responsabilidade:
 
 ### 6.3. `CustomPasswordAuthenticationProvider`
 
-Arquivo: [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java)
+Arquivo: [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java)
 
 Fluxo real:
 
@@ -218,7 +218,7 @@ Fluxo real:
 
 ### 7.1. `User`
 
-Arquivo: [backend/src/main/java/com/albertsilva/dev/dscatalog/domain/user/User.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/domain/user/User.java)
+Arquivo: [backend/src/main/java/com/albertsilva/dev/asjcatalog/domain/user/User.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/domain/user/User.java)
 
 Ela implementa `UserDetails` e expõe:
 
@@ -231,7 +231,7 @@ Ela implementa `UserDetails` e expõe:
 
 ### 7.2. `UserService`
 
-Arquivo: [backend/src/main/java/com/albertsilva/dev/dscatalog/service/UserService.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/service/UserService.java)
+Arquivo: [backend/src/main/java/com/albertsilva/dev/asjcatalog/service/UserService.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/service/UserService.java)
 
 Implementa `UserDetailsService` e carrega o usuário a partir do email:
 
@@ -241,13 +241,13 @@ Implementa `UserDetailsService` e carrega o usuário a partir do email:
 
 ### 7.3. `Role`
 
-Arquivo: [backend/src/main/java/com/albertsilva/dev/dscatalog/domain/user/Role.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/domain/user/Role.java)
+Arquivo: [backend/src/main/java/com/albertsilva/dev/asjcatalog/domain/user/Role.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/domain/user/Role.java)
 
 Implementa `GrantedAuthority` e expõe `getAuthority()`.
 
 ### 7.4. `AuthenticatedUser`
 
-Arquivo: [backend/src/main/java/com/albertsilva/dev/dscatalog/security/userdetails/AuthenticatedUser.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/userdetails/AuthenticatedUser.java)
+Arquivo: [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/userdetails/AuthenticatedUser.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/userdetails/AuthenticatedUser.java)
 
 Esse objeto encapsula:
 
@@ -259,7 +259,7 @@ Esse objeto é usado para transportar dados do usuário autenticado durante a ge
 
 ### 7.5. `AuthenticatedUserService`
 
-Arquivo: [backend/src/main/java/com/albertsilva/dev/dscatalog/security/auth/AuthenticatedUserService.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/auth/AuthenticatedUserService.java)
+Arquivo: [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/auth/AuthenticatedUserService.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/auth/AuthenticatedUserService.java)
 
 Responsabilidade real:
 
@@ -286,7 +286,7 @@ JWT claims
 
 ### 8.2. Onde isso acontece
 
-Confirmado em [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java):
+Confirmado em [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java):
 
 ```java
 OAuth2ClientAuthenticationToken oAuth2ClientAuthenticationToken = (OAuth2ClientAuthenticationToken) SecurityContextHolder
@@ -342,7 +342,7 @@ Confirmado pelo código:
 
 ### 9.2. TTL
 
-Confirmado em [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java):
+Confirmado em [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java):
 
 ```java
 .accessTokenTimeToLive(Duration.ofSeconds(jwtDurationSeconds))
@@ -363,7 +363,7 @@ O código adiciona estes claims no access token:
 
 ### 9.4. Classe responsável
 
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
 
 ### 9.5. Tabela de claims
 
@@ -387,8 +387,8 @@ As authorities confirmadas no sistema são:
 
 ### 10.1. Origem
 
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/domain/user/Role.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/domain/user/Role.java)
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/domain/user/User.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/domain/user/User.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/domain/user/Role.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/domain/user/Role.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/domain/user/User.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/domain/user/User.java)
 
 ### 10.2. `GrantedAuthority`
 
@@ -400,7 +400,7 @@ O claim `authorities` no JWT é montado a partir de `user.getAuthorities()` e in
 
 ### 10.4. `JwtGrantedAuthoritiesConverter`
 
-Em [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/resource/config/ResourceServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/resource/config/ResourceServerConfig.java), a conversão faz:
+Em [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/resource/config/ResourceServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/resource/config/ResourceServerConfig.java), a conversão faz:
 
 ```java
 JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
@@ -414,9 +414,9 @@ Conforme os controllers, a autorização depende de `hasRole('ADMIN')`, `hasRole
 
 Exemplos:
 
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/web/controller/CategoryController.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/web/controller/CategoryController.java)
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/web/controller/ProductController.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/web/controller/ProductController.java)
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/web/controller/UserController.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/web/controller/UserController.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/web/controller/CategoryController.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/web/controller/CategoryController.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/web/controller/ProductController.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/web/controller/ProductController.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/web/controller/UserController.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/web/controller/UserController.java)
 
 ## 11. OAuth2 Scopes Contract
 
@@ -427,7 +427,7 @@ Scopos confirmados no cliente registrado:
 - `read`
 - `write`
 
-Evidência: [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
+Evidência: [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
 
 ### 11.2. Diferença actual entre scopes e authorities
 
@@ -444,7 +444,7 @@ Não foi implementado um mapeamento semântico formal entre os scopes OAuth2 e a
 
 ### 12.1. Configuração principal
 
-Arquivo: [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/resource/config/ResourceServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/resource/config/ResourceServerConfig.java)
+Arquivo: [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/resource/config/ResourceServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/resource/config/ResourceServerConfig.java)
 
 ### 12.2. Elementos confirmados
 
@@ -510,8 +510,8 @@ Controller
 
 Confirmado por `@Order` e pela configuração da ordem dos beans em:
 
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
-- [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/resource/config/ResourceServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/resource/config/ResourceServerConfig.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
+- [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/resource/config/ResourceServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/resource/config/ResourceServerConfig.java)
 
 ## 14. Refresh Token Contract
 
@@ -528,7 +528,7 @@ Separação exigida:
 
 ### 14.2. Geração
 
-Confirmado pelo código em [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java):
+Confirmado pelo código em [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java):
 
 - `OAuth2RefreshTokenGenerator`
 - `refreshTokenContext`
@@ -595,7 +595,7 @@ O token e o refresh token são processados pelo Spring Authorization Server para
 
 ### 15.2. Confirmado por teste
 
-O teste existente [backend/src/test/java/com/albertsilva/dev/dscatalog/utils/TokenUtil.java](../backend/src/test/java/com/albertsilva/dev/dscatalog/utils/TokenUtil.java) confirma que a resposta da requisição ao `/oauth2/token` é tratada como JSON e contém `access_token`.
+O teste existente [backend/src/test/java/com/albertsilva/dev/asjcatalog/utils/TokenUtil.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/utils/TokenUtil.java) confirma que a resposta da requisição ao `/oauth2/token` é tratada como JSON e contém `access_token`.
 
 ### 15.3. Gap de cobertura
 
@@ -625,7 +625,7 @@ O contrato JSON final não foi implementado manualmente no backend. A serializa�
 
 ### 17.1. Configuração real
 
-Arquivo: [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/resource/config/ResourceServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/resource/config/ResourceServerConfig.java)
+Arquivo: [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/resource/config/ResourceServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/resource/config/ResourceServerConfig.java)
 
 Configuração confirmada:
 
@@ -645,7 +645,7 @@ O CORS do backend interfere com acessos de frontend e também com pré-flight de
 
 ### 18.1. `InMemoryOAuth2AuthorizationService`
 
-Confirmado em [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java):
+Confirmado em [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java):
 
 ```java
 @Bean
@@ -676,10 +676,10 @@ public OAuth2AuthorizationService authorizationService() {
 
 | Arquivo                                                                                                                                                                                                                   | Comportamento validado               | Contrato protegido                        |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ----------------------------------------- |
-| [backend/src/test/java/com/albertsilva/dev/dscatalog/utils/TokenUtil.java](../backend/src/test/java/com/albertsilva/dev/dscatalog/utils/TokenUtil.java)                                                                   | gera token com `grant_type=password` | `/oauth2/token` e autenticação do cliente |
-| [backend/src/test/java/com/albertsilva/dev/dscatalog/integrations/web/controller/CategoryControllerIT.java](../backend/src/test/java/com/albertsilva/dev/dscatalog/integrations/web/controller/CategoryControllerIT.java) | acesso com token JWT                 | Resource Server                           |
-| [backend/src/test/java/com/albertsilva/dev/dscatalog/integrations/web/controller/ProductControllerIT.java](../backend/src/test/java/com/albertsilva/dev/dscatalog/integrations/web/controller/ProductControllerIT.java)   | acesso com token JWT                 | Resource Server                           |
-| [backend/src/test/java/com/albertsilva/dev/dscatalog/integrations/web/controller/UserControllerIT.java](../backend/src/test/java/com/albertsilva/dev/dscatalog/integrations/web/controller/UserControllerIT.java)         | acesso autenticado e autorização     | `@PreAuthorize`                           |
+| [backend/src/test/java/com/albertsilva/dev/asjcatalog/utils/TokenUtil.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/utils/TokenUtil.java)                                                                   | gera token com `grant_type=password` | `/oauth2/token` e autenticação do cliente |
+| [backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/web/controller/CategoryControllerIT.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/web/controller/CategoryControllerIT.java) | acesso com token JWT                 | Resource Server                           |
+| [backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/web/controller/ProductControllerIT.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/web/controller/ProductControllerIT.java)   | acesso com token JWT                 | Resource Server                           |
+| [backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/web/controller/UserControllerIT.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/web/controller/UserControllerIT.java)         | acesso autenticado e autorização     | `@PreAuthorize`                           |
 
 ### 19.2. Gaps de cobertura
 
@@ -745,15 +745,15 @@ Os itens abaixo são parte do contrato atual e devem ser preservados:
 ### CRÍTICO
 
 1. Acoplamento da geração do JWT ao `SecurityContextHolder` e ao `AuthenticatedUser`.
-   - Local: [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java)
+   - Local: [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProvider.java)
    - Risco: qualquer alteração no principal/details pode quebrar o token.
 
 2. Uso de `InMemoryOAuth2AuthorizationService`.
-   - Local: [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
+   - Local: [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
    - Risco: reinício da aplicação e múltiplas instâncias quebram o contrato de autorização.
 
 3. Inconsistência semântica entre OAuth2 scopes e Spring Security authorities.
-   - Local: [backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/dscatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
+   - Local: [backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java](../backend/src/main/java/com/albertsilva/dev/asjcatalog/security/oauth2/authorization/config/AuthorizationServerConfig.java)
    - Risco: a autorização depende de um mapeamento implícito.
 
 ### ALTO
