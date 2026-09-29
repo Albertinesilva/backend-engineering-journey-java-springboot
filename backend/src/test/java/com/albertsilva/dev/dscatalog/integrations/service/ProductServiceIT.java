@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse;
 import com.albertsilva.dev.dscatalog.dto.product.request.ProductCreateRequest;
@@ -33,8 +34,6 @@ import com.albertsilva.dev.dscatalog.factory.ProductFactory;
 import com.albertsilva.dev.dscatalog.repository.ProductRepository;
 import com.albertsilva.dev.dscatalog.service.ProductService;
 import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
-
-import jakarta.transaction.Transactional;
 
 @SpringBootTest
 @Transactional
@@ -57,37 +56,16 @@ class ProductServiceIT {
     class FindAllPagedOperations {
 
       @Test
-      @DisplayName("findAllPaged should return paged products when page 0 size 10")
-      void findAllPagedShouldReturnPagedProductsWhenPage0Size10() {
-
-        // Arrange
-        String name = "";
-        PageRequest pageRequest = PageRequest.of(0, 10);
-
-        // Act
-        Page<ProductResponse> result = service.search(name, pageRequest);
-
-        // Assert
-        assertNotNull(result);
-        assertFalse(result.isEmpty());
-        assertEquals(0, result.getNumber());
-        assertEquals(10, result.getSize());
-        assertEquals(COUNT_TOTAL_PRODUCTS, result.getTotalElements());
-      }
-
-      @Test
-      @DisplayName("findAllPaged should return empty page when page does not exist")
+      @DisplayName("findAllPaged should return empty page with the real total when page does not exist")
       void findAllPagedShouldReturnEmptyPageWhenPageDoesNotExist() {
 
         // Arrange
-        String name = "";
         PageRequest pageRequest = PageRequest.of(50, 10);
 
         // Act
-        Page<ProductResponse> result = service.search(name, pageRequest);
+        Page<ProductResponse> result = service.findAllPaged("", "0", pageRequest);
 
         // Assert
-        assertNotNull(result);
         assertTrue(result.isEmpty());
         assertEquals(50, result.getNumber());
         assertEquals(10, result.getSize());
@@ -99,15 +77,12 @@ class ProductServiceIT {
       void findAllPagedShouldReturnOrderedPageWhenSortingByName() {
 
         // Arrange
-        String name = "";
         PageRequest pageRequest = PageRequest.of(0, 10, Sort.by("name"));
 
         // Act
-        Page<ProductResponse> result = service.search(name, pageRequest);
+        Page<ProductResponse> result = service.findAllPaged("", "0", pageRequest);
 
         // Assert
-        assertNotNull(result);
-        assertFalse(result.isEmpty());
         assertEquals("Air Fryer 5L Digital", result.getContent().get(0).name());
         // Nome lido do repositório (id 155) em vez de literal com "ô": o compilador deste ambiente
         // corrompe literais Java com "ô"/"ê" mesmo com o projeto configurado para UTF-8; o valor
@@ -117,27 +92,37 @@ class ProductServiceIT {
       }
 
       @Test
-      @DisplayName("findAllPaged should return filtered products when name exists")
-      void findAllPagedShouldReturnFilteredProductsWhenNameExists() {
+      @DisplayName("findAllPaged should return only products whose name contains the filter when no category is informed")
+      void findAllPagedShouldReturnFilteredProductsWhenOnlyNameIsInformed() {
 
         // Arrange
         String name = "pc";
         PageRequest pageRequest = PageRequest.of(0, 10);
 
         // Act
-        Page<ProductResponse> result = service.search(name, pageRequest);
+        Page<ProductResponse> result = service.findAllPaged(name, "0", pageRequest);
 
         // Assert
-        assertNotNull(result);
         assertFalse(result.isEmpty());
-
         result.getContent().forEach(product -> assertTrue(product.name().toLowerCase().contains(name)));
       }
-    }
 
-    @Nested
-    @DisplayName("FindAllPaged (real flow) Operations")
-    class FindAllPagedRealFlowOperations {
+      @Test
+      @DisplayName("findAllPaged should trim name before filtering")
+      void findAllPagedShouldTrimNameBeforeFiltering() {
+
+        // Arrange
+        PageRequest pageRequest = PageRequest.of(0, 10);
+
+        // Act
+        Page<ProductResponse> trimmedResult = service.findAllPaged("pc", "0", pageRequest);
+        Page<ProductResponse> result = service.findAllPaged("   pc   ", "0", pageRequest);
+
+        // Assert
+        assertFalse(result.isEmpty());
+        assertEquals(trimmedResult.getTotalElements(), result.getTotalElements());
+        result.getContent().forEach(product -> assertTrue(product.name().toLowerCase().contains("pc")));
+      }
 
       @Test
       @DisplayName("findAllPaged should return products with their categories when there is no filter")

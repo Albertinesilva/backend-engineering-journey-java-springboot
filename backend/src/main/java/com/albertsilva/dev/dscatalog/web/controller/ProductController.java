@@ -125,7 +125,7 @@ public class ProductController {
    * {@code page}, {@code size}, {@code sort} do Spring Data (a ordenação só
    * atinge as colunas {@code id} e {@code name}).</li>
    * <li><b>Fluxo:</b> {@code ProductService.findAllPaged} (consulta nativa +
-   * {@code JOIN FETCH}); <b>não</b> usa {@code ProductService.search}.</li>
+   * {@code JOIN FETCH}).</li>
    * <li><b>Sucesso:</b> {@code 200} com {@code Page<ProductResponse>}.</li>
    * <li><b>Erros:</b> {@code categoryIds} não numérico gera
    * {@code NumberFormatException} ({@code 500}, sem handler específico).</li>

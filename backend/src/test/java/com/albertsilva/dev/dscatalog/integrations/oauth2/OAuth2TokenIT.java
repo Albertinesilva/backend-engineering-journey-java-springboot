@@ -17,24 +17,21 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.json.JacksonJsonParser;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-@DisplayName("OAuth2 Token Integration Tests")
-class OAuth2TokenIT {
+import com.albertsilva.dev.dscatalog.integrations.common.AbstractIT;
 
-  @Autowired
-  private MockMvc mockMvc;
+/**
+ * Estende {@link AbstractIT} (contexto, perfil test e MockMvc), mas mantém um
+ * helper próprio: o {@code TokenUtil} devolve só o access token, e estes testes
+ * precisam também do refresh token e da resposta completa do endpoint.
+ */
+@DisplayName("OAuth2 Token Integration Tests")
+class OAuth2TokenIT extends AbstractIT {
 
   @Autowired
   private JwtDecoder jwtDecoder;
@@ -49,10 +46,12 @@ class OAuth2TokenIT {
   @DisplayName("POST /oauth2/token with password grant should issue access and refresh tokens with user claims")
   void passwordGrantShouldIssueAccessAndRefreshTokenWithUserClaims() throws Exception {
 
+    // Act
     Map<String, String> tokens = obtainTokens("maria@gmail.com", "123456");
     String accessToken = tokens.get("access_token");
     String refreshToken = tokens.get("refresh_token");
 
+    // Assert
     assertNotNull(accessToken);
     assertNotNull(refreshToken);
     assertFalse(accessToken.isBlank());
@@ -70,14 +69,17 @@ class OAuth2TokenIT {
   @DisplayName("POST /oauth2/token with refresh token should rotate the token pair and keep the user claims")
   void refreshTokenGrantShouldIssueNewAccessTokenAndRotateRefreshToken() throws Exception {
 
+    // Arrange
     Map<String, String> initialTokens = obtainTokens("maria@gmail.com", "123456");
     String originalAccessToken = initialTokens.get("access_token");
     String originalRefreshToken = initialTokens.get("refresh_token");
 
+    // Act
     Map<String, String> refreshedTokens = requestTokens(buildRefreshTokenParams(originalRefreshToken));
     String refreshedAccessToken = refreshedTokens.get("access_token");
     String refreshedRefreshToken = refreshedTokens.get("refresh_token");
 
+    // Assert
     assertNotNull(refreshedAccessToken);
     assertNotNull(refreshedRefreshToken);
     assertNotEquals(originalAccessToken, refreshedAccessToken);
@@ -93,6 +95,7 @@ class OAuth2TokenIT {
   @DisplayName("POST /oauth2/token should reject reuse of the old refresh token after rotation")
   void refreshTokenGrantShouldRejectReuseOfTheOldRefreshTokenAfterRotation() throws Exception {
 
+    // Arrange
     Map<String, String> initialTokens = obtainTokens("maria@gmail.com", "123456");
     String originalRefreshToken = initialTokens.get("refresh_token");
 
@@ -103,11 +106,13 @@ class OAuth2TokenIT {
     assertNotNull(rotatedRefreshToken);
     assertNotEquals(originalRefreshToken, rotatedRefreshToken);
 
+    // Act
     ResultActions result = mockMvc.perform(post("/oauth2/token")
         .params(buildRefreshTokenParams(originalRefreshToken))
         .with(httpBasic(clientId, clientSecret))
         .accept("application/json;charset=UTF-8"));
 
+    // Assert
     result
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.error").value("invalid_grant"));
@@ -117,16 +122,19 @@ class OAuth2TokenIT {
   @DisplayName("POST /oauth2/token with an invalid refresh token should fail with invalid_grant")
   void refreshTokenGrantShouldRejectInvalidRefreshToken() throws Exception {
 
+    // Arrange
     MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
     params.add("grant_type", "refresh_token");
     params.add("refresh_token", "invalid-refresh-token");
     params.add("client_id", clientId);
 
+    // Act
     ResultActions result = mockMvc.perform(post("/oauth2/token")
         .params(params)
         .with(httpBasic(clientId, clientSecret))
         .accept("application/json;charset=UTF-8"));
 
+    // Assert
     result
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.error").value("invalid_grant"));

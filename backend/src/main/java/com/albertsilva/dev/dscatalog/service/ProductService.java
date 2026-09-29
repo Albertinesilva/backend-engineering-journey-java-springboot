@@ -93,51 +93,6 @@ public class ProductService {
   }
 
   /**
-   * Lista produtos por consulta derivada do Spring Data, com filtro opcional
-   * por nome.
-   *
-   * <p>
-   * O termo recebe {@code trim}; nulo, vazio ou só com espaços significa "sem
-   * filtro" e usa {@code findAll(pageable)}. Com filtro, usa
-   * {@code findByNameContainingIgnoreCase}. Diferentemente de
-   * {@link #findAllPaged(String, String, Pageable)}, não filtra por categoria,
-   * inclui produtos sem categoria e aceita ordenação por qualquer propriedade
-   * da entidade.
-   * </p>
-   *
-   * <p>
-   * A conversão para resposta acessa as categorias de cada produto, que são
-   * carregadas sob demanda (padrão N+1 provável, dentro da transação de
-   * leitura).
-   * </p>
-   *
-   * <p>
-   * <b>Uso atual:</b> nenhum controller nem outro componente de
-   * {@code src/main} chama este método (apenas testes); a listagem HTTP de
-   * produtos usa {@code findAllPaged}.
-   * </p>
-   *
-   * @param name     termo procurado no nome (opcional)
-   * @param pageable página, tamanho e ordenação
-   * @return página de produtos convertidos para {@link ProductResponse}
-   */
-  @Transactional(readOnly = true)
-  public Page<ProductResponse> search(String name, Pageable pageable) {
-
-    String filter = StringUtils.hasText(name) ? name.trim() : null;
-
-    logger.debug("Buscando produtos | filtro={} | page={} | size={} | sort={}", filter, pageable.getPageNumber(),
-        pageable.getPageSize(), pageable.getSort());
-
-    Page<Product> productsPage = (filter != null) ? productRepository.findByNameContainingIgnoreCase(filter, pageable)
-        : productRepository.findAll(pageable);
-
-    logger.debug("Busca concluída | total={}", productsPage.getTotalElements());
-
-    return productMapper.toResponsePage(productsPage);
-  }
-
-  /**
    * Lista produtos com filtro por nome e por categorias e com paginação; é a
    * consulta usada pela listagem HTTP de produtos.
    *
@@ -164,8 +119,10 @@ public class ProductService {
    * <b>Comportamento observado no código:</b>
    * </p>
    * <ul>
-   * <li>{@code name} é repassado como recebido (sem {@code trim} nem
-   * tratamento de nulo/vazio); o controller usa {@code ""} por padrão</li>
+   * <li>{@code name} recebe {@code trim} antes da consulta, como em
+   * {@code CategoryService.search}; nulo, vazio ou só com espaços vira
+   * {@code ""} (sem filtro por nome); o controller usa {@code ""} por
+   * padrão</li>
    * <li>não há filtro por {@code active}: produtos inativos são listados</li>
    * <li>só aparecem produtos com ao menos uma categoria (a consulta nativa usa
    * {@code INNER JOIN})</li>
@@ -193,7 +150,9 @@ public class ProductService {
       categoryIds = Arrays.asList(categoryId.split(",")).stream().map(Long::parseLong).toList();
     }
 
-    Page<ProductProjection> page = productRepository.searchProducts(categoryIds, name, pageable);
+    String filter = StringUtils.hasText(name) ? name.trim() : "";
+
+    Page<ProductProjection> page = productRepository.searchProducts(categoryIds, filter, pageable);
     List<Long> productsIds = page.map(ProductProjection::getId).toList();
 
     List<Product> products = productRepository.searchProductsWithCategories(productsIds);

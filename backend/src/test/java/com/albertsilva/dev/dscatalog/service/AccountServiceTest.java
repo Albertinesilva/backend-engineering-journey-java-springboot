@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -147,12 +149,72 @@ class AccountServiceTest {
   }
 
   @Nested
+  @DisplayName("Resend Activation Operations")
+  class ResendActivationOperations {
+
+    @Test
+    @DisplayName("resendActivationEmail should do nothing when the email does not exist")
+    void resendActivationEmailShouldDoNothingWhenEmailDoesNotExist() throws MessagingException {
+      // Arrange
+      when(userRepository.findByEmail("ghost@gmail.com")).thenReturn(Optional.empty());
+
+      // Act
+      service.resendActivationEmail("ghost@gmail.com");
+
+      // Assert
+      verify(tokenService, never()).disableAllActivationTokens(any(User.class));
+      verify(tokenService, never()).createActivationToken(any(User.class));
+      verify(emailService, never()).sendActivationEmailAsync(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("resendActivationEmail should do nothing when the user is already active")
+    void resendActivationEmailShouldDoNothingWhenUserIsAlreadyActive() throws MessagingException {
+      // Arrange
+      User user = UserFactory.createUser();
+      user.activate();
+      when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+      // Act
+      service.resendActivationEmail(user.getEmail());
+
+      // Assert
+      verify(tokenService, never()).disableAllActivationTokens(any(User.class));
+      verify(tokenService, never()).createActivationToken(any(User.class));
+      verify(emailService, never()).sendActivationEmailAsync(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("resendActivationEmail should disable previous tokens, create a new one and send it when the user is inactive")
+    void resendActivationEmailShouldDisablePreviousTokensThenCreateAndSendNewTokenWhenUserIsInactive()
+        throws MessagingException {
+      // Arrange
+      User user = UserFactory.createUser();
+      user.deactivate();
+      Token newToken = new Token("new-activation-token", user, java.time.Instant.now().plusSeconds(3600),
+          TokenType.ACTIVATION);
+      when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+      when(tokenService.createActivationToken(user)).thenReturn(newToken);
+
+      // Act
+      service.resendActivationEmail(user.getEmail());
+
+      // Assert
+      InOrder inOrder = inOrder(tokenService, emailService);
+      inOrder.verify(tokenService).disableAllActivationTokens(user);
+      inOrder.verify(tokenService).createActivationToken(user);
+      inOrder.verify(emailService).sendActivationEmailAsync(user.getFirstName(), user.getEmail(),
+          "new-activation-token");
+    }
+  }
+
+  @Nested
   @DisplayName("Password Recovery Operations")
   class PasswordRecoveryOperations {
 
     @Test
-    @DisplayName("requestPasswordRecovery should send recovery email when user exists")
-    void requestPasswordRecoveryShouldSendRecoveryEmailWhenUserExists() {
+    @DisplayName("requestPasswordRecovery should disable previous recovery tokens, create a new one and send it by email")
+    void requestPasswordRecoveryShouldDisablePreviousTokensThenCreateAndSendNewTokenWhenUserExists() {
       // Arrange
       User user = UserFactory.createUser();
       user.setEmail("joao@gmail.com");
@@ -166,7 +228,10 @@ class AccountServiceTest {
       service.requestPasswordRecovery("joao@gmail.com");
 
       // Assert
-      verify(emailService, times(1)).sendPasswordRecoveryEmailAsync(user, token.getToken());
+      InOrder inOrder = inOrder(tokenService, emailService);
+      inOrder.verify(tokenService).disableAllPasswordRecoveryTokens(user);
+      inOrder.verify(tokenService).createPasswordRecoveryToken(user);
+      inOrder.verify(emailService).sendPasswordRecoveryEmailAsync(user, token.getToken());
     }
 
     @Test
@@ -179,6 +244,8 @@ class AccountServiceTest {
       assertDoesNotThrow(() -> service.requestPasswordRecovery("ghost@gmail.com"));
 
       // Assert
+      verify(tokenService, never()).disableAllPasswordRecoveryTokens(any(User.class));
+      verify(tokenService, never()).createPasswordRecoveryToken(any(User.class));
       verify(emailService, never()).sendPasswordRecoveryEmailAsync(any(User.class), anyString());
     }
 

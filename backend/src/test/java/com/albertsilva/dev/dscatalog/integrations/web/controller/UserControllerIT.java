@@ -2,10 +2,13 @@ package com.albertsilva.dev.dscatalog.integrations.web.controller;
 
 import static com.albertsilva.dev.dscatalog.factory.UserFactory.EXISTING_ID;
 import static com.albertsilva.dev.dscatalog.factory.UserFactory.NON_EXISTING_ID;
-import static com.albertsilva.dev.dscatalog.factory.UserFactory.ACTIVE_USER_ID;
-import static com.albertsilva.dev.dscatalog.factory.UserFactory.INACTIVE_USER_ID;
+import static com.albertsilva.dev.dscatalog.factory.UserFactory.OPERATOR_USER_ID;
+import static org.hamcrest.Matchers.containsStringIgnoringCase;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -15,15 +18,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Set;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.albertsilva.dev.dscatalog.domain.user.User;
 import com.albertsilva.dev.dscatalog.dto.user.request.UserCreateRequest;
 import com.albertsilva.dev.dscatalog.dto.user.request.UserUpdateRequest;
 import com.albertsilva.dev.dscatalog.factory.UserFactory;
@@ -61,54 +68,44 @@ class UserControllerIT extends AbstractIT {
     class FindAllOperations {
 
       @Test
-      @DisplayName("GET /users should return paged users when sorted by firstName")
-      void findAllShouldReturnSortedPagedWhenSortByFirstNameUsers() throws Exception {
+      @DisplayName("GET /users should return paged users sorted by firstName descending")
+      void findAllShouldReturnPagedUsersSortedByFirstNameDescending() throws Exception {
 
+        // Act
         ResultActions resultActions = mockMvc.perform(get(BASE_URL)
             .with(bearerToken())
             .accept(MediaType.APPLICATION_JSON)
             .param("page", "0")
             .param("size", "12")
-            .param("sort", "firstName,asc"));
+            .param("sort", "firstName,desc"));
 
+        // Assert
         resultActions
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content").isArray())
             .andExpect(jsonPath("$.totalElements").value(totalUsersCount))
+            .andExpect(jsonPath("$.content[0].firstName").value("Maria"))
+            .andExpect(jsonPath("$.content[1].firstName").value("Albert"))
             .andExpect(jsonPath("$.number").value(0))
             .andExpect(jsonPath("$.size").value(12));
       }
 
       @Test
-      @DisplayName("GET /users should return paged users")
-      void findAllWithPaginationShouldReturnPagedUsers() throws Exception {
-
-        ResultActions resultActions = mockMvc.perform(get(BASE_URL)
-            .with(bearerToken())
-            .param("page", "0")
-            .param("size", "20")
-            .param("sort", "firstName,asc")
-            .accept(MediaType.APPLICATION_JSON));
-
-        resultActions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content").isArray())
-            .andExpect(jsonPath("$.number").value(0))
-            .andExpect(jsonPath("$.size").value(20));
-      }
-
-      @Test
-      @DisplayName("GET /users with firstName filter should return filtered users")
+      @DisplayName("GET /users with firstName filter should return only users whose firstName contains the filter")
       void findAllShouldReturnFilteredUsersWhenFirstNameParameterIsInformed() throws Exception {
 
+        // Act
         ResultActions resultActions = mockMvc.perform(get(BASE_URL)
             .with(bearerToken())
-            .param("firstName", "maria")
+            .param("firstName", "mar")
             .param("page", "0")
             .param("size", "10")
             .accept(MediaType.APPLICATION_JSON));
 
-        resultActions.andExpect(status().isOk()).andExpect(jsonPath("$.content").isArray());
+        // Assert
+        resultActions
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isNotEmpty())
+            .andExpect(jsonPath("$.content[*].firstName").value(everyItem(containsStringIgnoringCase("mar"))));
       }
     }
 
@@ -133,14 +130,18 @@ class UserControllerIT extends AbstractIT {
       }
 
       @Test
-      @DisplayName("GET /users/{id} should return 404 when id does not exist")
+      @DisplayName("GET /users/{id} should return 404 with RESOURCE_NOT_FOUND code and translated message when id does not exist")
       void findByIdShouldReturnNotFoundWhenIdDoesNotExist() throws Exception {
 
         ResultActions resultActions = mockMvc.perform(get(BASE_URL + "/{id}", NON_EXISTING_ID)
             .with(bearerToken())
+            .header(HttpHeaders.ACCEPT_LANGUAGE, "en")
             .accept(MediaType.APPLICATION_JSON));
 
-        resultActions.andExpect(status().isNotFound());
+        resultActions
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
+            .andExpect(jsonPath("$.message").value("User not found"));
       }
     }
   }
@@ -178,28 +179,30 @@ class UserControllerIT extends AbstractIT {
     }
 
     @Test
-    @DisplayName("POST /users should create user with valid data")
-    void createShouldCreateUserWithValidData() throws Exception {
+    @DisplayName("POST /users should return 422 with the translated field error when firstName is blank and create nothing")
+    void createShouldReturnUnprocessableEntityWhenFirstNameIsBlank() throws Exception {
 
       // Arrange
-      UserCreateRequest request = UserFactory.createUserCreateRequest();
-      String jsonRequest = asJson(request);
+      UserCreateRequest request = new UserCreateRequest("", "Santos", "pedro@gmail.com", "JAVA!@#ResTIc18",
+          Set.of(1L));
       long initialCount = userRepository.count();
 
       // Act
       ResultActions resultActions = mockMvc.perform(post(BASE_URL)
           .with(bearerToken())
-          .content(jsonRequest)
+          .header(HttpHeaders.ACCEPT_LANGUAGE, "en")
+          .content(asJson(request))
           .contentType(MediaType.APPLICATION_JSON)
           .accept(MediaType.APPLICATION_JSON));
 
       // Assert
       resultActions
-          .andExpect(status().isCreated())
-          .andExpect(header().exists("Location"))
-          .andExpect(jsonPath("$.firstName").value(request.firstName()));
+          .andExpect(status().isUnprocessableEntity())
+          .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+          .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'firstName')].message")
+              .value(hasItem("First name is required")));
 
-      assertEquals(initialCount + 1, userRepository.count());
+      assertEquals(initialCount, userRepository.count());
     }
   }
 
@@ -258,17 +261,22 @@ class UserControllerIT extends AbstractIT {
   class ActivateOperations {
 
     @Test
-    @DisplayName("PATCH /users/{id}/activate should activate user when id exists")
-    void activateShouldActivateUserWhenIdExists() throws Exception {
+    @DisplayName("PATCH /users/{id}/activate should activate an inactive user")
+    void activateShouldActivateUserWhenUserIsInactive() throws Exception {
+
+      // Arrange
+      User user = userRepository.findById(OPERATOR_USER_ID).orElseThrow();
+      user.deactivate();
+      userRepository.saveAndFlush(user);
 
       // Act
-      ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}/activate", ACTIVE_USER_ID)
+      ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}/activate", OPERATOR_USER_ID)
           .with(bearerToken()));
 
       // Assert
       resultActions.andExpect(status().isNoContent());
 
-      assertEquals(true, userRepository.findById(ACTIVE_USER_ID).get().isActive());
+      assertTrue(userRepository.findById(OPERATOR_USER_ID).orElseThrow().isActive());
     }
 
     @Test
@@ -289,17 +297,20 @@ class UserControllerIT extends AbstractIT {
   class DeactivateOperations {
 
     @Test
-    @DisplayName("PATCH /users/{id}/deactivate should deactivate user when id exists")
-    void deactivateShouldDeactivateUserWhenIdExists() throws Exception {
+    @DisplayName("PATCH /users/{id}/deactivate should deactivate an active user")
+    void deactivateShouldDeactivateUserWhenUserIsActive() throws Exception {
+
+      // Arrange
+      assertTrue(userRepository.findById(OPERATOR_USER_ID).orElseThrow().isActive());
 
       // Act
-      ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}/deactivate", INACTIVE_USER_ID)
+      ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}/deactivate", OPERATOR_USER_ID)
           .with(bearerToken()));
 
       // Assert
       resultActions.andExpect(status().isNoContent());
 
-      assertEquals(false, userRepository.findById(INACTIVE_USER_ID).get().isActive());
+      assertFalse(userRepository.findById(OPERATOR_USER_ID).orElseThrow().isActive());
     }
 
     @Test

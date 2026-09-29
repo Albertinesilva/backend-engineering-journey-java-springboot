@@ -11,11 +11,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsStringIgnoringCase;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +32,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import org.springframework.test.web.servlet.ResultActions;
@@ -70,6 +79,7 @@ class ProductControllerIT extends AbstractIT {
       @DisplayName("GET /products should return sorted paged products when sort by name")
       void findAllShouldReturnSortedPagedWhenSortByNameProducts() throws Exception {
 
+        // Arrange
         // Nomes com acentos lidos do repositório (ids 155 e 162): literais Java com certos
         // caracteres acentuados são corrompidos pelo compilador deste ambiente mesmo com o
         // projeto configurado para UTF-8; os valores persistidos são lidos corretamente via
@@ -77,12 +87,14 @@ class ProductControllerIT extends AbstractIT {
         String expectedSecondName = productRepository.findById(155L).orElseThrow().getName();
         String expectedThirdName = productRepository.findById(162L).orElseThrow().getName();
 
+        // Act
         ResultActions resultActions = mockMvc.perform(get(BASE_URL)
             .param("page", "0")
             .param("size", "12")
             .param("sort", "name,asc")
             .accept(MediaType.APPLICATION_JSON));
 
+        // Assert
         resultActions
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content").isArray())
@@ -95,33 +107,78 @@ class ProductControllerIT extends AbstractIT {
       }
 
       @Test
-      @DisplayName("GET /products should return paged products")
-      void findAllWithPaginationShouldReturnPagedProducts() throws Exception {
+      @DisplayName("GET /products with one categoryId should return only the products of that category")
+      void findAllShouldReturnOnlyProductsOfTheInformedCategory() throws Exception {
 
+        // Act
         ResultActions resultActions = mockMvc.perform(get(BASE_URL)
+            .param("categoryIds", "2")
             .param("page", "0")
-            .param("size", "20")
+            .param("size", "5")
             .param("sort", "name,asc")
             .accept(MediaType.APPLICATION_JSON));
 
+        // Assert
         resultActions
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content").isArray())
-            .andExpect(jsonPath("$.number").value(0))
-            .andExpect(jsonPath("$.size").value(20));
+            .andExpect(jsonPath("$.totalElements").value(27))
+            .andExpect(jsonPath("$.content[*].name").value(contains("Clean Architecture", "Clean Code",
+                "Continuous Delivery", "Design Patterns: Elements of Reusable Object-Oriented Software",
+                "Designing Data-Intensive Applications")))
+            .andExpect(jsonPath("$.content[*].categories[*].id").value(hasItem(2)));
       }
 
       @Test
-      @DisplayName("GET /products with name filter should return filtered products")
+      @DisplayName("GET /products with several categoryIds should return the products of any of them without repetition")
+      void findAllShouldReturnProductsOfAnyInformedCategoryWithoutRepetition() throws Exception {
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(get(BASE_URL)
+            .param("categoryIds", "29,33")
+            .param("page", "0")
+            .param("size", "30")
+            .accept(MediaType.APPLICATION_JSON));
+
+        // Assert
+        resultActions
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalElements").value(7))
+            .andExpect(jsonPath("$.content[*].id").value(containsInAnyOrder(74, 75, 76, 85, 86, 87, 155)));
+      }
+
+      @Test
+      @DisplayName("GET /products with name and categoryIds should apply both filters")
+      void findAllShouldApplyNameAndCategoryFiltersTogether() throws Exception {
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(get(BASE_URL)
+            .param("name", "rails")
+            .param("categoryIds", "2")
+            .accept(MediaType.APPLICATION_JSON));
+
+        // Assert
+        resultActions
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalElements").value(1))
+            .andExpect(jsonPath("$.content[0].name").value("Ruby on Rails For Dummies"));
+      }
+
+      @Test
+      @DisplayName("GET /products with name filter should return only products whose name contains the filter")
       void findAllShouldReturnFilteredProductsWhenNameParameterIsInformed() throws Exception {
 
+        // Act
         ResultActions resultActions = mockMvc.perform(get(BASE_URL)
             .param("name", "pc")
             .param("page", "0")
             .param("size", "10")
             .accept(MediaType.APPLICATION_JSON));
 
-        resultActions.andExpect(status().isOk()).andExpect(jsonPath("$.content").isArray());
+        // Assert
+        resultActions
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isNotEmpty())
+            .andExpect(jsonPath("$.content[*].name").value(everyItem(containsStringIgnoringCase("pc"))));
       }
     }
 
@@ -145,13 +202,17 @@ class ProductControllerIT extends AbstractIT {
       }
 
       @Test
-      @DisplayName("GET /products/{id} should return 404 when id does not exist")
+      @DisplayName("GET /products/{id} should return 404 with RESOURCE_NOT_FOUND code and translated message when id does not exist")
       void findByIdShouldReturnNotFoundWhenIdDoesNotExist() throws Exception {
 
         ResultActions resultActions = mockMvc
-            .perform(get(BASE_URL + "/{id}", NON_EXISTING_ID).accept(MediaType.APPLICATION_JSON));
+            .perform(get(BASE_URL + "/{id}", NON_EXISTING_ID).header(HttpHeaders.ACCEPT_LANGUAGE, "en")
+            .accept(MediaType.APPLICATION_JSON));
 
-        resultActions.andExpect(status().isNotFound());
+        resultActions
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
+            .andExpect(jsonPath("$.message").value("Product not found"));
       }
     }
   }
@@ -216,6 +277,33 @@ class ProductControllerIT extends AbstractIT {
       assertEquals(persisted.getCreatedAt(), persisted.getUpdatedAt());
       assertEquals(true, persisted.isActive());
     }
+
+    @Test
+    @DisplayName("POST /products should return 422 with the translated field error when categoryIds is empty and create nothing")
+    void createShouldReturnUnprocessableEntityWhenCategoryIdsIsEmpty() throws Exception {
+
+      // Arrange
+      ProductCreateRequest request = new ProductCreateRequest("Valid Product Name", "Valid description", 10.0,
+          "https://img.com/product.png", null, List.of());
+      long initialCount = productRepository.count();
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(post(BASE_URL)
+          .with(bearerToken())
+          .header(HttpHeaders.ACCEPT_LANGUAGE, "en")
+          .content(asJson(request))
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      resultActions
+          .andExpect(status().isUnprocessableEntity())
+          .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+          .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'categoryIds')].message")
+              .value(hasItem("Product must contain at least one category")));
+
+      assertEquals(initialCount, productRepository.count());
+    }
   }
 
   @Nested
@@ -273,8 +361,13 @@ class ProductControllerIT extends AbstractIT {
   class ActivateOperations {
 
     @Test
-    @DisplayName("PATCH /products/{id}/activate should activate product when id exists")
-    void activateShouldActivateProductWhenIdExists() throws Exception {
+    @DisplayName("PATCH /products/{id}/activate should activate an inactive product")
+    void activateShouldActivateProductWhenProductIsInactive() throws Exception {
+
+      // Arrange
+      Product product = productRepository.findById(EXISTING_ID).orElseThrow();
+      product.setActive(false);
+      productRepository.saveAndFlush(product);
 
       // Act
       ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}/activate", EXISTING_ID)
@@ -283,7 +376,7 @@ class ProductControllerIT extends AbstractIT {
       // Assert
       resultActions.andExpect(status().isNoContent());
 
-      assertEquals(true, productRepository.findById(EXISTING_ID).get().isActive());
+      assertTrue(productRepository.findById(EXISTING_ID).orElseThrow().isActive());
     }
 
     @Test

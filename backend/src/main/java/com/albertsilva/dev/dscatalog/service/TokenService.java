@@ -70,7 +70,9 @@ public class TokenService {
    * Cria e persiste um token de recuperação de senha para o usuário, com UUID
    * aleatório e validade de {@code account.password-recovery.token.minutes}
    * minutos ({@code Token.passwordRecoveryToken}). Não desabilita tokens
-   * anteriores.
+   * anteriores; quem faz isso é o chamador
+   * ({@code AccountService.requestPasswordRecovery}), via
+   * {@link #disableAllPasswordRecoveryTokens(User)}.
    *
    * @param user usuário dono do token (deve estar persistido)
    * @return token salvo
@@ -96,8 +98,9 @@ public class TokenService {
 
   /**
    * Desabilita todos os tokens de recuperação de senha do usuário que ainda não
-   * estão desabilitados (inclusive os vencidos). Atualmente nenhum código de
-   * {@code src/main} chama este método.
+   * estão desabilitados (inclusive os vencidos). Chamado por
+   * {@code AccountService.requestPasswordRecovery} antes de criar um novo token,
+   * para que só o link mais recente seja aceito.
    *
    * @param user usuário dono dos tokens
    */

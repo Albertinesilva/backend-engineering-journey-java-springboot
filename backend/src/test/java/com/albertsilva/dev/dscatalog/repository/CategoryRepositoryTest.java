@@ -220,8 +220,8 @@ class CategoryRepositoryTest {
     }
 
     @Test
-    @DisplayName("should delete category without deleting associated products")
-    void shouldDeleteCategoryWithoutDeletingAssociatedProducts() {
+    @DisplayName("should delete category after dissociating it from products and keep the products")
+    void shouldDeleteCategoryAfterDissociatingItFromProductsAndKeepTheProducts() {
 
       // Arrange
       Category category = categoryRepository.saveAndFlush(CategoryFactory.createCategory());

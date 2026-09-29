@@ -206,17 +206,17 @@ public class AccountService {
    *
    * <p>
    * Busca o usuário por {@code findByEmail} (comparação exata). Se existir,
-   * cria um token de tipo {@link TokenType#PASSWORD_RECOVERY} e chama
+   * desabilita os tokens de recuperação anteriores
+   * ({@code TokenService.disableAllPasswordRecoveryTokens}), cria um novo token
+   * de tipo {@link TokenType#PASSWORD_RECOVERY} e chama
    * {@code EmailService.sendPasswordRecoveryEmailAsync} (retorno descartado). Se
    * não existir, <b>nada acontece</b> e nenhuma exceção é lançada, de modo que o
    * chamador observa o mesmo resultado nos dois casos.
    * </p>
    *
    * <p>
-   * O método não verifica se a conta está ativa e não desabilita tokens de
-   * recuperação anteriores ({@code TokenService.disableAllPasswordRecoveryTokens}
-   * existe, mas não é chamado): várias solicitações deixam vários tokens
-   * utilizáveis ao mesmo tempo.
+   * Como os tokens anteriores são desabilitados, só o link da solicitação mais
+   * recente é aceito. O método não verifica se a conta está ativa.
    * </p>
    *
    * @param email e-mail da conta, comparado exatamente como gravado
@@ -226,6 +226,7 @@ public class AccountService {
 
     userRepository.findByEmail(email).ifPresent(user -> {
 
+      tokenService.disableAllPasswordRecoveryTokens(user);
       Token token = tokenService.createPasswordRecoveryToken(user);
       emailService.sendPasswordRecoveryEmailAsync(user, token.getToken());
     });

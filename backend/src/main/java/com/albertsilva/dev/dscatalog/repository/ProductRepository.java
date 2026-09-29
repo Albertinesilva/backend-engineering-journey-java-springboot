@@ -42,8 +42,8 @@ import com.albertsilva.dev.dscatalog.projection.ProductProjection;
  * </p>
  *
  * <p>
- * <b>Outros usos:</b> {@code ProductService} (CRUD; {@code search} usa a
- * consulta derivada) e {@code ProductCreateValidator} /
+ * <b>Outros usos:</b> {@code ProductService} (CRUD) e
+ * {@code ProductCreateValidator} /
  * {@code ProductUpdateValidator} (unicidade de nome).
  * </p>
  */
@@ -76,9 +76,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
    * </p>
    *
    * <p>
-   * <b>Uso atual:</b> {@code ProductService.search}. Esse método do service não
-   * é chamado por nenhum controller; a listagem HTTP de produtos usa
-   * {@link #searchProducts(List, String, Pageable)}.
+   * <b>Uso atual:</b> nenhum componente de {@code src/main} chama este método
+   * (seu único chamador, {@code ProductService.search}, foi removido); a
+   * listagem HTTP de produtos usa {@link #searchProducts(List, String, Pageable)}.
    * </p>
    *
    * @param name     termo procurado no nome do produto

@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,7 +29,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 
@@ -38,7 +38,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -49,14 +52,16 @@ import com.albertsilva.dev.dscatalog.dto.category.response.CategoryDetailsRespon
 import com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse;
 import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
 import com.albertsilva.dev.dscatalog.repository.CategoryRepository;
+import com.albertsilva.dev.dscatalog.security.oauth2.resource.config.ResourceServerConfig;
 import com.albertsilva.dev.dscatalog.service.CategoryService;
 import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
 import com.albertsilva.dev.dscatalog.web.exception.handler.ControllerExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(value = CategoryController.class, excludeAutoConfiguration = { SecurityAutoConfiguration.class })
-@Import(ControllerExceptionHandler.class)
+@WebMvcTest(CategoryController.class)
+@Import({ ControllerExceptionHandler.class, ResourceServerConfig.class })
 @ActiveProfiles("test")
+@TestPropertySource(properties = { "spring.h2.console.enabled=false" })
 @DisplayName("Tests for CategoryController")
 class CategoryControllerTest {
 
@@ -73,6 +78,9 @@ class CategoryControllerTest {
 
   @MockitoBean
   private CategoryRepository categoryRepository;
+
+  @MockitoBean
+  private JwtDecoder jwtDecoder;
 
   private Page<CategoryResponse> page;
   private CategoryResponse categoryResponse;
@@ -97,6 +105,7 @@ class CategoryControllerTest {
 
     @Test
     @DisplayName("Should create category successfully")
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
     void createShouldReturnCreatedCategory() throws Exception {
 
       // Arrange
@@ -119,6 +128,25 @@ class CategoryControllerTest {
           .andExpect(jsonPath("$.name").value(categoryResponse.name()));
 
       verify(categoryService).create(any(CategoryCreateRequest.class));
+    }
+
+    @Test
+    @DisplayName("Should return 401 and not call the service when the request is not authenticated")
+    void createShouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+
+      // Arrange
+      String jsonRequest = asJson(CategoryFactory.createCategoryCreateRequest());
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(post(BASE_URL)
+          .content(jsonRequest)
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      resultActions.andExpect(status().isUnauthorized());
+
+      verify(categoryService, never()).create(any(CategoryCreateRequest.class));
     }
   }
 
@@ -242,6 +270,7 @@ class CategoryControllerTest {
   class UpdateTests {
 
     @Test
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
     @DisplayName("Should update category when id exists")
     void updateShouldReturnUpdatedCategoryWhenIdExists() throws Exception {
 
@@ -269,6 +298,7 @@ class CategoryControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
     @DisplayName("Should return 404 when id does not exist")
     void updateShouldReturnNotFoundWhenIdDoesNotExist() throws Exception {
 
@@ -297,6 +327,7 @@ class CategoryControllerTest {
   class DeleteTests {
 
     @Test
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
     @DisplayName("Should delete category when id exists")
     void deleteShouldReturnNoContentWhenIdExists() throws Exception {
 
@@ -313,6 +344,7 @@ class CategoryControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
     @DisplayName("Should return 404 when id does not exist")
     void deleteShouldReturnNotFoundWhenIdDoesNotExist() throws Exception {
 

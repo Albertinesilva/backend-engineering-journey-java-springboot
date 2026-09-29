@@ -2,6 +2,7 @@ package com.albertsilva.dev.dscatalog.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -15,8 +16,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.albertsilva.dev.dscatalog.domain.user.Role;
 import com.albertsilva.dev.dscatalog.domain.user.User;
 import com.albertsilva.dev.dscatalog.factory.UserFactory;
+import com.albertsilva.dev.dscatalog.projection.UserDetailsProjection;
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -301,6 +304,40 @@ class UserRepositoryTest {
 
       // Assert
       assertThat(userRepository.findById(userId)).as("User should be deleted").isEmpty();
+    }
+  }
+
+  @Nested
+  @DisplayName("SearchUserAndRolesByEmail Operations")
+  class SearchUserAndRolesByEmailOperations {
+
+    @Test
+    @DisplayName("should return one row per role with the user's credentials and status")
+    void shouldReturnOneRowPerRoleWithUserCredentialsAndStatus() {
+
+      // Arrange
+      Role reader = entityManager.persist(new Role(null, "ROLE_QWZX_READER"));
+      Role writer = entityManager.persist(new Role(null, "ROLE_QWZX_WRITER"));
+      User user = UserFactory.createUser();
+      user.addRole(reader);
+      user.addRole(writer);
+      user = entityManager.persistFlushFind(user);
+
+      // Act
+      List<UserDetailsProjection> result = userRepository.searchUserAndRolesByEmail(user.getEmail());
+
+      // Assert
+      assertThat(result).hasSize(2);
+      assertThat(result).extracting(UserDetailsProjection::getAuthority)
+          .containsExactlyInAnyOrder("ROLE_QWZX_READER", "ROLE_QWZX_WRITER");
+      assertThat(result).extracting(UserDetailsProjection::getRoleId)
+          .containsExactlyInAnyOrder(reader.getId(), writer.getId());
+      for (UserDetailsProjection row : result) {
+        assertThat(row.getId()).isEqualTo(user.getId());
+        assertThat(row.getUsername()).isEqualTo(user.getEmail());
+        assertThat(row.getPassword()).isEqualTo(user.getPassword());
+        assertThat(row.getActive()).isTrue();
+      }
     }
   }
 

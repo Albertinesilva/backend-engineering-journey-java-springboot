@@ -14,8 +14,7 @@ public class UserFactory {
   public static final Long NON_EXISTING_ID = 1000L;
   public static final Long COUNT_TOTAL_USERS = 2L;
   public static final String EXISTING_EMAIL = "maria@gmail.com";
-  public static final Long ACTIVE_USER_ID = 1L;
-  public static final Long INACTIVE_USER_ID = 2L;
+  public static final Long OPERATOR_USER_ID = 1L;
 
   public static User createUser() {
     return new User(null, "João", "Silva", "joao@gmail.com", "JAVA!@#ResTIc18", true);

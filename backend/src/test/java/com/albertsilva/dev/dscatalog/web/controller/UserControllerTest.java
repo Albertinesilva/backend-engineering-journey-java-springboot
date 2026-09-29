@@ -5,7 +5,9 @@ import static com.albertsilva.dev.dscatalog.factory.UserFactory.NON_EXISTING_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -33,6 +36,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -136,25 +140,29 @@ class UserControllerTest {
 
     @Test
     @WithMockUser(roles = { "ADMIN" })
-    @DisplayName("GET /users should return paginated users with 200 status")
-    void findAllShouldReturnPagedUsers() throws Exception {
+    @DisplayName("GET /users should forward page, size and sort to the service and return the page with 200 status")
+    void findAllShouldForwardPaginationToServiceAndReturnPagedUsers() throws Exception {
 
       // Arrange
-      when(userService.search(any(), any(Pageable.class))).thenReturn(page);
+      ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+      when(userService.search(isNull(), pageableCaptor.capture())).thenReturn(page);
 
       // Act
       ResultActions resultActions = mockMvc.perform(get(BASE_URL)
           .accept(MediaType.APPLICATION_JSON)
-          .param("page", "0")
+          .param("page", "2")
           .param("size", "12")
           .param("sort", "firstName,asc"));
 
       // Assert
       resultActions.andExpect(status().isOk())
-          .andExpect(jsonPath("$.content").isArray())
-          .andExpect(jsonPath("$.totalElements").value(1))
-          .andExpect(jsonPath("$.number").value(0))
-          .andExpect(jsonPath("$.size").value(10));
+          .andExpect(jsonPath("$.content[0].id").value(userResponse.id()))
+          .andExpect(jsonPath("$.totalElements").value(1));
+
+      Pageable pageable = pageableCaptor.getValue();
+      assertEquals(2, pageable.getPageNumber());
+      assertEquals(12, pageable.getPageSize());
+      assertEquals(Sort.by(Sort.Direction.ASC, "firstName"), pageable.getSort());
     }
 
     @Test

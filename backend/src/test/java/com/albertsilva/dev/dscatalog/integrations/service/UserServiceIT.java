@@ -3,11 +3,14 @@ package com.albertsilva.dev.dscatalog.integrations.service;
 import static com.albertsilva.dev.dscatalog.factory.UserFactory.COUNT_TOTAL_USERS;
 import static com.albertsilva.dev.dscatalog.factory.UserFactory.EXISTING_ID;
 import static com.albertsilva.dev.dscatalog.factory.UserFactory.NON_EXISTING_ID;
+import static com.albertsilva.dev.dscatalog.factory.UserFactory.OPERATOR_USER_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +22,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.albertsilva.dev.dscatalog.domain.user.User;
 import com.albertsilva.dev.dscatalog.dto.user.request.UserCreateRequest;
 import com.albertsilva.dev.dscatalog.dto.user.request.UserUpdateRequest;
 import com.albertsilva.dev.dscatalog.dto.user.response.UserDetailsResponse;
@@ -28,8 +33,6 @@ import com.albertsilva.dev.dscatalog.factory.UserFactory;
 import com.albertsilva.dev.dscatalog.repository.UserRepository;
 import com.albertsilva.dev.dscatalog.service.UserService;
 import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
-
-import jakarta.transaction.Transactional;
 
 @SpringBootTest
 @Transactional
@@ -94,6 +97,8 @@ class UserServiceIT {
       void searchShouldReturnOrderedPageWhenSortingByFirstName() {
 
         // Arrange
+        // "Aaron" recebe o maior id; sem ordenação por firstName ele viria por último.
+        repository.saveAndFlush(new User(null, "Aaron", "Souza", "aaron@gmail.com", "encoded-password", true));
         String firstName = "";
         PageRequest pageRequest = PageRequest.of(0, 10, Sort.by("firstName"));
 
@@ -101,8 +106,8 @@ class UserServiceIT {
         Page<UserResponse> result = service.search(firstName, pageRequest);
 
         // Assert
-        assertNotNull(result);
-        assertFalse(result.isEmpty());
+        List<String> firstNames = result.getContent().stream().map(UserResponse::firstName).toList();
+        assertEquals(List.of("Aaron", "Albert", "Maria"), firstNames);
       }
 
       @Test
@@ -208,17 +213,33 @@ class UserServiceIT {
   class ActivateOperations {
 
     @Test
-    @DisplayName("activate should set active to true when user exists")
-    void activateShouldSetActiveToTrueWhenUserExists() {
+    @DisplayName("activate should set active to true when user is inactive")
+    void activateShouldSetActiveToTrueWhenUserIsInactive() {
 
       // Arrange
-      Long userId = 1L;
+      User user = repository.findById(OPERATOR_USER_ID).orElseThrow();
+      user.deactivate();
+      repository.saveAndFlush(user);
 
       // Act
-      service.activate(userId);
+      service.activate(OPERATOR_USER_ID);
 
       // Assert
-      assertTrue(repository.findById(userId).get().isActive());
+      assertTrue(repository.findById(OPERATOR_USER_ID).orElseThrow().isActive());
+    }
+
+    @Test
+    @DisplayName("activate should keep an already active user active")
+    void activateShouldKeepUserActiveWhenUserIsAlreadyActive() {
+
+      // Arrange
+      assertTrue(repository.findById(OPERATOR_USER_ID).orElseThrow().isActive());
+
+      // Act
+      service.activate(OPERATOR_USER_ID);
+
+      // Assert
+      assertTrue(repository.findById(OPERATOR_USER_ID).orElseThrow().isActive());
     }
 
     @Test

@@ -57,12 +57,12 @@ class CategoryServiceIT {
   class ReadOperations {
 
     @Nested
-    @DisplayName("FindAllPaged Operations")
-    class FindAllPagedOperations {
+    @DisplayName("Search Operations")
+    class SearchOperations {
 
       @Test
-      @DisplayName("findAllPaged should return paged categories when name filter is empty")
-      void findAllPagedShouldReturnPagedCategoriesWhenNameFilterIsEmpty() {
+      @DisplayName("search should return paged categories when name filter is empty")
+      void searchShouldReturnPagedCategoriesWhenNameFilterIsEmpty() {
 
         // Arrange
         String name = "";
@@ -79,8 +79,8 @@ class CategoryServiceIT {
       }
 
       @Test
-      @DisplayName("findAllPaged should return filtered categories when name exists")
-      void findAllPagedShouldReturnFilteredCategoriesWhenNameExists() {
+      @DisplayName("search should return filtered categories when name exists")
+      void searchShouldReturnFilteredCategoriesWhenNameExists() {
 
         // Arrange
         String name = "book";
@@ -89,14 +89,13 @@ class CategoryServiceIT {
         Page<CategoryResponse> result = service.search(name, pageable);
 
         // Assert
-        assertNotNull(result);
-
+        assertFalse(result.isEmpty());
         result.getContent().forEach(category -> assertTrue(category.name().toLowerCase().contains(name.toLowerCase())));
       }
 
       @Test
-      @DisplayName("findAllPaged should trim name before searching")
-      void findAllPagedShouldTrimNameBeforeSearching() {
+      @DisplayName("search should trim name before searching")
+      void searchShouldTrimNameBeforeSearching() {
 
         // Arrange
         String nameWithSpaces = "   book   ";
@@ -105,14 +104,13 @@ class CategoryServiceIT {
         Page<CategoryResponse> result = service.search(nameWithSpaces, pageable);
 
         // Assert
-        assertNotNull(result);
-
+        assertFalse(result.isEmpty());
         result.getContent().forEach(category -> assertTrue(category.name().toLowerCase().contains("book")));
       }
 
       @Test
-      @DisplayName("findAllPaged should use findAll when name is blank")
-      void findAllPagedShouldUseFindAllWhenNameIsBlank() {
+      @DisplayName("search should return all categories when name is blank")
+      void searchShouldReturnAllCategoriesWhenNameIsBlank() {
 
         // Arrange
         String name = "   ";
@@ -126,8 +124,8 @@ class CategoryServiceIT {
       }
 
       @Test
-      @DisplayName("findAllPaged should use findAll when name is null")
-      void findAllPagedShouldUseFindAllWhenNameIsNull() {
+      @DisplayName("search should return all categories when name is null")
+      void searchShouldReturnAllCategoriesWhenNameIsNull() {
 
         // Act
         Page<CategoryResponse> result = service.search(null, pageable);

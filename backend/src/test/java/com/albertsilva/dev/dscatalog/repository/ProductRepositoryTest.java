@@ -3,6 +3,7 @@ package com.albertsilva.dev.dscatalog.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -11,12 +12,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.albertsilva.dev.dscatalog.domain.catalog.Category;
 import com.albertsilva.dev.dscatalog.domain.catalog.Product;
 import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
 import com.albertsilva.dev.dscatalog.factory.ProductFactory;
+import com.albertsilva.dev.dscatalog.projection.ProductProjection;
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -246,6 +251,123 @@ class ProductRepositoryTest {
       // Assert
       assertThat(product.getCreatedAt()).as("createdAt should not change on update").isEqualTo(createdAt);
       assertThat(product.getUpdatedAt()).as("updatedAt should be refreshed on update").isAfter(firstUpdatedAt);
+    }
+  }
+
+  @Nested
+  @DisplayName("SearchProducts Operations")
+  class SearchProductsOperations {
+
+    @Test
+    @DisplayName("should return only the products of the informed category")
+    void shouldReturnOnlyProductsOfTheInformedCategory() {
+
+      // Arrange
+      Category books = persistCategory("Qwzx Books");
+      Category games = persistCategory("Qwzx Games");
+      Product book = persistProduct("Qwzx Clean Book", books);
+      persistProduct("Qwzx Board Game", games);
+
+      // Act
+      Page<ProductProjection> result = productRepository.searchProducts(List.of(books.getId()), "",
+          PageRequest.of(0, 10));
+
+      // Assert
+      assertThat(result.getContent()).extracting(ProductProjection::getId).containsExactly(book.getId());
+      assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("should return products of any informed category without repeating a product that belongs to both")
+    void shouldReturnProductsOfAnyInformedCategoryWithoutRepetition() {
+
+      // Arrange
+      Category books = persistCategory("Qwzx Books");
+      Category games = persistCategory("Qwzx Games");
+      Product book = persistProduct("Qwzx Clean Book", books);
+      Product game = persistProduct("Qwzx Board Game", games);
+      Product shared = persistProduct("Qwzx Game Book", books, games);
+
+      // Act
+      Page<ProductProjection> result = productRepository.searchProducts(List.of(books.getId(), games.getId()), "",
+          PageRequest.of(0, 10));
+
+      // Assert
+      assertThat(result.getContent()).extracting(ProductProjection::getId)
+          .containsExactlyInAnyOrder(book.getId(), game.getId(), shared.getId());
+      assertThat(result.getTotalElements()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("should filter by name ignoring case when no category is informed")
+    void shouldFilterByNameIgnoringCaseWhenNoCategoryIsInformed() {
+
+      // Arrange
+      Category books = persistCategory("Qwzx Books");
+      Product match = persistProduct("Qwzx Unique Title", books);
+      persistProduct("Qwzx Other Title", books);
+
+      // Act
+      Page<ProductProjection> result = productRepository.searchProducts(List.of(), "QWZX UNIQUE",
+          PageRequest.of(0, 10));
+
+      // Assert
+      assertThat(result.getContent()).extracting(ProductProjection::getId).containsExactly(match.getId());
+      assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("should combine name and category filters")
+    void shouldCombineNameAndCategoryFilters() {
+
+      // Arrange
+      Category books = persistCategory("Qwzx Books");
+      Category games = persistCategory("Qwzx Games");
+      Product match = persistProduct("Qwzx Chess Book", books);
+      persistProduct("Qwzx Chess Game", games);
+      persistProduct("Qwzx Poetry Book", books);
+
+      // Act
+      Page<ProductProjection> result = productRepository.searchProducts(List.of(books.getId()), "chess",
+          PageRequest.of(0, 10));
+
+      // Assert
+      assertThat(result.getContent()).extracting(ProductProjection::getId).containsExactly(match.getId());
+      assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("should paginate and sort by name while reporting the total of all matches")
+    void shouldPaginateAndSortByNameWhileReportingTheTotal() {
+
+      // Arrange
+      Category books = persistCategory("Qwzx Books");
+      persistProduct("Qwzx C Book", books);
+      persistProduct("Qwzx A Book", books);
+      persistProduct("Qwzx B Book", books);
+
+      // Act
+      Page<ProductProjection> firstPage = productRepository.searchProducts(List.of(books.getId()), "",
+          PageRequest.of(0, 2, Sort.by("name")));
+      Page<ProductProjection> secondPage = productRepository.searchProducts(List.of(books.getId()), "",
+          PageRequest.of(1, 2, Sort.by("name")));
+
+      // Assert
+      assertThat(firstPage.getContent()).extracting(ProductProjection::getName)
+          .containsExactly("Qwzx A Book", "Qwzx B Book");
+      assertThat(secondPage.getContent()).extracting(ProductProjection::getName).containsExactly("Qwzx C Book");
+      assertThat(firstPage.getTotalElements()).isEqualTo(3);
+      assertThat(firstPage.getTotalPages()).isEqualTo(2);
+    }
+
+    private Category persistCategory(String name) {
+      return categoryRepository.saveAndFlush(CategoryFactory.createCategory(name));
+    }
+
+    private Product persistProduct(String name, Category... categories) {
+      Product product = new Product(name, "Description of " + name, 10.0, "https://img.com/qwzx.png", true);
+      product.getCategories().addAll(List.of(categories));
+      return productRepository.saveAndFlush(product);
     }
   }
 

@@ -52,7 +52,6 @@ class ProductServiceTest {
   private Long nonExistingId;
   private Long dependentId;
   private Pageable pageable;
-  private PageImpl<Product> page;
 
   @BeforeEach
   void setUp() {
@@ -60,7 +59,6 @@ class ProductServiceTest {
     nonExistingId = 1000L;
     dependentId = 4L;
     pageable = PageRequest.of(0, 10);
-    page = new PageImpl<>(List.of(ProductFactory.createProduct()));
   }
 
   @Nested
@@ -148,78 +146,6 @@ class ProductServiceTest {
   }
 
   @Nested
-  @DisplayName("Search Operations")
-  class SearchOperations {
-
-    @Test
-    @DisplayName("search should return page when name is empty")
-    void searchShouldReturnPageWhenNameIsEmpty() {
-
-      // Arrange
-      String name = "";
-      Page<ProductResponse> expectedPage = new PageImpl<>(List.of());
-
-      Mockito.when(repository.findAll(pageable)).thenReturn(page);
-      Mockito.when(productMapper.toResponsePage(page)).thenReturn(expectedPage);
-
-      // Act
-      Page<ProductResponse> result = service.search(name, pageable);
-
-      // Assert
-      Assertions.assertNotNull(result);
-      Assertions.assertEquals(expectedPage, result);
-
-      Mockito.verify(repository).findAll(pageable);
-      Mockito.verify(productMapper).toResponsePage(page);
-    }
-
-    @Test
-    @DisplayName("search should return filtered page when name exists")
-    void searchShouldReturnFilteredPageWhenNameExists() {
-
-      // Arrange
-      String name = "pc";
-      Page<ProductResponse> expectedPage = new PageImpl<>(List.of());
-
-      Mockito.when(repository.findByNameContainingIgnoreCase(name, pageable)).thenReturn(page);
-
-      Mockito.when(productMapper.toResponsePage(page)).thenReturn(expectedPage);
-
-      // Act
-      Page<ProductResponse> result = service.search(name, pageable);
-
-      // Assert
-      Assertions.assertNotNull(result);
-      Assertions.assertEquals(expectedPage, result);
-
-      Mockito.verify(repository).findByNameContainingIgnoreCase(name, pageable);
-
-      Mockito.verify(productMapper).toResponsePage(page);
-    }
-
-    @Test
-    @DisplayName("search should trim name before filtering")
-    void searchShouldTrimNameBeforeFiltering() {
-
-      // Arrange
-      String name = "  pc  ";
-      Page<ProductResponse> expectedPage = new PageImpl<>(List.of());
-
-      Mockito.when(repository.findByNameContainingIgnoreCase("pc", pageable)).thenReturn(page);
-
-      Mockito.when(productMapper.toResponsePage(page)).thenReturn(expectedPage);
-
-      // Act
-      Page<ProductResponse> result = service.search(name, pageable);
-
-      // Assert
-      Assertions.assertNotNull(result);
-
-      Mockito.verify(repository).findByNameContainingIgnoreCase("pc", pageable);
-    }
-  }
-
-  @Nested
   @DisplayName("FindAllPaged Operations")
   class FindAllPagedOperations {
 
@@ -244,6 +170,23 @@ class ProductServiceTest {
       // Verify
       Mockito.verify(repository).searchProducts(List.of(), "pc", pageable);
       Mockito.verify(repository).searchProductsWithCategories(List.of());
+    }
+
+    @Test
+    @DisplayName("findAllPaged should trim name before filtering")
+    void findAllPagedShouldTrimNameBeforeFiltering() {
+
+      // Arrange
+      Page<ProductProjection> projections = new PageImpl<>(List.of(), pageable, 0);
+
+      Mockito.when(repository.searchProducts(List.of(), "pc", pageable)).thenReturn(projections);
+      Mockito.when(repository.searchProductsWithCategories(List.of())).thenReturn(List.of());
+
+      // Act
+      service.findAllPaged("  pc  ", "0", pageable);
+
+      // Assert
+      Mockito.verify(repository).searchProducts(List.of(), "pc", pageable);
     }
 
     @Test

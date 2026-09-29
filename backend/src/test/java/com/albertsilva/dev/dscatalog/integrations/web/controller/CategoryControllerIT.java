@@ -7,8 +7,12 @@ import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.NON_DEPENDEN
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.hamcrest.Matchers.containsStringIgnoringCase;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -20,10 +24,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.albertsilva.dev.dscatalog.domain.catalog.Category;
 import com.albertsilva.dev.dscatalog.dto.category.request.CategoryCreateRequest;
 import com.albertsilva.dev.dscatalog.dto.category.request.CategoryUpdateRequest;
 import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
@@ -104,7 +110,7 @@ class CategoryControllerIT extends AbstractIT {
       }
 
       @Test
-      @DisplayName("GET /categories should return filtered categories when name parameter is informed")
+      @DisplayName("GET /categories with name filter should return only categories whose name contains the filter")
       void findAllShouldReturnFilteredCategoriesWhenNameParameterIsInformed() throws Exception {
 
         // Act
@@ -117,8 +123,9 @@ class CategoryControllerIT extends AbstractIT {
         // Assert
         resultActions
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content").isArray())
-            .andExpect(jsonPath("$.content[0].name").value("Books"));
+            .andExpect(jsonPath("$.content").isNotEmpty())
+            .andExpect(jsonPath("$.content[*].name").value(everyItem(containsStringIgnoringCase("book"))))
+            .andExpect(jsonPath("$.content[*].name").value(hasItem("Books")));
       }
     }
 
@@ -142,15 +149,19 @@ class CategoryControllerIT extends AbstractIT {
       }
 
       @Test
-      @DisplayName("GET /categories/{id} should return 404 when id does not exist")
+      @DisplayName("GET /categories/{id} should return 404 with RESOURCE_NOT_FOUND code and translated message when id does not exist")
       void findByIdShouldReturnNotFoundWhenIdDoesNotExist() throws Exception {
 
         // Act
         ResultActions resultActions = mockMvc
-            .perform(get(BASE_URL + "/{id}", NON_EXISTING_ID).accept(MediaType.APPLICATION_JSON));
+            .perform(get(BASE_URL + "/{id}", NON_EXISTING_ID).header(HttpHeaders.ACCEPT_LANGUAGE, "en")
+            .accept(MediaType.APPLICATION_JSON));
 
         // Assert
-        resultActions.andExpect(status().isNotFound());
+        resultActions
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
+            .andExpect(jsonPath("$.message").value("Category not found"));
       }
     }
 
@@ -189,6 +200,31 @@ class CategoryControllerIT extends AbstractIT {
 
       assertEquals(categoryRepository.count(), initialCount + 1);
       assertEquals(request.description(), categoryRepository.findById(id).orElseThrow().getDescription());
+    }
+
+    @Test
+    @DisplayName("POST /categories should return 422 with the translated field error when name is blank and create nothing")
+    void createShouldReturnUnprocessableEntityWhenNameIsBlank() throws Exception {
+
+      // Arrange
+      CategoryCreateRequest request = new CategoryCreateRequest("", null);
+      long initialCount = categoryRepository.count();
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(post(BASE_URL)
+          .with(bearerToken())
+          .header(HttpHeaders.ACCEPT_LANGUAGE, "en")
+          .content(asJson(request))
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      resultActions
+          .andExpect(status().isUnprocessableEntity())
+          .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+          .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'name')].message").value(hasItem("Category name is required")));
+
+      assertEquals(initialCount, categoryRepository.count());
     }
   }
 
@@ -246,8 +282,13 @@ class CategoryControllerIT extends AbstractIT {
   class ActivateOperations {
 
     @Test
-    @DisplayName("PATCH /categories/{id}/activate should activate category when id exists")
-    void activateShouldActivateCategoryWhenIdExists() throws Exception {
+    @DisplayName("PATCH /categories/{id}/activate should activate an inactive category")
+    void activateShouldActivateCategoryWhenCategoryIsInactive() throws Exception {
+
+      // Arrange
+      Category category = categoryRepository.findById(EXISTING_ID).orElseThrow();
+      category.setActive(false);
+      categoryRepository.saveAndFlush(category);
 
       // Act
       ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}/activate", EXISTING_ID)
@@ -256,7 +297,7 @@ class CategoryControllerIT extends AbstractIT {
       // Assert
       resultActions.andExpect(status().isNoContent());
 
-      assertEquals(true, categoryRepository.findById(EXISTING_ID).get().isActive());
+      assertTrue(categoryRepository.findById(EXISTING_ID).orElseThrow().isActive());
     }
 
     @Test
@@ -340,25 +381,5 @@ class CategoryControllerIT extends AbstractIT {
       // Assert
       resultActions.andExpect(status().isNotFound());
     }
-
-    // Esse teste não esta funcionando porque é necessario verificar a logica de
-    // negocio para deletar a categoria,
-    // ou seja, verificar a exceção lançada quando a categoria tem produtos
-    // associados. Verificar a possibilidade de usar o
-    // categoryRepository.flush() para forçar a execução da operação de delete e
-    // verificar a exceção lançada.
-    // @Test
-    // @DisplayName("DELETE /categories/{id} should return 409 when category has associated products")
-    // void deleteShouldReturnBadRequestWhenCategoryHasAssociatedProducts() throws Exception {
-
-    //   // Act
-    //   ResultActions resultActions = mockMvc.perform(delete(BASE_URL + "/{id}", DEPENDENT_ID)
-    //       .with(bearerToken())
-    //       .accept(MediaType.APPLICATION_JSON));
-
-    //   // Assert
-    //   resultActions.andExpect(status().isConflict()).andExpect(jsonPath("$.error").value("Conflict"))
-    //       .andExpect(jsonPath("$.message").value("Cannot delete resource because it has related entities"));
-    // }
   }
 }

@@ -71,8 +71,8 @@ public interface TokenRepository extends JpaRepository<Token, Long> {
    * <p>
    * <b>Uso atual:</b> {@code TokenService.disableAllActivationTokens}
    * (chamado por {@code AccountService.resendActivationEmail}) e
-   * {@code TokenService.disableAllPasswordRecoveryTokens} (sem chamadores
-   * atualmente).
+   * {@code TokenService.disableAllPasswordRecoveryTokens} (chamado por
+   * {@code AccountService.requestPasswordRecovery}).
    * </p>
    *
    * @param user o usuário dono dos tokens
