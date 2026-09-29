@@ -20,8 +20,10 @@ import org.springframework.context.annotation.Configuration;
  * ({@code /docs-asjcatalog} nos perfis {@code dev} e {@code test} (desativado
  * em {@code prod})); a segurança só libera os caminhos {@code /docs-asjcatalog*} e
  * {@code /swagger-ui/**}. Os controllers escaneados são os de
- * {@code web.controller}. Não há propriedade que desabilite o springdoc em
- * nenhum perfil.
+ * {@code web.controller}. No perfil {@code prod}, o springdoc é desativado por
+ * {@code springdoc.api-docs.enabled=false} e
+ * {@code springdoc.swagger-ui.enabled=false} em
+ * {@code application-prod.properties}.
  * </p>
  */
 @Configuration
