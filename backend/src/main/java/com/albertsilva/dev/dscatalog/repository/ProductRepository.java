@@ -20,8 +20,7 @@ import com.albertsilva.dev.dscatalog.projection.ProductProjection;
  * três naturezas:
  * </p>
  * <ul>
- * <li><b>derivadas</b>: {@link #findByNameContainingIgnoreCase(String, Pageable)},
- * {@link #existsByNameIgnoreCase(String)} e
+ * <li><b>derivadas</b>: {@link #existsByNameIgnoreCase(String)} e
  * {@link #existsByNameIgnoreCaseAndIdNot(String, Long)}</li>
  * <li><b>SQL nativo</b>: {@link #searchProducts(List, String, Pageable)},
  * que retorna a projeção {@link ProductProjection} (somente {@code id} e
@@ -49,43 +48,6 @@ import com.albertsilva.dev.dscatalog.projection.ProductProjection;
  */
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
-
-  /**
-   * Lista, de forma paginada, os produtos cujo nome contém o termo informado,
-   * sem diferenciar maiúsculas de minúsculas.
-   *
-   * <p>
-   * <b>Consulta derivada:</b> o SQL é gerado pelo Spring Data a partir do nome
-   * do método, resultando em um {@code LIKE '%termo%'} aplicado ao campo
-   * {@code name} sem distinção de caixa. Não há {@code @Query}.
-   * </p>
-   *
-   * <p>
-   * <b>Paginação e ordenação:</b> definidas pelo {@link Pageable}, com nomes de
-   * propriedades da entidade. Sem ordenação informada, a consulta não define a
-   * ordem. Como o retorno é {@link Page}, o Spring Data executa também uma
-   * consulta de contagem.
-   * </p>
-   *
-   * <p>
-   * <b>Carregamento:</b> devolve entidades {@link Product} <b>sem</b> as
-   * categorias inicializadas (relacionamento tardio). Converter o resultado em
-   * resposta que exponha as categorias faz o acesso a
-   * {@code Product.getCategories()} disparar uma consulta adicional por produto
-   * da página (padrão N+1), a menos que outra consulta já as tenha carregado.
-   * </p>
-   *
-   * <p>
-   * <b>Uso atual:</b> nenhum componente de {@code src/main} chama este método
-   * (seu único chamador, {@code ProductService.search}, foi removido); a
-   * listagem HTTP de produtos usa {@link #searchProducts(List, String, Pageable)}.
-   * </p>
-   *
-   * @param name     termo procurado no nome do produto
-   * @param pageable configurações de paginação (página, tamanho, ordenação)
-   * @return página de produtos encontrados (vazia se nenhum corresponder)
-   */
-  Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
   /**
    * Busca paginada, por <b>SQL nativo</b>, de produtos filtrando por nome e,

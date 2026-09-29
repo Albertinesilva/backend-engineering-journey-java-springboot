@@ -26,7 +26,6 @@ import com.albertsilva.dev.dscatalog.service.exception.PasswordUpdateException;
 import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
 
 import jakarta.mail.MessagingException;
-import jakarta.validation.Valid;
 
 /**
  * Serviço de aplicação dos fluxos de <b>conta do próprio usuário</b>, chamados
