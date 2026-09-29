@@ -12,12 +12,12 @@ O README da raiz do repositório apresenta o capítulo atual do projeto. Esta pa
 
 | Guia | Conteúdo | Situação |
 | --- | --- | --- |
-| GETTING-STARTED | Como preparar o ambiente, rodar a aplicação localmente e fazer a primeira requisição. | Em construção |
-| CONFIGURATION | Perfis `dev`, `test` e `prod` e todas as variáveis de ambiente. | Em construção |
-| ARCHITECTURE | Camadas, organização dos pacotes e caminho de uma requisição pela aplicação. | Em construção |
-| DOMAIN-MODEL | Entidades do domínio, seus relacionamentos e as regras que ficam dentro delas. | Em construção |
-| DATA-ACCESS | Repositórios, consultas (derivadas, JPQL e nativas), paginação e a solução do problema N+1. | Em construção |
-| DATABASE-MIGRATIONS | Migrations do Flyway, pastas `schema`, `reference` e `data` e o que roda em cada perfil. | Em construção |
+| [GETTING-STARTED](guides/GETTING-STARTED.md) | Como preparar o ambiente, rodar a aplicação localmente e fazer a primeira requisição. | Disponível |
+| [CONFIGURATION](guides/CONFIGURATION.md) | Perfis `dev`, `test` e `prod` e todas as variáveis de ambiente. | Disponível |
+| [ARCHITECTURE](guides/ARCHITECTURE.md) | Camadas, organização dos pacotes e caminho de uma requisição pela aplicação. | Disponível |
+| [DOMAIN-MODEL](guides/DOMAIN-MODEL.md) | Entidades do domínio, seus relacionamentos e as regras que ficam dentro delas. | Disponível |
+| [DATA-ACCESS](guides/DATA-ACCESS.md) | Repositórios, consultas (derivadas, JPQL e nativas), paginação e a solução do problema N+1. | Disponível |
+| [DATABASE-MIGRATIONS](guides/DATABASE-MIGRATIONS.md) | Migrations do Flyway, pastas `schema`, `reference` e `data` e o que roda em cada perfil. | Disponível |
 | API-ENDPOINTS | Todos os endpoints da API, com permissões exigidas, corpo da requisição e respostas. | Em construção |
 | AUTHENTICATION | Como obter e renovar tokens, como funcionam as roles e como chamar rotas protegidas. | Em construção |
 | ACCOUNT-FLOWS | Cadastro, ativação de conta, recuperação e troca de senha e envio de e-mails. | Em construção |

@@ -19,9 +19,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * {@code application.properties} por {@code ${APP_PROFILE:dev}}, ou seja,
  * sem a variável de ambiente {@code APP_PROFILE} o perfil é {@code dev}
  * (PostgreSQL). Os detalhes de cada perfil estão em
- * {@code backend/src/main/resources}, nos arquivos
- * {@code application.properties} e
- * {@code application-{dev,test,prod}.properties}.
+ * {@code docs/guides/CONFIGURATION.md}.
  * </p>
  *
  * <p>
