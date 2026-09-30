@@ -246,5 +246,7 @@ A renovação do token e as regras de acesso de cada endpoint são explicadas em
 
 ## 10. Limitações conhecidas
 
-- **Falha de e-mail não chega ao cliente da API.** Quando o envio falha, o cadastro e a recuperação de senha respondem com sucesso mesmo assim; o erro fica só no log.
+- **Falha no envio de e-mail não chega ao cliente da API.** Este item trata só do caso em que o envio **falha**, por exemplo com o servidor SMTP fora do ar ou com credenciais inválidas; quando o envio funciona, o e-mail chega normalmente. Nesse caso de falha, o cadastro e a recuperação de senha respondem com sucesso mesmo assim, e o erro fica só no log.
+  - **Na recuperação de senha**, responder sucesso é intencional: o endpoint sempre responde da mesma forma para não revelar se o e-mail está cadastrado.
+  - **No cadastro**, a conta é criada inativa mesmo sem o e-mail. Depois que o envio voltar a funcionar, a pessoa pode pedir outro e-mail em `POST /api/v1/accounts/resend-activation` (veja [ACCOUNT-FLOWS.md](ACCOUNT-FLOWS.md#3-reenvio-de-ativação)).
 - **A variável ausente não é apontada pelo nome.** No perfil `dev`, esquecer `POSTGRES_DATASOURCE_USER` ou `POSTGRES_DATASOURCE_PASSWORD` não gera uma mensagem de "variável ausente": o erro aparece como falha de autenticação no PostgreSQL (veja a seção 9).
