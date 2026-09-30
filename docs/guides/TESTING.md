@@ -49,7 +49,6 @@ Os comandos partem da pasta `backend`. No PowerShell, argumentos `-D` com ponto 
 | Só os testes de integração (`*IT`) | `.\mvnw verify '-Dtest=NenhumTeste' '-Dsurefire.failIfNoSpecifiedTests=false'` | `./mvnw verify -Dtest=NenhumTeste -Dsurefire.failIfNoSpecifiedTests=false` |
 | Uma classe de unidade | `.\mvnw test '-Dtest=StrongPasswordValidatorTest'` | `./mvnw test -Dtest=StrongPasswordValidatorTest` |
 | Uma classe de integração | `.\mvnw verify '-Dtest=NenhumTeste' '-Dsurefire.failIfNoSpecifiedTests=false' '-Dit.test=CategoryControllerIT'` | `./mvnw verify -Dtest=NenhumTeste -Dsurefire.failIfNoSpecifiedTests=false -Dit.test=CategoryControllerIT` |
-| Todos os testes sem credenciais de e-mail | `.\mvnw verify '-Dspring.mail.test-connection=false'` | `./mvnw verify -Dspring.mail.test-connection=false` |
 
 Como funciona o comando "só os testes de integração": `-Dtest` filtra o Surefire, e `NenhumTeste` não corresponde a nenhuma classe; `-Dsurefire.failIfNoSpecifiedTests=false` impede que isso seja tratado como erro. O Failsafe usa outro filtro (`-Dit.test`), e por isso roda todos os `*IT`.
 
@@ -135,26 +134,9 @@ Nomes de método no padrão `<ação>Should<resultado>When<condição>`, `@Displ
 
 ## 8. Dependências externas
 
-Alguns testes dependem de serviços fora da máquina.
+**Servidor SMTP: não é necessário.** O `application.properties` liga `spring.mail.test-connection`, que faz a subida testar a conexão com o servidor de e-mail. O `application-test.properties` desliga esse teste (`spring.mail.test-connection=false`), e nenhum teste envia e-mail de verdade (seção 5). Por isso **os testes não precisam das variáveis `MAIL_USERNAME` e `MAIL_PASSWORD`**: sem elas, `./mvnw verify` passou com 301 e 150 testes, sem erros.
 
-**Servidor SMTP (credenciais `MAIL_*`).** O `application.properties` tem `spring.mail.test-connection=true`, que também vale no perfil `test`: todo teste que sobe o contexto completo do Spring testa a conexão com o servidor de e-mail. Resultado de `./mvnw verify` **sem** as variáveis `MAIL_USERNAME` e `MAIL_PASSWORD`:
-
-| Fase | Resultado |
-| --- | --- |
-| Surefire | 301 testes, **1 erro**: `AsjcatalogApplicationTests.contextLoads` (`Mail server is not available`, causado por `AuthenticationFailedException: 535`) |
-| Failsafe | Não roda, porque o Surefire falhou |
-
-Forçando a continuação (`-Dmaven.test.failure.ignore=true`), o Failsafe informa 140 testes com **121 erros**: todas as classes de integração falham ao carregar o contexto, menos o `AccountFlowIT` (19 testes), que substitui o `JavaMailSenderImpl` por um mock.
-
-**Como rodar sem credenciais de e-mail:** desligue o teste de conexão. Com as variáveis `MAIL_*` ausentes, o comando abaixo passou com 301 e 150 testes, sem erros:
-
-```powershell
-.\mvnw verify '-Dspring.mail.test-connection=false'
-```
-
-No bash: `./mvnw verify -Dspring.mail.test-connection=false`.
-
-**DNS (internet).** O validador `@ValidEmail` consulta o registro MX do domínio do e-mail pela internet (veja [VALIDATION.md](VALIDATION.md#6-validação-de-e-mail)). Testes que dependem disso:
+**DNS (internet).** Esta é a única dependência externa dos testes. O validador `@ValidEmail` consulta o registro MX do domínio do e-mail pela internet (veja [VALIDATION.md](VALIDATION.md#6-validação-de-e-mail)). Testes que dependem disso:
 
 - `ValidEmailValidatorTest`, que valida `user@gmail.com` consultando o DNS real;
 - testes de integração que enviam e-mails para endpoints com `@ValidEmail`, como o `AccountFlowIT` (cadastro com `joana.flowit@gmail.com`).
@@ -163,7 +145,6 @@ Sem acesso ao DNS, esses testes falham, porque o e-mail é considerado inválido
 
 ## 9. Limitações conhecidas
 
-- **Os testes exigem credenciais de e-mail ou o parâmetro `-Dspring.mail.test-connection=false`.** Sem nenhum dos dois, o build falha logo no Surefire (seção 8).
 - **Os testes dependem de internet** para a consulta de DNS da validação de e-mail.
 - **Flyway não é testado.** O perfil `test` cria as tabelas a partir das entidades, e não pelas migrations. Um erro numa migration só aparece ao subir nos perfis `dev` ou `prod`.
 - **Comportamentos sem teste.** Não há teste para `PUT /users/{id}` feito por um OPERATOR no próprio id, para `GET /accounts/me` sem token, para `GET /products?sort=price` nem para o comportamento após reiniciar a aplicação (tokens invalidados). Veja as limitações em [API-ENDPOINTS.md](API-ENDPOINTS.md#9-limitações-conhecidas) e [AUTHENTICATION.md](AUTHENTICATION.md#10-limitações-conhecidas).

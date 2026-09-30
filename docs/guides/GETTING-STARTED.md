@@ -149,7 +149,9 @@ O arquivo `application.properties`, que vale para todos os perfis, tem:
 spring.mail.test-connection=true
 ```
 
-Com isso, **a subida testa a conexão com o servidor de e-mail** (por padrão `smtp.gmail.com`, porta 587, com as credenciais `MAIL_USERNAME` e `MAIL_PASSWORD`). Sem credenciais válidas, a aplicação não sobe e o log mostra:
+Com isso, **a subida testa a conexão com o servidor de e-mail** (por padrão `smtp.gmail.com`, porta 587, com as credenciais `MAIL_USERNAME` e `MAIL_PASSWORD`). A exceção é o perfil `test`, usado pelos testes automatizados: o `application-test.properties` desliga esse teste, e por isso **os testes (`./mvnw verify`) não precisam de credenciais de e-mail**. Veja [TESTING.md](TESTING.md#8-dependências-externas).
+
+Ao subir a aplicação no perfil `dev`, sem credenciais válidas, ela não sobe e o log mostra:
 
 ```text
 Caused by: java.lang.IllegalStateException: Mail server is not available

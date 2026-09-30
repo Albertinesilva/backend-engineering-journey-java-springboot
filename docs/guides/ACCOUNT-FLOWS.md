@@ -170,7 +170,7 @@ O remetente no cabeçalho é `nao-responder@asjcatalog.com.br`, e o logo (`stati
 
 **Os links apontam para o front-end** (`FRONTEND_URL`, padrão `http://localhost:5173`), que não faz parte deste repositório. Espera-se que o front-end leia o `token` da URL e chame a API: `GET /api/v1/accounts/activate?token=...` ou `POST /api/v1/accounts/reset-password`.
 
-**SMTP.** Servidor, porta e credenciais vêm de `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME` e `MAIL_PASSWORD` (veja [CONFIGURATION.md](CONFIGURATION.md#4-variáveis-de-ambiente)). A aplicação testa a conexão ao subir; como subir sem credenciais está em [GETTING-STARTED.md](GETTING-STARTED.md#5-servidor-de-e-mail-smtp).
+**SMTP.** Servidor, porta e credenciais vêm de `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME` e `MAIL_PASSWORD` (veja [CONFIGURATION.md](CONFIGURATION.md#4-variáveis-de-ambiente)). A aplicação testa a conexão ao subir (nos perfis `dev` e `prod`); como subir sem credenciais está em [GETTING-STARTED.md](GETTING-STARTED.md#5-servidor-de-e-mail-smtp).
 
 **Registro.** Depois de cada envio bem-sucedido, o `EmailService` grava uma linha em `tb_email` (entidade `Email`).
 
