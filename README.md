@@ -40,7 +40,7 @@ This chapter focuses on designing a robust domain model, implementing real busin
 
 <img src="https://img.shields.io/badge/Documentation-Swagger%20%7C%20OpenAPI-85EA2D?style=for-the-badge" />
 
-<img src="https://img.shields.io/github/license/Albertinesilva/backend-engineering-journey-java-springboot?style=for-the-badge" />
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" /></a>
 
 <img src="https://img.shields.io/github/last-commit/Albertinesilva/backend-engineering-journey-java-springboot?style=for-the-badge" />
 
@@ -55,6 +55,8 @@ Foram implementados casos de uso relacionados ao ciclo de vida da conta do usuá
 Além da evolução funcional, a camada de persistência foi aprimorada com consultas otimizadas utilizando <strong>Spring Data JPA</strong>, <strong>JPQL</strong>, consultas nativas, paginação, filtros dinâmicos e estratégias para eliminação do problema <strong>N+1 Select</strong>, garantindo melhor desempenho e escalabilidade.
 
 O capítulo também introduz integração com serviços externos através do envio de e-mails transacionais, gerenciamento de tokens de negócio e aplicação de conceitos inspirados em <strong>Domain-Driven Design (DDD)</strong>, aproximando o projeto dos padrões encontrados em sistemas corporativos modernos.
+
+O nome <strong>ASJCatalog</strong> vem das iniciais de <strong>Albert Silva de Jesus</strong>: o projeto nasceu da base do <strong>DSCatalog</strong>, do curso DevSuperior, e evoluiu de forma independente.
 </em>
 
 </p>
@@ -67,34 +69,37 @@ O capítulo também introduz integração com serviços externos através do env
 
 ---
 
-| 🧩 Module                                                                       | ⚡ Description                                                              |
-| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| [📚 Contexto da Implementação](#-contexto-da-implementação)                     | Contexto da evolução arquitetural e dos novos requisitos de negócio         |
-| [🎯 Objetivos](#-objetivos)                                                     | Metas técnicas e arquiteturais implementadas neste módulo                   |
-| [📂 Organização dos Packages](#-organização-dos-packages)                       | Estrutura modular da aplicação e responsabilidades das camadas              |
-| [🧩 Organização da Camada de Domínio](#-organização-da-camada-de-domínio)       | Evolução da camada de domínio e organização dos subdomínios                 |
-| [🧠 Conceitos Fundamentais Trabalhados](#-conceitos-fundamentais-trabalhados)   | Conceitos de arquitetura, persistência e modelagem aplicados                |
-| [🛠️ Tecnologias e Frameworks Utilizados](#️-tecnologias-e-frameworks-utilizados) | Stack tecnológica empregada na evolução da aplicação                        |
-| [🗄️ Modelagem ORM](#️-modelagem-orm)                                             | Modelagem das entidades, relacionamentos e estratégias de persistência      |
-| [🎯 Casos de Uso](#-casos-de-uso)                                               | Fluxos de negócio implementados na camada de serviços                       |
-| [🔍 Consultas ao Banco](#-consultas-ao-banco)                                   | Estratégias de consultas utilizando Spring Data JPA, JPQL e Native SQL      |
-| [🚀 Otimizações de Persistência](#-otimizações-de-persistência)                 | Técnicas aplicadas para otimização de desempenho e eliminação do N+1 Select |
-| [📧 Integração com E-mail](#-integração-com-e-mail)                             | Fluxo de envio de e-mails transacionais e gerenciamento de tokens           |
-| [🧱 Boas Práticas Aplicadas](#-boas-práticas-aplicadas)                         | Padrões arquiteturais e boas práticas adotadas durante a implementação      |
-| [📈 Evolução Arquitetural](#-evolução-arquitetural)                             | Principais evoluções estruturais da aplicação                               |
-| [🎓 Aprendizados](#-aprendizados)                                               | Conhecimentos consolidados ao longo deste capítulo                          |
-| [💼 Competências Técnicas Desenvolvidas](#-competências-técnicas-desenvolvidas) | Competências adquiridas com a implementação                                 |
-| [🏁 Conclusão](#-conclusão)                                                     | Considerações finais sobre a evolução da arquitetura                        |
-| [📚 Referências Técnicas](#-referências-técnicas)                               | Documentações oficiais e materiais utilizados                               |
-| [👨‍💻 Autor](#-autor)                                                             | Informações sobre o autor da documentação                                   |
-| [📎 Contato](#-contato)                                                         | Canais de contato e redes profissionais                                     |
+| 🧩 Module                                                                       | ⚡ Description                                                                     |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [📚 Contexto da Implementação](#-contexto-da-implementação)                     | Contexto da evolução arquitetural e dos novos requisitos de negócio                |
+| [🎯 Objetivos](#-objetivos)                                                     | Metas técnicas e arquiteturais implementadas neste módulo                          |
+| [🚀 Como Executar](#-como-executar)                                             | Pré-requisitos e comandos para rodar o projeto localmente                          |
+| [📖 Documentação Técnica](#-documentação-técnica)                               | Guias detalhados de cada parte do backend                                          |
+| [📂 Organização dos Packages](#-organização-dos-packages)                       | Estrutura modular da aplicação e responsabilidades das camadas                     |
+| [🧩 Organização da Camada de Domínio](#-organização-da-camada-de-domínio)       | Evolução da camada de domínio e organização dos subdomínios                        |
+| [🧠 Conceitos Fundamentais Trabalhados](#-conceitos-fundamentais-trabalhados)   | Conceitos de arquitetura, persistência e modelagem aplicados                       |
+| [🛠️ Tecnologias e Frameworks Utilizados](#️-tecnologias-e-frameworks-utilizados) | Stack tecnológica empregada na evolução da aplicação                               |
+| [🗄️ Modelagem ORM](#️-modelagem-orm)                                             | Entidades, relacionamentos e estratégias de persistência                           |
+| [🎯 Casos de Uso](#-casos-de-uso)                                               | Fluxos de negócio implementados na camada de serviços                              |
+| [🔍 Consultas e Otimizações](#-consultas-e-otimizações)                         | Spring Data JPA, JPQL, Native SQL e a eliminação do N+1 Select                     |
+| [📧 Integração com E-mail](#-integração-com-e-mail)                             | Envio de e-mails transacionais e gerenciamento de tokens                           |
+| [🧱 Boas Práticas Aplicadas](#-boas-práticas-aplicadas)                         | Padrões arquiteturais e boas práticas adotadas durante a implementação             |
+| [📈 Evolução Arquitetural](#-evolução-arquitetural)                             | Principais evoluções estruturais da aplicação, inclusive além do tema do capítulo |
+| [🎓 Aprendizados](#-aprendizados)                                               | Conhecimentos consolidados ao longo deste capítulo                                 |
+| [💼 Competências Técnicas Desenvolvidas](#-competências-técnicas-desenvolvidas) | Competências adquiridas com a implementação                                        |
+| [🏁 Conclusão](#-conclusão)                                                     | Considerações finais sobre a evolução da arquitetura                               |
+| [📚 Referências Técnicas](#-referências-técnicas)                               | Documentações oficiais e materiais utilizados                                      |
+| [👨‍💻 Autor](#-autor)                                                             | Informações sobre o autor da documentação                                          |
+| [📎 Contato](#-contato)                                                         | Canais de contato e redes profissionais                                            |
 
 ---
 
 ## 📚 Contexto da Implementação
 
 Após a implementação da infraestrutura de autenticação e autorização baseada em Spring Security, OAuth2 e JWT, o ASJCatalog evolui para incorporar fluxos de negócio mais próximos dos requisitos encontrados em aplicações corporativas reais.
-Neste modulo foram implementados casos de uso completos relacionados ao ciclo de vida da conta do usuário, além da evolução da camada de persistência utilizando JPA/Hibernate, consultas otimizadas e integração com serviços de e-mail.
+
+Neste módulo foram implementados casos de uso completos relacionados ao ciclo de vida da conta do usuário, além da evolução da camada de persistência utilizando JPA/Hibernate, consultas otimizadas e integração com serviços de e-mail.
+
 O foco principal foi construir fluxos de negócio completos, desacoplados e alinhados com boas práticas de arquitetura backend.
 
 ---
@@ -117,273 +122,86 @@ Os principais objetivos deste módulo são:
 
 ---
 
+## 🚀 Como Executar
+
+**Pré-requisitos:** JDK 17, PostgreSQL com um banco chamado `asjcatalog` e as variáveis de ambiente `POSTGRES_DATASOURCE_USER` e `POSTGRES_DATASOURCE_PASSWORD` com o usuário e a senha do banco.
+
+**PowerShell**:
+
+```powershell
+git clone https://github.com/Albertinesilva/backend-engineering-journey-java-springboot.git
+cd backend-engineering-journey-java-springboot; git checkout chapter-04-domain-orm
+cd backend
+.\mvnw spring-boot:run '-Dspring-boot.run.arguments=--spring.mail.test-connection=false'
+```
+
+**bash**:
+
+```bash
+git clone https://github.com/Albertinesilva/backend-engineering-journey-java-springboot.git
+cd backend-engineering-journey-java-springboot && git checkout chapter-04-domain-orm
+cd backend
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--spring.mail.test-connection=false
+```
+
+O último comando sobe a aplicação sem exigir um servidor de e-mail (SMTP). A API fica em `http://localhost:8080`, e a documentação interativa (Swagger) em `http://localhost:8080/docs-asjcatalog.html`.
+
+> [!TIP]
+> O passo a passo completo, com criação do banco, usuários de exemplo, obtenção de token e solução de problemas comuns, está em [Primeiros Passos](docs/guides/GETTING-STARTED.md). Para rodar os testes: `./mvnw verify` (veja [Testes](docs/guides/TESTING.md)).
+
+---
+
+## 📖 Documentação Técnica
+
+Os detalhes técnicos de cada parte do backend ficam em guias próprios, dentro de `docs/`.
+
+| 📘 Documento                                                          | ⚡ Descrição                                                                    |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [🚀 Primeiros Passos](docs/guides/GETTING-STARTED.md)                 | Do zero até a primeira requisição autenticada                                  |
+| [⚙️ Configuração e Perfis](docs/guides/CONFIGURATION.md)              | Perfis `dev`, `test` e `prod` e todas as variáveis de ambiente                 |
+| [🏗️ Arquitetura](docs/guides/ARCHITECTURE.md)                         | Camadas, pacotes e caminho de uma requisição                                   |
+| [🧩 Modelo de Domínio](docs/guides/DOMAIN-MODEL.md)                   | Entidades, relacionamentos e regras de negócio                                 |
+| [🔍 Acesso a Dados](docs/guides/DATA-ACCESS.md)                       | Repositórios, consultas, paginação, N+1 e transações                           |
+| [🗄️ Migrations](docs/guides/DATABASE-MIGRATIONS.md)                   | Flyway, pastas `schema`/`reference`/`data` e numeração das versões             |
+| [🌐 Endpoints da API](docs/guides/API-ENDPOINTS.md)                   | Todas as rotas, permissões, corpos e respostas                                 |
+| [🔐 Autenticação](docs/guides/AUTHENTICATION.md)                      | Login, tokens JWT, refresh token, roles, 401 e 403                             |
+| [📧 Fluxos de Conta](docs/guides/ACCOUNT-FLOWS.md)                    | Cadastro, ativação, recuperação de senha e envio de e-mails                    |
+| [🧾 Validação](docs/guides/VALIDATION.md)                             | Bean Validation, validadores customizados, senha forte e e-mail                |
+| [⚠️ Tratamento de Erros](docs/guides/ERROR-HANDLING.md)               | Formato das respostas de erro e códigos `ApiErrorCode`                         |
+| [🌍 Internacionalização](docs/guides/INTERNATIONALIZATION.md)         | Mensagens em português, inglês e espanhol                                      |
+| [🧪 Testes](docs/guides/TESTING.md)                                   | Testes de unidade e de integração, comandos e cobertura                        |
+| [📐 Convenções](docs/guides/CONVENTIONS.md)                           | Nomes, JavaDoc, commits, branches e migrations                                 |
+| [🛡️ Contrato de Segurança](docs/SECURITY-CONTRACT.md)                 | Referência detalhada do comportamento de autenticação e autorização            |
+| [🏠 Índice da Documentação](docs/HOME.md)                             | Visão geral da documentação e histórico de auditorias                          |
+
+---
+
 ## 📂 Organização dos Packages
 
 A evolução do ASJCatalog exigiu uma reorganização estrutural da aplicação para suportar novos requisitos de negócio, mecanismos de segurança, integrações externas e estratégias avançadas de persistência.
 
 A arquitetura foi organizada com base nos princípios de separação de responsabilidades, alta coesão e baixo acoplamento, permitindo que cada módulo possua responsabilidades bem definidas dentro do sistema.
 
-Além das tradicionais camadas de persistência e exposição de APIs REST, foram incorporados componentes especializados para autenticação OAuth2, gerenciamento de tokens de negócio, recuperação de acesso, envio de e-mails transacionais, validações customizadas, projeções para consultas otimizadas e implementação de casos de uso completos.
+O código fica em `backend/src/main/java`, no pacote base `com.albertsilva.dev.asjcatalog`:
 
-Essa organização favorece a manutenção, a evolução e a testabilidade da aplicação, aproximando sua arquitetura dos padrões adotados em sistemas corporativos modernos.
+| Package      | Responsabilidade                                                                                          |
+| ------------ | --------------------------------------------------------------------------------------------------------- |
+| `config`     | Configurações globais: documentação OpenAPI (`config.documentation`) e idiomas das mensagens (`config.i18n`) |
+| `domain`     | Entidades centrais do domínio e regras de negócio                                                          |
+| `dto`        | Contratos de entrada (`request`) e saída (`response`) da API                                               |
+| `mapper`     | Conversão entre entidades e DTOs                                                                           |
+| `projection` | Projeções utilizadas em consultas otimizadas                                                               |
+| `repository` | Acesso e persistência de dados                                                                             |
+| `security`   | Autenticação, autorização e infraestrutura OAuth2                                                          |
+| `service`    | Implementação dos casos de uso e exceções de negócio (`service.exception`)                                 |
+| `util`       | Utilitários, como a reordenação de resultados usada contra o N+1                                          |
+| `validation` | Anotações e validadores customizados                                                                       |
+| `web`        | Controllers REST e tratamento global de erros (`web.exception`)                                            |
 
----
+Os recursos ficam em `backend/src/main/resources`: configurações por perfil (`application*.properties`), mensagens em três idiomas (`messages_*.properties`), migrations do Flyway (`db/migration/schema`, `reference` e `data`) e templates de e-mail.
 
-## 🏗️ Estrutura Arquitetural da Aplicação
-
-A estrutura abaixo apresenta a organização completa dos principais módulos do backend, evidenciando a separação entre domínio, aplicação, infraestrutura, segurança e exposição dos recursos REST.
-
-Cada package possui responsabilidades bem definidas, reduzindo o acoplamento entre os componentes e favorecendo sua evolução independente.
-
-```text
-📦 com.albertsilva.dev.asjcatalog
-┃
-┣ 📄 DscatalogApplication.java
-┃
-┣ 📂 config
-┃ ┗ 📄 SpringDocOpenApiConfig.java
-┃
-┣ 📂 domain
-┃ ┣ 📄 Identifiable.java
-┃ ┃
-┃ ┣ 📂 catalog
-┃ ┃ ┣ 📄 Category.java
-┃ ┃ ┗ 📄 Product.java
-┃ ┃
-┃ ┣ 📂 recovery
-┃ ┃ ┣ 📄 Email.java
-┃ ┃ ┣ 📄 Token.java
-┃ ┃ ┃
-┃ ┃ ┗ 📂 enums
-┃ ┃   ┣ 📄 EmailStatus.java
-┃ ┃   ┗ 📄 TokenType.java
-┃ ┃
-┃ ┗ 📂 user
-┃   ┣ 📄 Role.java
-┃   ┗ 📄 User.java
-┃
-┣ 📂 dto
-┃ ┣ 📂 category
-┃ ┃ ┣ 📂 request
-┃ ┃ ┃ ┣ 📄 CategoryCreateRequest.java
-┃ ┃ ┃ ┗ 📄 CategoryUpdateRequest.java
-┃ ┃ ┃
-┃ ┃ ┗ 📂 response
-┃ ┃   ┣ 📄 CategoryDetailsResponse.java
-┃ ┃   ┗ 📄 CategoryResponse.java
-┃ ┃
-┃ ┣ 📂 email
-┃ ┃ ┗ 📂 request
-┃ ┃   ┗ 📄 EmailRegisterRequest.java
-┃ ┃
-┃ ┣ 📂 product
-┃ ┃ ┣ 📂 request
-┃ ┃ ┃ ┣ 📄 ProductCreateRequest.java
-┃ ┃ ┃ ┗ 📄 ProductUpdateRequest.java
-┃ ┃ ┃
-┃ ┃ ┗ 📂 response
-┃ ┃   ┣ 📄 ProductDetailsResponse.java
-┃ ┃   ┗ 📄 ProductResponse.java
-┃ ┃
-┃ ┣ 📂 role
-┃ ┃ ┗ 📂 response
-┃ ┃   ┗ 📄 RoleResponse.java
-┃ ┃
-┃ ┗ 📂 user
-┃   ┣ 📂 request
-┃   ┃ ┣ 📄 PasswordResetRequest.java
-┃   ┃ ┣ 📄 UserCreateRequest.java
-┃   ┃ ┣ 📄 UserEmailRequest.java
-┃   ┃ ┣ 📄 UserRegisterRequest.java
-┃   ┃ ┗ 📄 UserUpdateRequest.java
-┃   ┃
-┃   ┗ 📂 response
-┃     ┣ 📄 UserDetailsResponse.java
-┃     ┗ 📄 UserResponse.java
-┃
-┣ 📂 mapper
-┃ ┣ 📂 category
-┃ ┃ ┗ 📄 CategoryMapper.java
-┃ ┣ 📂 product
-┃ ┃ ┗ 📄 ProductMapper.java
-┃ ┗ 📂 user
-┃   ┗ 📄 UserMapper.java
-┃
-┣ 📂 projection
-┃ ┣ 📄 ProductProjection.java
-┃ ┗ 📄 UserDetailsProjection.java
-┃
-┣ 📂 repository
-┃ ┣ 📄 CategoryRepository.java
-┃ ┣ 📄 EmailRepository.java
-┃ ┣ 📄 ProductRepository.java
-┃ ┣ 📄 RoleRepository.java
-┃ ┣ 📄 TokenRepository.java
-┃ ┗ 📄 UserRepository.java
-┃
-┣ 📂 security
-┃ ┣ 📂 auth
-┃ ┃ ┗ 📄 AuthenticatedUserService.java
-┃ ┃
-┃ ┣ 📂 config
-┃ ┃ ┗ 📄 SecurityBeansConfig.java
-┃ ┃
-┃ ┣ 📂 oauth2
-┃ ┃ ┣ 📂 authorization
-┃ ┃ ┃ ┗ 📂 config
-┃ ┃ ┃   ┗ 📄 AuthorizationServerConfig.java
-┃ ┃ ┃
-┃ ┃ ┣ 📂 grant
-┃ ┃ ┃ ┗ 📂 password
-┃ ┃ ┃   ┣ 📄 CustomPasswordAuthenticationConverter.java
-┃ ┃ ┃   ┣ 📄 CustomPasswordAuthenticationProvider.java
-┃ ┃ ┃   ┗ 📄 CustomPasswordAuthenticationToken.java
-┃ ┃ ┃
-┃ ┃ ┗ 📂 resource
-┃ ┃   ┗ 📂 config
-┃ ┃     ┗ 📄 ResourceServerConfig.java
-┃ ┃
-┃ ┗ 📂 userdetails
-┃   ┗ 📄 AuthenticatedUser.java
-┃
-┣ 📂 service
-┃ ┣ 📄 AccountService.java
-┃ ┣ 📄 CategoryService.java
-┃ ┣ 📄 EmailService.java
-┃ ┣ 📄 ProductService.java
-┃ ┣ 📄 TokenService.java
-┃ ┣ 📄 UserService.java
-┃ ┃
-┃ ┗ 📂 exception
-┃   ┣ 📄 AuthenticatedUserNotFoundException.java
-┃   ┣ 📄 DatabaseException.java
-┃   ┣ 📄 InvalidTokenException.java
-┃   ┗ 📄 ResourceNotFoundException.java
-┃
-┣ 📂 util
-┃ ┗ 📄 IdentifiableUtils.java
-┃
-┣ 📂 validation
-┃ ┣ 📂 category
-┃ ┃ ┣ 📂 annotation
-┃ ┃ ┃ ┣ 📄 CategoryCreateValid.java
-┃ ┃ ┃ ┗ 📄 CategoryUpdateValid.java
-┃ ┃ ┃
-┃ ┃ ┗ 📂 validator
-┃ ┃   ┣ 📄 CategoryCreateValidator.java
-┃ ┃   ┗ 📄 CategoryUpdateValidator.java
-┃ ┃
-┃ ┣ 📂 product
-┃ ┃ ┣ 📂 annotation
-┃ ┃ ┃ ┣ 📄 ProductCreateValid.java
-┃ ┃ ┃ ┗ 📄 ProductUpdateValid.java
-┃ ┃ ┃
-┃ ┃ ┗ 📂 validator
-┃ ┃   ┣ 📄 ProductCreateValidator.java
-┃ ┃   ┗ 📄 ProductUpdateValidator.java
-┃ ┃
-┃ ┣ 📂 role
-┃ ┃ ┣ 📂 annotation
-┃ ┃ ┃ ┗ 📄 ValidRoles.java
-┃ ┃ ┃
-┃ ┃ ┗ 📂 validator
-┃ ┃   ┗ 📄 ValidRolesValidator.java
-┃ ┃
-┃ ┗ 📂 user
-┃   ┣ 📂 annotation
-┃   ┃ ┣ 📄 StrongPassword.java
-┃   ┃ ┣ 📄 UniqueEmail.java
-┃   ┃ ┣ 📄 UserCreateValid.java
-┃   ┃ ┣ 📄 UserUpdateValid.java
-┃   ┃ ┗ 📄 ValidEmail.java
-┃   ┃
-┃   ┗ 📂 validator
-┃     ┣ 📄 StrongPasswordValidator.java
-┃     ┣ 📄 UniqueEmailValidator.java
-┃     ┣ 📄 UserCreateValidator.java
-┃     ┣ 📄 UserUpdateValidator.java
-┃     ┗ 📄 ValidEmailValidator.java
-┃
-┣ 📂 web
-┃ ┣ 📂 controller
-┃ ┃ ┣ 📄 AccountController.java
-┃ ┃ ┣ 📄 CategoryController.java
-┃ ┃ ┣ 📄 ProductController.java
-┃ ┃ ┗ 📄 UserController.java
-┃ ┃
-┃ ┗ 📂 exception
-┃   ┣ 📂 enums
-┃   ┃ ┗ 📄 ErrorType.java
-┃   ┃
-┃   ┣ 📂 handler
-┃   ┃ ┗ 📄 ControllerExceptionHandler.java
-┃   ┃
-┃   ┗ 📂 response
-┃     ┣ 📄 FieldMessage.java
-┃     ┣ 📄 ProblemDetails.java
-┃     ┗ 📄 ValidationError.java
-┃
-┗ 📂 resources
-  ┣ 📂 db
-  ┃ ┗ 📂 migration
-  ┃   ┣ 📂 data
-  ┃   ┃ ┣ 📄 V100__insert_categories.sql
-  ┃   ┃ ┣ 📄 V101__insert_products.sql
-  ┃   ┃ ┣ 📄 V102__insert_product_category.sql
-  ┃   ┃ ┣ 📄 V103__insert_user.sql
-  ┃   ┃ ┣ 📄 V104__insert_role.sql
-  ┃   ┃ ┗ 📄 V105__insert_user_role.sql
-  ┃   ┃
-  ┃   ┗ 📂 schema
-  ┃     ┣ 📄 V001__create_table_category.sql
-  ┃     ┣ 📄 V002__create_table_product.sql
-  ┃     ┣ 📄 V003__create_table_product_category.sql
-  ┃     ┣ 📄 V004__alter_table_product_category.sql
-  ┃     ┣ 📄 V005__create_table_role.sql
-  ┃     ┣ 📄 V006__create_table_user.sql
-  ┃     ┣ 📄 V007__create_table_user_role.sql
-  ┃     ┣ 📄 V008__alter_table_user_role.sql
-  ┃     ┣ 📄 V009__create_table_token.sql
-  ┃     ┣ 📄 V010__alter_table_token.sql
-  ┃     ┗ 📄 V011__create_table_email.sql
-  ┃
-  ┣ 📂 META-INF
-  ┃ ┗ 📄 additional-spring-configuration-metadata.json
-  ┃
-  ┣ 📂 static
-  ┃ ┗ 📂 image
-  ┃
-  ┣ 📂 templates
-  ┃ ┣ 📄 activate_user_by_email_template.html
-  ┃ ┣ 📄 reactivate_user_by_email_template.html
-  ┃ ┗ 📄 reset_password_email_template.html
-  ┃
-  ┣ 📄 application.properties
-  ┣ 📄 application-dev.properties
-  ┣ 📄 application-test.properties
-  ┣ 📄 application-prod.properties
-  ┣ 📄 ValidationMessages.properties
-  ┣ 📄 banner-dev.txt
-  ┗ 📄 import.sql
-```
-
-### Principais Responsabilidades
-
-| Package      | Responsabilidade                                     |
-| ------------ | ---------------------------------------------------- |
-| `config`     | Configurações globais da aplicação                   |
-| `domain`     | Objetos centrais do domínio e regras de negócio      |
-| `dto`        | Contratos de entrada e saída da API                  |
-| `mapper`     | Conversão entre entidades e DTOs                     |
-| `projection` | Projeções utilizadas para consultas otimizadas       |
-| `repository` | Acesso e persistência de dados                       |
-| `security`   | Autenticação, autorização e infraestrutura OAuth2    |
-| `service`    | Implementação dos casos de uso da aplicação          |
-| `validation` | Validações customizadas e regras de consistência     |
-| `web`        | Exposição dos endpoints REST                         |
-| `resources`  | Configurações, templates e scripts de banco de dados |
-
-<p>A adoção dessa estrutura permite que novas funcionalidades sejam adicionadas sem impactar diretamente os demais módulos, favorecendo escalabilidade e manutenibilidade a longo prazo.</p>
+> [!NOTE]
+> A árvore completa de pacotes, o papel de cada tipo de classe e o caminho de uma requisição do controller ao banco estão em [Arquitetura](docs/guides/ARCHITECTURE.md).
 
 ---
 
@@ -391,80 +209,18 @@ Cada package possui responsabilidades bem definidas, reduzindo o acoplamento ent
 
 Uma das principais evoluções arquiteturais deste capítulo foi a transformação da antiga camada baseada apenas em entidades persistentes para uma camada efetivamente orientada ao domínio.
 
-Nas primeiras versões do projeto, as classes eram organizadas em um package denominado `entity`, refletindo principalmente sua função de mapeamento para o banco de dados. Com o crescimento da aplicação e o surgimento de novos requisitos de negócio, essa abordagem passou a limitar a expressividade do modelo.
+Nas primeiras versões do projeto, as classes eram organizadas em um package denominado `entity`, refletindo principalmente sua função de mapeamento para o banco de dados. Com o crescimento da aplicação e o surgimento de novos requisitos de negócio, o package foi evoluído para `domain`, e as entidades passaram a representar conceitos centrais do negócio, deixando de ser tratadas apenas como estruturas de persistência.
 
-Para representar de forma mais adequada os conceitos centrais do sistema, o package foi evoluído para `domain`, refletindo uma visão mais próxima das práticas adotadas em arquiteturas orientadas ao domínio.
+| Módulo     | Classes                                         | Responsabilidade                                                                           |
+| ---------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `catalog`  | `Category`, `Product`                           | Catálogo de produtos e suas categorias                                                     |
+| `user`     | `User`, `Role`                                  | Identidade dos usuários e perfis de acesso (RBAC, controle de acesso baseado em papéis)    |
+| `recovery` | `Token`, `Email` e as enums `TokenType`, `EmailStatus` | Ativação de conta, recuperação de senha e registro dos e-mails enviados            |
 
-Essa mudança vai além de uma alteração de nomenclatura. Ela representa uma mudança de perspectiva: as entidades passaram a representar conceitos centrais do domínio, deixando de ser tratadas apenas como estruturas de persistência.
+A criação do módulo `recovery` permitiu encapsular as responsabilidades de recuperação de acesso sem sobrecarregar as entidades relacionadas aos usuários.
 
-### Estrutura Atual do Domínio
-
-```text
-📂 domain
-┃
-┣ 📄 Identifiable.java
-┃
-┣ 📂 catalog
-┃ ┣ 📄 Category.java
-┃ ┗ 📄 Product.java
-┃
-┣ 📂 user
-┃ ┣ 📄 User.java
-┃ ┗ 📄 Role.java
-┃
-┗ 📂 recovery
-  ┣ 📄 Token.java
-  ┣ 📄 Email.java
-  ┗ 📂 enums
-    ┣ 📄 TokenType.java
-    ┗ 📄 EmailStatus.java
-```
-
-### Módulo Catalog
-
-Responsável pelos conceitos relacionados ao catálogo de produtos da aplicação.
-
-```package
-catalog
-├── Product
-└── Category
-```
-
-Contém as entidades responsáveis pela representação dos produtos comercializados e suas respectivas categorias, além dos relacionamentos necessários para consultas e regras de negócio do catálogo.
-
-### Módulo User
-
-Centraliza os conceitos relacionados à identidade e autorização dos usuários.
-
-```text
-user
-├── User
-└── Role
-```
-
-Esse módulo é responsável por representar usuários autenticados, perfis de acesso e relacionamentos utilizados pelos mecanismos de autorização implementados com Spring Security.
-
-### Módulo Recovery
-
-Introduzido para suportar fluxos de negócio relacionados ao gerenciamento de acesso e comunicação com usuários.
-
-```text
-recovery
-├── Token
-├── Email
-├── TokenType
-└── EmailStatus
-```
-
-Esse módulo concentra os conceitos utilizados nos processos de:
-
-- Ativação de conta
-- Reenvio de ativação
-- Recuperação de senha
-- Redefinição de senha
-- Controle de envio de e-mails transacionais
-
-A criação desse módulo permitiu encapsular responsabilidades específicas de recuperação de acesso sem sobrecarregar as entidades relacionadas aos usuários.
+> [!NOTE]
+> Campos, relacionamentos e regras de cada entidade estão em [Modelo de Domínio](docs/guides/DOMAIN-MODEL.md).
 
 ---
 
@@ -478,84 +234,81 @@ A tabela a seguir resume os principais conceitos explorados e a forma como cada 
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | **Domain Modeling**                 | Organização do domínio em módulos (`catalog`, `user` e `recovery`) contendo entidades que representam conceitos do negócio.                                                 | Tornar o modelo mais expressivo e alinhado às regras de negócio.              |
 | **Domain-Driven Design (DDD)**      | Evolução da antiga camada `entity` para `domain`, aproximando a estrutura da linguagem do domínio e separando responsabilidades por subdomínios.                            | Melhorar organização arquitetural, legibilidade e escalabilidade.             |
-| **ORM (Object-Relational Mapping)** | Mapeamento objeto-relacional entre entidades Java e tabelas do PostgreSQL utilizando Jakarta Persistence (JPA) com Hibernate como provedor ORM.                             | Eliminar SQL manual para operações de persistência.                           |
+| **ORM (Object-Relational Mapping)** | Mapeamento objeto-relacional entre entidades Java e tabelas do PostgreSQL utilizando Jakarta Persistence (JPA) com Hibernate como provedor ORM.                             | Reduzir o SQL manual nas operações de persistência.                           |
 | **Spring Data JPA**                 | Implementação dos repositórios utilizando interfaces derivadas de `JpaRepository` e consultas customizadas.                                                                 | Simplificar operações de acesso aos dados.                                    |
 | **Hibernate**                       | Provedor ORM responsável pela implementação da especificação Jakarta Persistence (JPA), gerenciamento do ciclo de vida das entidades e carregamento de relacionamentos.     | Automatizar a persistência orientada a objetos.                               |
-| **Relacionamentos JPA**             | Utilização de associações como `@ManyToMany`, `@OneToMany` e `@ManyToOne` entre usuários, papéis, produtos, categorias e tokens.                                            | Representar corretamente as relações existentes no domínio.                   |
-| **JPQL**                            | Consultas orientadas às entidades para recuperação de dados utilizando a linguagem de consultas da JPA.                                                                     | Escrever consultas independentes do banco de dados.                           |
-| **Native SQL**                      | Consulta nativa utilizada na paginação de produtos com filtros por categorias, reduzindo custo das consultas complexas.                                                     | Obter melhor desempenho em cenários específicos.                              |
+| **Relacionamentos JPA**             | `@ManyToMany` entre produtos e categorias e entre usuários e roles; `@OneToMany`/`@ManyToOne` entre usuários e tokens.                                                      | Representar corretamente as relações existentes no domínio.                   |
+| **JPQL**                            | Consultas orientadas às entidades, como o carregamento de produtos com suas categorias via `JOIN FETCH`.                                                                    | Escrever consultas independentes do banco de dados.                           |
+| **Native SQL**                      | Duas consultas nativas: a busca paginada de produtos por nome e categorias e a busca do usuário com suas roles no login.                                                     | Obter melhor desempenho em cenários específicos.                              |
 | **Projection Pattern**              | Interfaces como `ProductProjection` e `UserDetailsProjection` retornam apenas os atributos necessários das consultas.                                                       | Reduzir transferência de dados e aumentar eficiência.                         |
-| **Paginação**                       | Utilização de `Pageable` e `Page` para retorno paginado de produtos e usuários.                                                                                             | Melhorar escalabilidade em consultas com grandes volumes de dados.            |
+| **Paginação**                       | Utilização de `Pageable` e `Page` para retorno paginado de produtos, categorias e usuários.                                                                                 | Melhorar escalabilidade em consultas com grandes volumes de dados.            |
 | **Filtros Dinâmicos**               | Busca por nome e categorias utilizando parâmetros opcionais nas consultas.                                                                                                  | Permitir consultas flexíveis sem duplicação de código.                        |
 | **Fetch Join**                      | Estratégia utilizada para carregar categorias juntamente com produtos em uma única consulta.                                                                                | Eliminar consultas adicionais provocadas pelo carregamento lazy.              |
 | **Problema N+1 Select**             | Solucionado através da combinação entre consultas nativas, projeções e `JOIN FETCH`.                                                                                        | Reduzir drasticamente o número de consultas executadas pelo Hibernate.        |
 | **Service Layer**                   | Serviços especializados (`AccountService`, `UserService`, `ProductService`, `CategoryService`, `TokenService`, `EmailService`) concentram a implementação dos casos de uso. | Centralizar regras de negócio e desacoplar controllers da persistência.       |
 | **Repository Pattern**              | Repositórios responsáveis exclusivamente pelo acesso aos dados, abstraindo detalhes da persistência.                                                                        | Separar regras de negócio das operações de banco de dados.                    |
-| **DTO Pattern**                     | Utilização de objetos específicos para entrada e saída de dados da API.                                                                                                     | Evitar exposição direta das entidades do domínio.                             |
+| **DTO Pattern**                     | Utilização de objetos específicos (`record`) para entrada e saída de dados da API.                                                                                          | Evitar exposição direta das entidades do domínio.                             |
 | **Mapper Pattern**                  | Conversão entre entidades e DTOs através de classes dedicadas de mapeamento.                                                                                                | Reduzir acoplamento entre domínio e camada de apresentação.                   |
 | **Transactional Management**        | Métodos anotados com `@Transactional` garantem consistência durante operações de escrita e leitura.                                                                         | Assegurar integridade das transações e controle do contexto de persistência.  |
-| **Business Use Cases**              | Implementação completa dos fluxos de cadastro, ativação de conta, recuperação de senha, redefinição de senha e obtenção do usuário autenticado.                             | Aproximar a aplicação de cenários reais encontrados em sistemas corporativos. |
+| **Business Use Cases**              | Implementação completa dos fluxos de cadastro, ativação de conta, recuperação e redefinição de senha e gestão dos dados do usuário autenticado.                             | Aproximar a aplicação de cenários reais encontrados em sistemas corporativos. |
 | **Business Tokens**                 | A entidade `Token` encapsula criação, validação, expiração e invalidação de tokens para ativação de conta e recuperação de senha.                                           | Garantir segurança e encapsular regras do domínio diretamente na entidade.    |
 | **Factory Methods**                 | Métodos estáticos como `activationToken()` e `passwordRecoveryToken()` criam tokens de negócio com regras padronizadas.                                                     | Padronizar a criação de objetos complexos e evitar duplicação de lógica.      |
-| **Transactional Email**             | Integração entre `EmailService`, templates HTML e Spring Mail para envio de e-mails de ativação e recuperação de senha.                                                     | Automatizar comunicações transacionais com usuários.                          |
+| **Transactional Email**             | Integração entre `EmailService`, templates Thymeleaf e Spring Mail para envio de e-mails de ativação e recuperação de senha.                                                | Automatizar comunicações transacionais com usuários.                          |
 | **Authentication Context**          | Serviço `AuthenticatedUserService` centraliza a recuperação do usuário autenticado a partir do JWT presente no `SecurityContext`.                                           | Desacoplar a infraestrutura de segurança das regras de negócio.               |
 | **Spring Security Integration**     | Implementação de `UserDetailsService`, `GrantedAuthority` e consultas personalizadas para autenticação baseada em OAuth2 e JWT.                                             | Integrar autenticação e autorização ao modelo de domínio da aplicação.        |
-| **Exception Handling**              | Exceções específicas, como `InvalidTokenException`, `ResourceNotFoundException` e `AuthenticatedUserNotFoundException`, representam erros de negócio de forma explícita.    | Padronizar o tratamento de erros e melhorar a legibilidade da aplicação.      |
+| **Exception Handling**              | Exceções específicas, como `InvalidTokenException` e `ResourceNotFoundException`, convertidas pelo `ControllerExceptionHandler` em respostas `ProblemDetails` com um código estável (`ApiErrorCode`). | Padronizar o tratamento de erros e melhorar a legibilidade da aplicação.      |
+| **Internacionalização (i18n)**      | Mensagens da API em português, inglês e espanhol (`messages_*.properties`), escolhidas pelo cabeçalho `Accept-Language`.                                                    | Atender clientes em mais de um idioma sem textos fixos no código.             |
 
 ---
 
 ## 🛠️ Tecnologias e Frameworks Utilizados
 
-Ao longo desta etapa de evolução do ASJCatalog, a aplicação passou a incorporar recursos normalmente encontrados em sistemas corporativos. Para atender aos novos requisitos de negócio, autenticação, persistência, comunicação por e-mail e documentação da API, foram integradas diversas tecnologias do ecossistema Java e Spring.
+Ao longo desta etapa de evolução do ASJCatalog, a aplicação passou a incorporar recursos normalmente encontrados em sistemas corporativos. Cada ferramenta foi adotada com um propósito específico, contribuindo para aspectos como produtividade, organização arquitetural, segurança, desempenho, manutenibilidade e escalabilidade.
 
-Cada ferramenta foi adotada com um propósito específico, contribuindo para aspectos como produtividade, organização arquitetural, segurança, desempenho, manutenibilidade e escalabilidade.
-
-A tabela a seguir resume as principais tecnologias empregadas na evolução da aplicação.
-
-| 🛠️ Tecnologia                              | 📦 Versão    | 📖 Utilização no Projeto                                    | 🎯 Objetivo                                                                                                                       |
-| ------------------------------------------ | ------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| **Java**                                   | 17 LTS       | Linguagem principal da aplicação                            | Base da implementação da aplicação, utilizando recursos modernos da linguagem e da plataforma Java.                               |
-| **Spring Boot**                            | 3.5.x        | Framework principal do backend                              | Simplificar a configuração, inicialização e execução da aplicação por meio do ecossistema Spring.                                 |
-| **Spring Web (Spring MVC)**                | Starter      | Implementação da API REST                                   | Exposição dos endpoints HTTP da aplicação.                                                                                        |
-| **Spring Data JPA**                        | Starter      | Camada de persistência                                      | Abstração da camada de persistência por meio de repositórios e consultas orientadas ao domínio.                                   |
-| **Hibernate ORM**                          | 6.x          | Implementação da especificação JPA                          | Implementação da especificação JPA, responsável pelo mapeamento objeto-relacional e gerenciamento do ciclo de vida das entidades. |
-| **PostgreSQL**                             | Runtime      | Banco de dados principal                                    | Sistema gerenciador de banco de dados relacional utilizado para persistência da aplicação.                                        |
-| **H2 Database**                            | Runtime      | Banco em memória                                            | Banco de dados em memória utilizado para testes e cenários de desenvolvimento.                                                    |
-| **Flyway**                                 | Starter      | Versionamento do banco de dados                             | Versionamento do schema do banco de dados e gerenciamento evolutivo das migrations.                                               |
-| **Spring Validation (Jakarta Validation)** | Starter      | Validação de dados                                          | Validação dos dados de entrada utilizando Bean Validation e validadores customizados.                                             |
-| **Spring Security**                        | Starter      | Segurança da aplicação                                      | Implementação de autenticação, autorização e proteção dos recursos REST.                                                          |
-| **Spring Authorization Server**            | Atual        | Servidor OAuth2                                             | Emissão e gerenciamento de tokens de acesso seguindo o protocolo OAuth2.                                                          |
-| **OAuth2 Resource Server**                 | Starter      | Validação de tokens JWT emitidos pelo Authorization Server. | Proteção dos endpoints utilizando tokens JWT assinados.                                                                           |
-| **JWT (JSON Web Token)**                   | OAuth2       | Autenticação stateless                                      | Representação das credenciais de autenticação em formato de token assinado.                                                       |
-| **Spring Mail**                            | Starter      | Envio de e-mails                                            | Disparo de e-mails transacionais para ativação de conta e recuperação de senha.                                                   |
-| **Thymeleaf**                              | Starter      | Templates HTML                                              | Geração dinâmica dos templates de e-mail enviados aos usuários.                                                                   |
-| **SpringDoc OpenAPI**                      | 2.8.x        | Documentação automática                                     | Geração da especificação OpenAPI e interface Swagger UI.                                                                          |
-| **Maven**                                  | Build Tool   | Gerenciamento do projeto                                    | Gerenciamento de dependências, plugins e ciclo de build do projeto.                                                               |
-| **JUnit 5**                                | Starter Test | Testes automatizados                                        | Base para criação dos testes da aplicação.                                                                                        |
-| **Spring Security Test**                   | Starter Test | Testes de segurança                                         | Suporte para testes envolvendo autenticação e autorização.                                                                        |
-
----
+| 🛠️ Tecnologia                              | 📦 Versão    | 📖 Utilização no Projeto                         | 🎯 Objetivo                                                                                                 |
+| ------------------------------------------ | ------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| **Java**                                   | 17 LTS       | Linguagem principal da aplicação                 | Base da implementação, utilizando recursos modernos da linguagem, como `record`.                            |
+| **Spring Boot**                            | 3.5          | Framework principal do backend                   | Simplificar a configuração, inicialização e execução da aplicação.                                         |
+| **Spring Web (Spring MVC)**                | Starter      | Implementação da API REST                        | Exposição dos endpoints HTTP da aplicação.                                                                  |
+| **Spring Data JPA**                        | Starter      | Camada de persistência                           | Repositórios e consultas orientadas ao domínio.                                                             |
+| **Hibernate ORM**                          | 6.6          | Implementação da especificação JPA               | Mapeamento objeto-relacional e gerenciamento do ciclo de vida das entidades.                               |
+| **PostgreSQL**                             | Runtime      | Banco de dados dos perfis `dev` e `prod`         | Persistência relacional da aplicação.                                                                       |
+| **H2 Database**                            | 2.3          | Banco em memória, usado **apenas no perfil `test`** | Executar os testes automatizados sem depender de um banco externo.                                       |
+| **Flyway**                                 | 11           | Versionamento do banco de dados                  | Criação e evolução do schema por migrations versionadas.                                                    |
+| **Spring Validation (Jakarta Validation)** | Starter      | Validação de dados                               | Bean Validation e validadores customizados.                                                                 |
+| **Spring Security**                        | 6.5          | Segurança da aplicação                           | Autenticação, autorização e proteção dos recursos REST.                                                     |
+| **Spring Authorization Server**            | 1.5          | Servidor OAuth2                                  | Emissão de access tokens e refresh tokens.                                                                  |
+| **OAuth2 Resource Server**                 | Starter      | Validação dos tokens JWT                         | Proteção dos endpoints com tokens JWT assinados.                                                            |
+| **JWT (JSON Web Token)**                   | RS256        | Autenticação stateless                           | Representar a identidade e as permissões do usuário num token assinado.                                    |
+| **Spring Mail**                            | Starter      | Envio de e-mails                                 | E-mails transacionais de ativação de conta e recuperação de senha.                                          |
+| **Thymeleaf**                              | Starter      | Templates HTML                                   | Geração do corpo HTML dos e-mails.                                                                          |
+| **SpringDoc OpenAPI**                      | 2.8          | Documentação automática                          | Especificação OpenAPI e interface Swagger UI.                                                               |
+| **Maven**                                  | Wrapper      | Gerenciamento do projeto                         | Dependências, plugins e ciclo de build, sem instalar o Maven (`mvnw`).                                      |
+| **JUnit**                                  | 5            | Testes automatizados                             | Base dos testes de unidade e de integração.                                                                 |
+| **Mockito**                                | 5            | Testes de unidade                                | Substituir dependências por mocks.                                                                          |
+| **Spring Security Test e MockMvc**         | Starter Test | Testes de segurança e da camada web              | Simular requisições HTTP, autenticação e autorização.                                                       |
+| **Maven Failsafe**                         | Plugin       | Testes de integração                             | Executar as classes `*IT` na fase `verify`.                                                                 |
+| **Spring Boot DevTools**                   | Runtime      | Desenvolvimento local                            | Reinício automático da aplicação ao alterar o código.                                                       |
 
 ### ⚙️ Recursos da Plataforma Utilizados
 
-Além dos frameworks principais, a aplicação utiliza diversos recursos da plataforma Spring para aumentar a flexibilidade de configuração, facilitar a implantação em diferentes ambientes e melhorar aspectos relacionados à segurança, observabilidade e manutenção, a aplicação incorporou diversos recursos da plataforma Spring para se tornar mais robusta e preparada para diferentes ambientes de execução.
+| ⚙️ Recurso                              | 📖 Aplicação                                                                                                                     |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Perfis `dev`, `test` e `prod`**       | Configurações separadas por ambiente, escolhidas pela variável `APP_PROFILE`. Sem ela, o perfil é `dev`.                         |
+| **Externalização de Configurações**     | Segredos, URLs e credenciais em variáveis de ambiente; no perfil `prod`, sem valores padrão.                                     |
+| **Open Session in View Desabilitado**   | `spring.jpa.open-in-view=false`: os dados são carregados dentro dos services, sem consultas escondidas na camada web.            |
+| **Migrations Versionadas**              | Pastas `schema`, `reference` e `data`, aplicadas conforme o perfil.                                                             |
+| **Internacionalização**                 | `MessageSourceConfig` e mensagens `messages_*.properties` em três idiomas.                                                      |
+| **Swagger Customizado**                 | Documentação em `/docs-asjcatalog.html` nos perfis `dev` e `test`, desligada em `prod`.                                         |
+| **Configuração de CORS**                | Origens autorizadas a consumir a API definidas em `cors.origins`.                                                               |
+| **SMTP e Tokens Configuráveis**         | Servidor de e-mail e validade dos tokens de ativação e recuperação definidos por variáveis de ambiente.                          |
 
-| ⚙️ Recurso                                            | 📖 Aplicação                                                                                                                                                             |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Profiles (`application-dev` e `application-test`)** | Isolamento das configurações específicas para os ambientes de desenvolvimento, testes e produção.                                                                        |
-| **Externalização de Configurações**                   | Externalização de configurações sensíveis por meio de propriedades e variáveis de ambiente.                                                                              |
-| **Logging Configurável**                              | Configuração dos níveis de log da aplicação e dos principais componentes da infraestrutura.                                                                              |
-| **Open Session in View Desabilitado**                 | Desabilitação do padrão Open Session in View para evitar consultas fora da camada de serviço (`spring.jpa.open-in-view=false`) e reduzir acoplamento com a persistência. |
-| **Migrations Versionadas**                            | Organização das migrations em módulos distintos para evolução do schema e carga inicial de dados (`schema` e `data`).                                                    |
-| **Validação Internacionalizada**                      | Centralização das mensagens de validação no arquivo `ValidationMessages.properties`.                                                                                     |
-| **Swagger Customizado**                               | Personalização dos endpoints de documentação OpenAPI e Swagger UI.                                                                                                       |
-| **Configuração de CORS**                              | Controle dos domínios autorizados a consumir a API.                                                                                                                      |
-| **SMTP Configurável**                                 | Externalização das configurações do servidor SMTP para envio de e-mails transacionais.                                                                                   |
-| **Controle de Expiração de Tokens**                   | Parametrização do tempo de expiração dos tokens de ativação de conta e recuperação de senha.                                                                             |
+> [!NOTE]
+> A comparação completa entre os perfis e a lista de todas as variáveis de ambiente estão em [Configuração e Perfis](docs/guides/CONFIGURATION.md).
 
 ### 🏗️ Organização Tecnológica
 
-```java
+```text
                   Backend Stack
 
                     Java 17
@@ -575,300 +328,150 @@ Spring Web   Spring Data JPA  Spring Security  Spring Mail
                       Flyway
 ```
 
-> [!NOTE] Essa organização evidencia a separação das responsabilidades entre as camadas da aplicação, na qual o Spring Boot atua como > núcleo da infraestrutura, enquanto os módulos especializados oferecem suporte à construção da API REST, persistência de dados, segurança e comunicação por e-mail.
+> [!NOTE]
+> Essa organização evidencia a separação das responsabilidades entre as camadas da aplicação: o Spring Boot atua como núcleo da infraestrutura, enquanto os módulos especializados oferecem suporte à construção da API REST, persistência de dados, segurança e comunicação por e-mail.
 
 ---
 
 ## 🗄️ Modelagem ORM
 
-A camada de persistência do **ASJCatalog** foi implementada utilizando a especificação **Jakarta Persistence (JPA)**, com o **Hibernate** como provedor **ORM** responsável pelo mapeamento entre objetos Java e estruturas relacionais do PostgreSQL.
+A camada de persistência do **ASJCatalog** foi implementada utilizando a especificação **Jakarta Persistence (JPA)**, com o **Hibernate** como provedor **ORM** (a biblioteca que traduz operações em objetos Java para comandos SQL).
 
-A modelagem foi estruturada para representar os principais conceitos do domínio da aplicação por meio de entidades, relacionamentos, consultas especializadas e estratégias de otimização de acesso aos dados.
+| Entidade     | Responsabilidade                                                                    |
+| ------------ | ----------------------------------------------------------------------------------- |
+| **Product**  | Representa os produtos disponíveis no catálogo.                                     |
+| **Category** | Organiza os produtos em categorias.                                                 |
+| **User**     | Representa os usuários da aplicação e implementa `UserDetails` do Spring Security. |
+| **Role**     | Define os perfis de acesso utilizados pelo Spring Security (RBAC).                  |
+| **Token**    | Gerencia tokens de ativação de conta e recuperação de senha.                        |
+| **Email**    | Registra os e-mails transacionais enviados, sem relacionamento com `User`.          |
 
-### 📦 Modelo de Domínio
-
-O domínio da aplicação foi dividido em módulos independentes, cada um responsável por um conjunto específico de regras de negócio.
-
-| Entidade     | Responsabilidade                                                   |
-| ------------ | ------------------------------------------------------------------ |
-| **Product**  | Representa os produtos disponíveis no catálogo.                    |
-| **Category** | Organiza os produtos em categorias.                                |
-| **User**     | Representa os usuários autenticados da aplicação.                  |
-| **Role**     | Define os perfis de acesso utilizados pelo Spring Security (RBAC). |
-| **Token**    | Gerencia tokens de ativação de conta e recuperação de senha.       |
-| **Email**    | Registra o envio de e-mails transacionais da aplicação.            |
-
-Essa organização promove alta coesão, baixo acoplamento e evolução independente dos módulos que compõem o domínio da aplicação.
-
----
-
-### 🔄 Relacionamentos entre Entidades
-
-A modelagem utiliza os principais tipos de associações disponibilizados pela JPA para representar os relacionamentos existentes entre as entidades do domínio.
-
-```text
-                   Many-to-Many
-+-----------+ <----------------------> +------------+
-| Category  |                          |  Product   |
-+-----------+                          +------------+
-
-                   Many-to-Many
-+---------+ <------------------------> +---------+
-|  Role   |                            |  User   |
-+---------+                            +---------+
-
-                   One-to-Many
-+---------+ -------------------------> +---------+
-|  User   |                            | Token   |
-+---------+ <------------------------- +---------+
-                    Many-to-One
-
-                   One-to-Many
-+---------+ -------------------------> +---------+
-|  User   |                            | Email   |
-+---------+ <------------------------- +---------+
-                    Many-to-One
+```mermaid
+classDiagram
+    Product "*" -- "*" Category : tb_product_category
+    User "*" --> "*" Role : tb_user_role
+    User "1" -- "*" Token : user_id
+    class Email
 ```
 
-#### Principais associações
-
-| Relacionamento       | Objetivo                                                                                    |
-| -------------------- | ------------------------------------------------------------------------------------------- |
-| `Product ↔ Category` | Permite que um produto pertença a várias categorias e uma categoria possua vários produtos. |
-| `User ↔ Role`        | Implementa o controle de acesso baseado em papéis (RBAC).                                   |
-| `User → Token`       | Gerencia tokens utilizados em ativação de conta e recuperação de senha.                     |
-| `User → Email`       | Mantém o histórico dos e-mails transacionais enviados ao usuário.                           |
-
----
-
-### 🔍 Consultas ao Banco de Dados
-
-A camada de persistência combina diferentes estratégias de consulta conforme os requisitos de desempenho, flexibilidade e complexidade de cada operação.
-
-| Estratégia        | Aplicação                                                                                                                                                                   |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Query Methods** | Consultas derivadas automaticamente pelo mecanismo de geração de consultas do Spring Data JPA., como `findByNameContainingIgnoreCase()`.                                    |
-| **JPQL**          | Consultas orientadas às entidades, como o carregamento de produtos utilizando `JOIN FETCH`.                                                                                 |
-| **Native SQL**    | Consultas SQL nativas utilizadas em cenários que demandam maior controle sobre desempenho ou recursos específicos do banco de dados (`relacionamentos muitos-para-muitos`). |
-| **Repositories**  | Centralizam toda a comunicação com o banco de dados através do padrão Repository.                                                                                           |
-
-A combinação dessas estratégias permite utilizar consultas derivadas para operações simples e recorrer a JPQL ou SQL nativo quando requisitos de desempenho ou flexibilidade tornam essa abordagem mais adequada.
-
----
-
-### 🚀 Estratégias de Otimização
-
-Além da modelagem `ORM`, foram adotadas estratégias de otimização para reduzir o custo das consultas ao `banco de dados`, minimizar a quantidade de operações executadas pelo `Hibernate` e melhorar o desempenho da camada de persistência.
-
-| Técnica                        | Como foi aplicada                                                                                                              | Benefício                                                                   |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| **Projection**                 | `ProductProjection` retorna apenas os campos necessários durante a paginação.                                                  | Reduz transferência de dados e consumo de memória.                          |
-| **Native Query**               | Primeira consulta recupera apenas os IDs dos produtos filtrados.                                                               | Paginação eficiente em relacionamentos muitos-para-muitos.                  |
-| **Fetch Join**                 | Segunda consulta utiliza `JOIN FETCH` para carregar produtos e categorias em uma única operação.                               | Evita consultas adicionais decorrentes do carregamento lazy das categorias. |
-| **Reordenação dos Resultados** | `IdentifiableUtils.reorderByReference()` preserva a ordem retornada pela consulta paginada.                                    | Mantém consistência entre paginação e carregamento das entidades.           |
-| **Eliminação do N+1 Select**   | Combinação entre Projection, Native SQL e Fetch Join para carregar produtos e categorias em apenas duas consultas controladas. | Elimina dezenas ou centenas de consultas extras em cenários paginados.      |
-
-#### Fluxo da otimização
-
-```text
-Cliente
-    │
-    ▼
-Native SQL + Projection
-(busca apenas IDs paginados)
-    │
-    ▼
-Lista de IDs
-    │
-    ▼
-JPQL + JOIN FETCH
-(carrega produtos + categorias)
-    │
-    ▼
-Reordenação da lista
-    │
-    ▼
-Mappeamento para → DTO
-    │
-    ▼
-Resposta da API
-```
-
-Essa estratégia elimina o problema clássico de **N+1 Select**, mantendo a paginação eficiente e garantindo o carregamento completo das categorias associadas aos produtos com um número reduzido de consultas ao banco de dados.
+> [!NOTE]
+> Os campos de cada entidade, os factory methods de `Token` e as limitações conhecidas do modelo estão em [Modelo de Domínio](docs/guides/DOMAIN-MODEL.md).
 
 ---
 
 ## 🎯 Casos de Uso
 
-Além das operações CRUD tradicionais, o ASJCatalog implementa casos de uso que representam fluxos completos de negócio encontrados em aplicações corporativas. Cada caso de uso é encapsulado na camada de serviços (Service Layer), responsável por aplicar validações, regras de negócio, controle transacional, persistência e integrações externas, enquanto os controllers permanecem responsáveis exclusivamente pela exposição dos endpoints REST.
+Além das operações CRUD tradicionais, o ASJCatalog implementa casos de uso que representam fluxos completos de negócio encontrados em aplicações corporativas. Cada caso de uso é encapsulado na camada de serviços (Service Layer), responsável por aplicar validações, regras de negócio, controle transacional, persistência e integrações externas, enquanto os controllers permanecem responsáveis pela exposição dos endpoints REST.
 
-| Caso de Uso                        | Descrição                                                                                                                                                            |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 👤 **Gerenciamento de Usuários**   | Cadastro, consulta, atualização, ativação, desativação e remoção de usuários, com validações de negócio, criptografia de senhas e gerenciamento de perfis de acesso. |
-| 🛍️ **Gerenciamento de Produtos**   | CRUD completo de produtos, associação com categorias, paginação, filtros, atualização parcial e controle de status (ativo/inativo).                                  |
-| 🗂️ **Gerenciamento de Categorias** | Cadastro, consulta, atualização e remoção de categorias utilizadas na organização do catálogo de produtos.                                                           |
-| 🔐 **Registro de Conta**           | Criação de novas contas com atribuição automática de permissões, geração de token de ativação e envio de e-mail de confirmação.                                      |
-| ✉️ **Ativação de Conta**           | Validação do token de ativação, habilitação da conta e invalidação dos tokens utilizados.                                                                            |
-| 🔄 **Reenvio de Ativação**         | Geração de um novo token de ativação para usuários que ainda não confirmaram o cadastro.                                                                             |
-| 🔑 **Recuperação de Senha**        | Solicitação de redefinição de senha mediante geração de token temporário e envio de e-mail transacional.                                                             |
-| 🔒 **Redefinição de Senha**        | Validação do token de recuperação, atualização segura da senha e invalidação dos tokens utilizados.                                                                  |
-| 👤 **Usuário Autenticado**         | Recuperação dos dados do usuário autenticado diretamente a partir do contexto de segurança do Spring Security.                                                       |
-| 🔑 **Autenticação**                | Integração com OAuth2 Authorization Server e JWT para autenticação e autorização baseada em papéis (RBAC).                                                           |
+| Caso de Uso                        | Descrição                                                                                                                              |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 👤 **Gerenciamento de Usuários**   | Cadastro, consulta, atualização, ativação, desativação e remoção de usuários por administradores, com criptografia de senhas e perfis. |
+| 🛍️ **Gerenciamento de Produtos**   | Cadastro, consulta, atualização, ativação, desativação e remoção de produtos, com categorias, paginação e filtros por nome e categoria. |
+| 🗂️ **Gerenciamento de Categorias** | Cadastro, consulta, atualização, ativação, desativação e remoção das categorias do catálogo.                                          |
+| 🔐 **Registro de Conta**           | Criação de novas contas com a role `ROLE_OPERATOR`, geração de token de ativação e envio de e-mail de confirmação.                     |
+| ✉️ **Ativação de Conta**           | Validação do token de ativação, habilitação da conta e invalidação do token utilizado.                                                 |
+| 🔄 **Reenvio de Ativação**         | Geração de um novo token de ativação para usuários que ainda não confirmaram o cadastro.                                               |
+| 🔑 **Recuperação de Senha**        | Solicitação de redefinição de senha mediante geração de token temporário e envio de e-mail transacional.                              |
+| 🔒 **Redefinição de Senha**        | Validação do token de recuperação, atualização segura da senha e invalidação do token utilizado.                                       |
+| 👤 **Usuário Autenticado**         | Consulta e atualização dos próprios dados e troca da própria senha, a partir do usuário identificado no token.                         |
+| 🔑 **Autenticação**                | Login com OAuth2 e JWT, renovação por refresh token e autorização baseada em papéis (RBAC).                                             |
 
 ### Fluxo Geral dos Casos de Uso
 
-```java
+```text
 Cliente
-    │
-    ▼
+   │
+   ▼
 Controller (REST API)
-    │
-    ▼
-Service Layer
-    │
-    ├── Validações
-    ├── Regras de negócio
-    ├── Controle transacional
-    ├── Integração com outros serviços
-    ▼
+   │
+   ▼
+Service Layer ──────► TokenService
+   │                  EmailService
+   │                  AuthenticatedUserService
+   ├── Validações
+   ├── Regras de negócio
+   └── Controle transacional
+   │
+   ▼
 Repositories
-    │
-    ▼
+   │
+   ▼
 Banco de Dados
-
-           │
-           ├────────► TokenService
-           │
-           ├────────► EmailService
-           │
-           └────────► AuthenticatedUserService
 ```
 
 ### Organização por Responsabilidade
 
-| Serviço                    | Responsabilidade Principal                                                                            |
-| -------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `ProductService`           | Gerencia produtos, categorias associadas, paginação, filtros e otimizações de consulta.               |
-| `CategoryService`          | Centraliza as operações relacionadas às categorias do catálogo.                                       |
-| `UserService`              | Gerencia usuários, perfis de acesso, autenticação, CRUD e regras administrativas.                     |
-| `AccountService`           | Implementa o ciclo completo de vida da conta: registro, ativação, recuperação e redefinição de senha. |
-| `TokenService`             | Cria, valida, expira e invalida tokens de ativação e recuperação de senha.                            |
-| `EmailService`             | Gera e envia e-mails transacionais utilizando templates HTML.                                         |
-| `AuthenticatedUserService` | Recupera o usuário autenticado a partir do `SecurityContext`.                                         |
+| Serviço                    | Responsabilidade Principal                                                                         |
+| -------------------------- | -------------------------------------------------------------------------------------------------- |
+| `ProductService`           | Gerencia produtos, categorias associadas, paginação, filtros e otimizações de consulta.            |
+| `CategoryService`          | Centraliza as operações relacionadas às categorias do catálogo.                                    |
+| `UserService`              | Gerencia usuários e perfis de acesso e carrega o usuário para o login (`UserDetailsService`).      |
+| `AccountService`           | Implementa o ciclo de vida da conta: registro, ativação, recuperação, redefinição e troca de senha. |
+| `TokenService`             | Cria, valida e invalida tokens de ativação e recuperação de senha.                                 |
+| `EmailService`             | Gera e envia e-mails transacionais utilizando templates HTML.                                      |
+| `AuthenticatedUserService` | Recupera o usuário autenticado a partir do JWT presente no `SecurityContext`.                      |
 
-> 💡 Observação: Os casos de uso foram implementados seguindo uma arquitetura em camadas (Controller → Service → Repository), onde os > controllers recebem as requisições HTTP e delegam o processamento aos services. Essa abordagem centraliza regras de negócio, validações, transações e integrações (e-mail, tokens e autenticação), reduz o acoplamento entre as camadas e torna a aplicação mais organizada, testável e alinhada às práticas de desenvolvimento de sistemas corporativos.
-
----
-
-## 🔍 Consultas ao Banco
-
-A camada de persistência do **ASJCatalog** foi implementada com **Spring Data JPA**, combinando consultas derivadas, **JPQL**, **Native SQL** e **Projections** para atender diferentes cenários de negócio com equilíbrio entre simplicidade, flexibilidade e desempenho.
-
-Enquanto as consultas derivadas simplificam operações comuns, consultas personalizadas foram empregadas para implementar filtros avançados, paginação e otimizações específicas relacionadas ao relacionamento muitos-para-muitos entre produtos e categorias.
-
-### Estratégias utilizadas
-
-| Estratégia            | Aplicação no ASJCatalog                                                                    | Benefício                                                           |
-| --------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| **Query Methods**     | Métodos derivados como `findByNameContainingIgnoreCase()` e `existsByNameIgnoreCase()`     | Reduz código repetitivo por meio das convenções do Spring Data JPA. |
-| **JPQL**              | Consulta com `JOIN FETCH` para carregar produtos juntamente com suas categorias.           | Evita carregamentos adicionais e melhora o desempenho.              |
-| **Native SQL**        | Consulta personalizada para busca paginada com filtros por nome e categorias.              | Permite consultas mais eficientes em cenários complexos.            |
-| **Projection**        | Interface `ProductProjection` retorna apenas os campos necessários para paginação inicial. | Reduz transferência de dados e consumo de memória.                  |
-| **Paginação**         | Utilização de `Page`, `Pageable` e `PageImpl`.                                             | Permite consultas escaláveis para grandes volumes de dados.         |
-| **Filtros Dinâmicos** | Busca por nome e múltiplas categorias utilizando parâmetros opcionais.                     | Oferece maior flexibilidade sem duplicação de consultas.            |
-
-> 💡 **Observação:** A combinação entre consultas derivadas, JPQL e Native SQL permitiu utilizar a estratégia mais adequada para cada cenário, equilibrando simplicidade de desenvolvimento, legibilidade e desempenho.
+> [!NOTE]
+> Os casos de uso seguem a arquitetura em camadas (Controller → Service → Repository): os controllers recebem as requisições HTTP e delegam o processamento aos services, que centralizam regras de negócio, validações, transações e integrações. Os fluxos de conta estão detalhados em [Fluxos de Conta](docs/guides/ACCOUNT-FLOWS.md), e todas as rotas em [Endpoints da API](docs/guides/API-ENDPOINTS.md).
 
 ---
 
-## 🚀 Otimizações de Persistência
+## 🔍 Consultas e Otimizações
 
-Além da modelagem do domínio, esta etapa do projeto dedicou atenção especial ao desempenho da camada de persistência e à eficiência das consultas executadas pelo Hibernate.
+A camada de persistência combina diferentes estratégias de consulta conforme os requisitos de desempenho, flexibilidade e complexidade de cada operação.
 
-O principal desafio encontrado foi o carregamento do relacionamento **muitos-para-muitos** entre produtos e categorias, que poderia gerar o conhecido problema **N+1 Select**.
+| Estratégia            | Aplicação no ASJCatalog                                                                     | Benefício                                                           |
+| --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Query Methods**     | Métodos derivados do nome, como `findByNameContainingIgnoreCase()` e `existsByNameIgnoreCase()`. | Reduz código repetitivo por meio das convenções do Spring Data JPA. |
+| **JPQL**              | Consulta com `JOIN FETCH` para carregar produtos juntamente com suas categorias.            | Evita carregamentos adicionais e melhora o desempenho.              |
+| **Native SQL**        | Busca paginada de produtos com filtros por nome e categorias, e busca do usuário no login.  | Permite consultas mais eficientes em cenários complexos.            |
+| **Projection**        | `ProductProjection` retorna apenas os campos necessários para a paginação inicial.          | Reduz transferência de dados e consumo de memória.                  |
+| **Paginação**         | Utilização de `Page`, `Pageable` e `PageImpl`.                                              | Permite consultas escaláveis para grandes volumes de dados.         |
+| **Filtros Dinâmicos** | Busca por nome e múltiplas categorias utilizando parâmetros opcionais.                      | Oferece maior flexibilidade sem duplicação de consultas.            |
 
-### Estratégias adotadas
+### 🚀 Eliminação do N+1 Select
 
-| Otimização                     | Como foi aplicada                                                                                                        | Benefício                                                                     |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| **Projection Pattern**         | A consulta inicial recupera apenas os atributos necessários por meio da interface `ProductProjection`.                   | Reduz o volume de dados recuperados do banco.                                 |
-| **Native SQL**                 | Consulta otimizada para paginação e filtragem antes do carregamento das entidades completas.                             | Melhora a eficiência em consultas complexas.                                  |
-| **Fetch Join**                 | Utilização de `JOIN FETCH` para carregar produtos e categorias em uma única consulta.                                    | Evita consultas adicionais provocadas pelo carregamento lazy.                 |
-| **Reordenação dos Resultados** | Utilização do `IdentifiableUtils.reorderByReference()` para preservar a ordem original da paginação após o `JOIN FETCH`. | Mantém consistência dos resultados apresentados ao usuário.                   |
-| **Eliminação do N+1 Select**   | Combinação entre Projection, Native SQL e Fetch Join durante o fluxo de busca paginada.                                  | Reduz significativamente a quantidade de consultas executadas pelo Hibernate. |
+O **problema N+1** acontece quando o sistema faz 1 consulta para buscar uma lista e depois mais 1 consulta para cada item, para carregar dados relacionados. Com 20 produtos na página, seriam 21 consultas só para trazer as categorias.
 
-### Fluxo da otimização
+A listagem de produtos resolve isso com **duas consultas controladas e uma reordenação**:
 
-```text
-Native SQL
-      │
-      ▼
-ProductProjection
-      │
-      ▼
-Lista de IDs
-      │
-      ▼
-JPQL + JOIN FETCH
-      │
-      ▼
-Produtos + Categorias carregados
-      │
-      ▼
-Reordenação (IdentifiableUtils)
-      │
-      ▼
-DTO de resposta
+```mermaid
+flowchart LR
+    A["1ª consulta (Native SQL + Projection)<br/>página de ids"] --> B["2ª consulta (JPQL + JOIN FETCH)<br/>produtos com categorias"]
+    B --> C["IdentifiableUtils.reorderByReference<br/>ordem da paginação"]
+    C --> D["DTOs de resposta"]
 ```
 
-> 🚀 Essa estratégia mantém a paginação eficiente sem abrir mão do carregamento completo das categorias, solucionando um dos problemas clássicos de performance em aplicações que utilizam JPA/Hibernate.
+1. A consulta nativa aplica filtros e paginação e devolve só os ids dos produtos (`ProductProjection`).
+2. A consulta JPQL com `JOIN FETCH` carrega esses produtos e suas categorias de uma vez.
+3. `IdentifiableUtils.reorderByReference()` devolve a ordem original da paginação.
+
+> [!TIP]
+> Como cada estratégia foi implementada, o uso de `open-in-view=false` e das transações estão em [Acesso a Dados](docs/guides/DATA-ACCESS.md).
 
 ---
 
 ## 📧 Integração com E-mail
 
-O ASJCatalog implementa integração com serviços de e-mail para suportar os fluxos de ativação de conta e recuperação de senha, aproximando a aplicação das práticas adotadas em sistemas corporativos.
-
-A implementação utiliza **Spring Mail**, **JavaMailSender** e **Thymeleaf**, permitindo gerar mensagens HTML personalizadas e enviá-las de forma assíncrona.
-
-### Fluxo de envio
+O ASJCatalog envia e-mails nos fluxos de ativação de conta e de recuperação de senha, utilizando **Spring Mail**, **JavaMailSender** e templates **Thymeleaf** para gerar mensagens HTML.
 
 ```text
-Controller
+AccountService ──► TokenService   (cria o token de ativação ou de recuperação)
       │
-      ▼
-AccountService
-      │
-      ▼
-TokenService
-      │
-      ▼
-EmailService
-      │
-      ▼
-Template Thymeleaf
-      │
-      ▼
-Servidor SMTP
-      │
-      ▼
-Usuário
+      └──────────► EmailService ──► Template Thymeleaf ──► Servidor SMTP ──► Usuário
 ```
 
-### Recursos implementados
+| Recurso                             | Aplicação                                                                                                 |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Spring Mail e JavaMailSender**    | Comunicação com o servidor SMTP.                                                                          |
+| **Thymeleaf**                       | Templates HTML dos e-mails de ativação e de redefinição de senha.                                         |
+| **Envio síncrono**                  | Os métodos de envio têm `@Async`, mas o projeto não tem `@EnableAsync`: a requisição espera o envio terminar. Falhas de envio ficam registradas no log. |
+| **Tokens de negócio**               | Token de ativação válido por 24 horas e de recuperação por 30 minutos, criados por factory methods da entidade `Token`. |
+| **Registro de envios**              | Cada envio bem-sucedido é registrado na entidade `Email`, que não tem relacionamento com `User`.           |
+| **Externalização de Configurações** | Servidor SMTP, URLs dos links e validade dos tokens configurados por variáveis de ambiente.               |
 
-| Recurso                             | Aplicação                                                                           |
-| ----------------------------------- | ----------------------------------------------------------------------------------- |
-| **Spring Mail**                     | Envio de e-mails transacionais.                                                     |
-| **JavaMailSender**                  | Comunicação com servidor SMTP.                                                      |
-| **Thymeleaf**                       | Geração de templates HTML personalizados.                                           |
-| **@Async**                          | Envio assíncrono dos e-mails sem bloquear a requisição HTTP.                        |
-| **TokenService**                    | Geração, validação e invalidação de tokens de ativação e recuperação de senha.      |
-| **Factory Methods**                 | Criação padronizada de tokens através de métodos estáticos da entidade `Token`.     |
-| **Persistência de Logs**            | Registro dos e-mails enviados na entidade `Email` para auditoria e rastreabilidade. |
-| **Externalização de Configurações** | URLs, SMTP e tempo de expiração configurados via propriedades da aplicação.         |
-
-> 💡 A entidade `Token` encapsula parte importante das regras de negócio, sendo responsável por validar expiração, tipo do token, estado de utilização e criação padronizada através de Factory Methods.
+> [!NOTE]
+> Os fluxos completos, os templates e como testar sem servidor de e-mail estão em [Fluxos de Conta](docs/guides/ACCOUNT-FLOWS.md).
 
 ---
 
@@ -876,21 +479,23 @@ Usuário
 
 Durante o desenvolvimento deste capítulo foram adotadas diversas práticas utilizadas em aplicações corporativas construídas com Spring Boot.
 
-| Boa prática                             | Aplicação no projeto                                                        |
-| --------------------------------------- | --------------------------------------------------------------------------- |
-| **Arquitetura em Camadas**              | Separação entre Controller, Service, Repository e Domain.                   |
-| **Separação por Domínio**               | Organização dos módulos `catalog`, `user` e `recovery`.                     |
-| **DTO Pattern**                         | Evita exposição direta das entidades.                                       |
-| **Mapper Pattern**                      | Conversão centralizada entre entidades e DTOs.                              |
-| **Repository Pattern**                  | Isolamento da camada de persistência.                                       |
-| **Service Layer**                       | Centralização das regras de negócio.                                        |
-| **Bean Validation**                     | Validações declarativas através de anotações customizadas.                  |
-| **Tratamento Global de Exceções**       | Padronização das respostas de erro utilizando `ControllerExceptionHandler`. |
-| **Transações**                          | Utilização de `@Transactional` para garantir consistência dos dados.        |
-| **Externalização de Configurações**     | Uso de arquivos `.properties` e variáveis de ambiente.                      |
-| **Versionamento do Banco de Dados**     | Versionamento do schema utilizando Flyway.                                  |
-| **Documentação da API**                 | Integração com OpenAPI/Swagger.                                             |
-| **Princípio da Responsabilidade Única** | Cada classe possui uma responsabilidade bem definida.                       |
+| Boa prática                             | Aplicação no projeto                                                                                 |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Arquitetura em Camadas**              | Separação entre Controller, Service, Repository e Domain.                                            |
+| **Separação por Domínio**               | Organização dos módulos `catalog`, `user` e `recovery`.                                              |
+| **DTO Pattern**                         | Evita exposição direta das entidades.                                                                |
+| **Mapper Pattern**                      | Conversão centralizada entre entidades e DTOs.                                                       |
+| **Repository Pattern**                  | Isolamento da camada de persistência.                                                                |
+| **Service Layer**                       | Centralização das regras de negócio.                                                                 |
+| **Bean Validation**                     | Validações declarativas através de anotações customizadas.                                           |
+| **Tratamento Global de Exceções**       | `ControllerExceptionHandler` padroniza as respostas de erro com `ProblemDetails` e `ApiErrorCode`.   |
+| **Internacionalização**                 | Mensagens da API em três idiomas, sem textos fixos nas respostas de erro e de validação.             |
+| **Transações**                          | Utilização de `@Transactional` para garantir consistência dos dados.                                 |
+| **Externalização de Configurações**     | Perfis por ambiente, arquivos `.properties` e variáveis de ambiente.                                 |
+| **Versionamento do Banco de Dados**     | Versionamento do schema utilizando Flyway.                                                           |
+| **Testes Automatizados**                | Testes de unidade (Surefire) e de integração (Failsafe).                                             |
+| **Documentação da API**                 | Integração com OpenAPI/Swagger.                                                                      |
+| **Princípio da Responsabilidade Única** | Cada classe possui uma responsabilidade bem definida.                                                |
 
 ---
 
@@ -907,6 +512,18 @@ Entre as principais evoluções destacam-se:
 - Separação mais clara entre infraestrutura, domínio e exposição da API.
 - Evolução da camada de persistência com consultas otimizadas e estratégias de desempenho.
 - Fortalecimento da arquitetura baseada em responsabilidades bem definidas.
+
+### 🔧 Além do tema do capítulo
+
+Durante este capítulo, o projeto também recebeu melhorias de infraestrutura que vão além da modelagem de domínio:
+
+- **Perfis `dev`, `test` e `prod`**, com `dev` como padrão e um perfil `prod` seguro: sem valores padrão para segredos e com Swagger e console do H2 desligados. Veja [Configuração e Perfis](docs/guides/CONFIGURATION.md).
+- **Migrations separadas em `schema`, `reference` e `data`**, para que os dados de exemplo nunca cheguem à produção. Veja [Migrations](docs/guides/DATABASE-MIGRATIONS.md).
+- **Testes de integração com o Maven Failsafe**, executados na fase `verify`. Veja [Testes](docs/guides/TESTING.md).
+- **Internacionalização em pt-BR, en e es**, com testes que garantem a consistência das mensagens e a escolha do idioma. Veja [Internacionalização](docs/guides/INTERNATIONALIZATION.md).
+- **Ampliação da suíte de testes**, com testes de conta, autorização, CORS, OAuth2 e consultas nativas. Veja [Testes](docs/guides/TESTING.md#6-o-que-cada-grupo-cobre).
+- **Renomeação do pacote base** para `com.albertsilva.dev.asjcatalog`. Veja [Arquitetura](docs/guides/ARCHITECTURE.md#5-origem-do-nome).
+- **Reorganização da documentação** em guias técnicos, contrato de segurança e histórico de auditorias. Veja o [Índice da Documentação](docs/HOME.md).
 
 > [!IMPORTANT]
 > Essa evolução tornou a aplicação mais organizada, extensível e preparada para receber novas funcionalidades sem comprometer sua estrutura.
