@@ -1,589 +1,174 @@
-<h1 align="center">🌍 Internacionalização (Internationalization - i18n)</h1>
+# Internacionalização
 
-<p align="justify">
-<em>
-This documentation explores the internationalization (i18n) infrastructure of ASJCatalog, covering the implementation of multilingual API responses, centralized message management, locale resolution, standardized error handling, and Spring's native internationalization features to build scalable and globally ready REST APIs.
-</em>
-</p>
+Este guia explica como a API responde em português, inglês ou espanhol, onde ficam as mensagens e como adicionar uma mensagem ou um idioma novo.
 
-<p align="center">
+## Sumário
 
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
-![Spring Framework](https://img.shields.io/badge/Spring_Framework-6.x-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
-![Internationalization](https://img.shields.io/badge/Internationalization-i18n-blue?style=for-the-badge)
-![MessageSource](https://img.shields.io/badge/MessageSource-Spring-success?style=for-the-badge)
-![LocaleResolver](https://img.shields.io/badge/AcceptHeaderLocaleResolver-orange?style=for-the-badge)
-![Bean Validation](https://img.shields.io/badge/Bean_Validation-Jakarta-red?style=for-the-badge)
-![REST API](https://img.shields.io/badge/REST_API-ProblemDetails-005571?style=for-the-badge)
-![Languages](https://img.shields.io/badge/Languages-PT--BR%20%7C%20EN%20%7C%20ES-purple?style=for-the-badge)
+1. [Visão geral](#1-visão-geral)
+2. [Configuração](#2-configuração)
+3. [Arquivos de mensagens](#3-arquivos-de-mensagens)
+4. [O que é traduzido](#4-o-que-é-traduzido)
+5. [Fluxo de uma resposta traduzida](#5-fluxo-de-uma-resposta-traduzida)
+6. [Exemplos](#6-exemplos)
+7. [Testes](#7-testes)
+8. [Adicionar uma mensagem](#8-adicionar-uma-mensagem)
+9. [Adicionar um idioma](#9-adicionar-um-idioma)
+10. [Limitações conhecidas](#10-limitações-conhecidas)
 
-</p>
+## 1. Visão geral
 
-<p align="center">
+**Internacionalização** (abreviada como **i18n**: "i", 18 letras, "n") é preparar a aplicação para mais de um idioma, sem textos fixos no código.
 
-![Stateless](https://img.shields.io/badge/Stateless-API-blueviolet?style=flat-square)
-![UTF-8](https://img.shields.io/badge/UTF--8-Unicode-informational?style=flat-square)
-![ApiErrorCode](https://img.shields.io/badge/ApiErrorCode-Stable-success?style=flat-square)
-![ProblemDetails](https://img.shields.io/badge/ProblemDetails-RFC7807-blue?style=flat-square)
-![Accept-Language](https://img.shields.io/badge/Accept--Language-RFC9110-orange?style=flat-square)
+A API tem mensagens em três idiomas:
 
-</p>
+| Idioma | Arquivo |
+| --- | --- |
+| Português do Brasil (padrão) | `messages_pt_BR.properties` |
+| Inglês | `messages_en.properties` |
+| Espanhol | `messages_es.properties` |
 
----
-## 📑 Sumário
+O cliente escolhe o idioma pelo cabeçalho HTTP **`Accept-Language`** (por exemplo `Accept-Language: en`). Sem o cabeçalho, ou com um idioma não suportado, a resposta vem em português. Nada fica guardado em sessão: cada requisição traz o seu idioma.
 
-> Navegação da documentação de Internacionalização (i18n).
+## 2. Configuração
 
----
+A configuração fica na classe `config/i18n/MessageSourceConfig.java`, que declara dois beans:
 
-| 🧩 Módulo                                                                   | ⚡ Descrição                                                  |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| [📖 Visão Geral](#-visão-geral)                                             | Introdução à arquitetura de internacionalização               |
-| [🎯 Objetivos](#-objetivos)                                                 | Metas e princípios adotados na implementação do i18n          |
-| [🏗 Arquitetura](#-arquitetura)                                             | Fluxo de resolução de mensagens com componentes do Spring     |
-| [⚙️ Configuração](#️-configuração)                                          | Configuração do MessageSource e do LocaleResolver             |
-| [📂 Organização dos Arquivos](#-organização-dos-arquivos)                   | Estrutura dos arquivos de mensagens por idioma                |
-| [🧩 Estrutura das Mensagens](#-estrutura-das-mensagens)                     | Organização das chaves de tradução por domínio                |
-| [🌐 Recursos Internacionalizados](#-recursos-internacionalizados)           | Validações, exceções e respostas localizadas da API           |
-| [📦 ProblemDetails](#-problemdetails)                                       | Padronização das respostas de erro multilíngues               |
-| [🔄 Fluxo da Internacionalização](#-fluxo-da-internacionalização)           | Ciclo de resolução de mensagens durante a requisição          |
-| [🚀 Benefícios](#-benefícios)                                               | Vantagens da arquitetura adotada                              |
-| [📈 Evolução da Implementação](#-evolução-da-implementação)                 | Evolução da validação para uma infraestrutura completa de i18n |
-| [🎯 Boas Práticas Aplicadas](#-boas-práticas-aplicadas)                     | Boas práticas de internacionalização com Spring Framework     |
-| [🎓 Aprendizados](#-aprendizados)                                           | Conceitos consolidados durante a implementação                |
-| [💼 Competências Desenvolvidas](#-competências-desenvolvidas)               | Competências técnicas demonstradas                            |
-| [🏁 Conclusão](#-conclusão)                                                 | Considerações finais sobre a implementação                    |
-| [📚 Referências](#-referências)                                             | Documentações oficiais e materiais de apoio                   |
-| [👨‍💻 Autor](#-autor)                                                      | Informações sobre o autor                                     |
-| [📎 Contato](#-contato)                                                     | Canais de contato profissional                                |
+| Bean | Classe | Configuração |
+| --- | --- | --- |
+| `messageSource` | `ReloadableResourceBundleMessageSource` | Arquivos `classpath:messages_*.properties`, lidos em UTF-8; não usa o idioma do sistema operacional como reserva (`fallbackToSystemLocale=false`); idioma padrão `pt_BR` |
+| `localeResolver` | `AcceptHeaderLocaleResolver` | Lê o idioma do cabeçalho `Accept-Language`; padrão `pt_BR` |
 
----
-## 📖 Visão Geral
+O **`MessageSource`** é o componente do Spring que busca um texto pela chave e pelo idioma. O **`LocaleResolver`** decide o idioma (*locale*) de cada requisição.
 
-O ASJCatalog implementa um mecanismo completo de internacionalização (Internationalization — **i18n**) baseado na infraestrutura nativa do Spring Framework, permitindo que todas as mensagens retornadas pela API sejam apresentadas no idioma solicitado pelo cliente.
+**Idioma não suportado.** Com `Accept-Language: fr`, por exemplo, não existe `messages_fr.properties`. Como a busca no idioma do sistema está desligada, o `MessageSource` usa o idioma padrão, e a resposta vem em português. O `AcceptLanguageIT` confirma esse comportamento.
 
-A solução foi projetada para desacoplar completamente os textos da lógica da aplicação, centralizando todas as mensagens em arquivos de propriedades organizados por idioma.
+> **Atenção:** como a classe declara os beans `messageSource` e `localeResolver`, as propriedades `spring.messages.*` e `spring.web.locale*` **não têm efeito** neste projeto. Para mudar o comportamento de idioma, altere `MessageSourceConfig`.
 
-Atualmente são suportados os seguintes idiomas:
+## 3. Arquivos de mensagens
 
-| Idioma                | Locale  |
-| --------------------- | ------- |
-| 🇧🇷 Português (Brasil) | `pt-BR` |
-| 🇺🇸 Inglês             | `en`    |
-| 🇪🇸 Espanhol           | `es`    |
+Os três arquivos ficam em `backend/src/main/resources`, estão em UTF-8 e têm **exatamente as mesmas chaves** (hoje, 79). Muda só o texto. Cada arquivo é dividido em blocos comentados:
 
-A seleção do idioma ocorre automaticamente através do cabeçalho HTTP **Accept-Language**, sem necessidade de parâmetros adicionais na URL ou armazenamento de preferência em sessão.
+| Bloco | Exemplos de chave |
+| --- | --- |
+| API - Erros Globais (ProblemDetails) | `error.resource.title`, `error.category.notFound`, `error.token.expired` |
+| Category - Validação | `category.name.notBlank`, `category.name.unique` |
+| Product - Validação | `product.price.positive`, `product.categoryIds.invalid` |
+| Role - Validação | `role.invalid` |
+| User - Dados pessoais | `user.email.invalid`, `user.email.unique` |
+| User - Senha | `user.password.uppercase`, `user.password.personalData` |
+| Email - Validação | `email.sender.notBlank` |
 
----
+Algumas mensagens têm **placeholders**, trechos entre chaves que o Bean Validation substitui pelo valor da anotação. Por exemplo, `category.name.size=O nome da categoria deve ter entre {min} e {max} caracteres` recebe `{min}` e `{max}` do `@Size(min = 3, max = 80)`.
 
-## 🎯 Objetivos
+O projeto não tem `ValidationMessages.properties`: todas as mensagens, inclusive as de validação, ficam nos arquivos `messages_*.properties`.
 
-A internacionalização foi implementada com os seguintes objetivos:
+## 4. O que é traduzido
 
-- desacoplar completamente as mensagens da lógica de negócio;
-- permitir múltiplos idiomas utilizando a mesma base de código;
-- fornecer mensagens consistentes para toda a API;
-- facilitar manutenção e tradução das mensagens;
-- melhorar a experiência de integração para consumidores internacionais da API;
-- centralizar todas as mensagens em um único mecanismo de resolução.
+| Origem | Como a chave chega ao texto |
+| --- | --- |
+| Anotações de validação dos DTOs | `@NotBlank(message = "{category.name.notBlank}")`: o Bean Validation traduz a chave no idioma da requisição |
+| Validadores customizados | Usam a mesma forma, por exemplo `buildConstraintViolationWithTemplate("{user.email.unique}")` |
+| Exceções de negócio | Carregam a chave como mensagem: `new ResourceNotFoundException("error.category.notFound")` |
+| `ControllerExceptionHandler` | Recebe o `Locale` da requisição e usa o `MessageSource` para montar os campos `error` e `message` |
 
----
+**Código estável.** Além do texto traduzido, toda resposta de erro traz o campo `code`, do enum `ApiErrorCode` (por exemplo `RESOURCE_NOT_FOUND`), que **não muda com o idioma**. O cliente deve usar `code` para decidir o que fazer e `error`/`message` para mostrar ao usuário. Veja [ERROR-HANDLING.md](ERROR-HANDLING.md).
 
-## 🏗 Arquitetura
+O formato das respostas de erro é a classe `ProblemDetails`, **do próprio projeto**. Ela não segue a RFC 7807, apesar do nome parecido.
 
-A infraestrutura de internacionalização utiliza os componentes nativos do Spring Framework.
+## 5. Fluxo de uma resposta traduzida
 
-```java
-Cliente HTTP
-      │
-Accept-Language
-      │
-      ▼
-AcceptHeaderLocaleResolver
-      │
-      ▼
-Locale
-      │
-      ▼
-MessageSource
-      │
-      ▼
-messages_pt_BR.properties
-messages_en.properties
-messages_es.properties
-      │
-      ▼
-Mensagem traduzida
+```mermaid
+flowchart TD
+    A["Requisição<br/>Accept-Language: en"] --> B["AcceptHeaderLocaleResolver<br/>define o locale en"]
+    B --> C["Controller / Service<br/>lança ResourceNotFoundException('error.category.notFound')"]
+    C --> D["ControllerExceptionHandler<br/>recebe o Locale"]
+    D --> E["MessageSource<br/>busca a chave em messages_en.properties"]
+    E --> F["ProblemDetails<br/>error = Resource not found<br/>message = Category not found"]
 ```
 
-Toda a resolução das mensagens é realizada durante o processamento da requisição.
+## 6. Exemplos
 
----
+Respostas reais de `GET /api/v1/categories/999999`.
 
-## ⚙️ Configuração
-
-A configuração da internacionalização encontra-se centralizada na classe:
-
-```java
-MessageSourceConfig
-```
-
-Ela possui duas responsabilidades principais:
-
-- configurar o `MessageSource`;
-- definir o resolvedor de Locale baseado no cabeçalho HTTP.
-
-### MessageSource
-
-Foi utilizado o componente:
-
-```java
-ReloadableResourceBundleMessageSource
-```
-
-Configuração aplicada:
-
-| Configuração                   | Finalidade                                         |
-| ------------------------------ | -------------------------------------------------- |
-| `basename=messages`            | Localização dos arquivos de mensagens              |
-| `UTF-8`                        | Suporte completo a caracteres especiais            |
-| `fallbackToSystemLocale=false` | Impede utilização do Locale do sistema operacional |
-| `defaultLocale=pt-BR`          | Português como idioma padrão                       |
-
----
-
-### LocaleResolver
-
-O projeto utiliza:
-
-```java
-AcceptHeaderLocaleResolver
-```
-
-A escolha do idioma ocorre automaticamente através do cabeçalho:
-
-```http
-Accept-Language
-```
-
-Exemplos:
-
-```http
-Accept-Language: pt-BR
-```
-
-```http
-Accept-Language: en
-```
-
-```http
-Accept-Language: es
-```
-
-Caso nenhum idioma seja informado, a aplicação utiliza:
-
-```text
-pt-BR
-```
-
-como idioma padrão.
-
-Essa estratégia torna a API completamente stateless, sem necessidade de armazenar idioma em sessão ou cookies.
-
----
-
-## 📂 Organização dos Arquivos
-
-As mensagens encontram-se organizadas em arquivos independentes por idioma.
-
-```java
-src/main/resources
-
-messages_pt_BR.properties
-messages_en.properties
-messages_es.properties
-```
-
-Cada arquivo contém exatamente as mesmas chaves, alterando apenas os textos traduzidos.
-
-Essa organização facilita:
-
-- inclusão de novos idiomas;
-- manutenção;
-- revisão das traduções;
-- consistência entre todos os idiomas suportados.
-
----
-
-## 🧩 Estrutura das Mensagens
-
-As mensagens foram organizadas por domínio funcional.
-
-```java
-API
- ├── ProblemDetails
- ├── Erros Globais
-
-Categoria
- ├── Bean Validation
- ├── Validações customizadas
-
-Produto
- ├── Bean Validation
- ├── Validações customizadas
-
-Usuário
- ├── Dados pessoais
- ├── Senha
-
-Role
-
-Tokens
-
-Autenticação
-```
-
-Essa divisão melhora significativamente a organização dos arquivos de tradução.
-
----
-
-## 🌐 Recursos Internacionalizados
-
-A internacionalização não se limita apenas às validações da aplicação.
-
-Ela está presente em toda a API.
-
-### Bean Validation
-
-Todas as anotações de validação utilizam chaves de mensagens.
-
-Exemplos:
-
-```java
-category.name.notBlank
-
-product.price.positive
-
-user.email.invalid
-```
-
----
-
-### Validadores Customizados
-
-Os validadores implementados pela aplicação também utilizam o `MessageSource`.
-
-Isso permite que regras específicas do domínio retornem mensagens traduzidas da mesma forma que as validações nativas do Bean Validation.
-
-Exemplos:
-
-- categoria já existente;
-- produto duplicado;
-- e-mail já cadastrado;
-- categorias inexistentes;
-- roles inválidas.
-
----
-
-### Exceções de Negócio
-
-As exceções da camada de serviço não retornam textos fixos.
-
-Em vez disso, retornam códigos de mensagem.
-
-Exemplo:
-
-```java
-error.product.notFound
-```
-
-Durante o tratamento da exceção, esse código é convertido para o idioma solicitado pelo cliente.
-
----
-
-### ControllerExceptionHandler
-
-Toda a tradução das respostas de erro é centralizada no:
-
-```java
-ControllerExceptionHandler
-```
-
-A classe recebe automaticamente o `Locale` resolvido pelo Spring.
-
-```text
-Locale locale
-```
-
-Cada resposta utiliza o `MessageSource` para resolver:
-
-- título;
-- descrição;
-- mensagens específicas.
-
-Essa abordagem garante consistência em todas as respostas da API.
-
----
-
-### 🏷 ApiErrorCode
-
-Além das mensagens traduzidas, o projeto utiliza um código estável de erro através do enum:
-
-```java
-ApiErrorCode
-```
-
-Cada resposta contém duas informações distintas:
-
-| Campo     | Finalidade                                    |
-| --------- | --------------------------------------------- |
-| `code`    | Código estável para integração entre sistemas |
-| `error`   | Título traduzido                              |
-| `message` | Descrição traduzida                           |
-
-Exemplo:
+**Sem `Accept-Language`, ou com `Accept-Language: fr`:**
 
 ```json
 {
+  "timestamp": "2026-09-29T21:02:30.319566500Z",
   "status": 404,
   "code": "RESOURCE_NOT_FOUND",
   "error": "Recurso não encontrado",
-  "message": "Produto não encontrado"
+  "message": "Categoria não encontrada",
+  "path": "/api/v1/categories/999999"
 }
 ```
 
-Em inglês:
+**Com `Accept-Language: en`:**
 
 ```json
 {
+  "timestamp": "2026-09-29T21:02:30.375480900Z",
   "status": 404,
   "code": "RESOURCE_NOT_FOUND",
   "error": "Resource not found",
-  "message": "Product not found"
+  "message": "Category not found",
+  "path": "/api/v1/categories/999999"
 }
 ```
 
-O campo `code` nunca muda de idioma, permitindo que aplicações clientes utilizem esse identificador para regras de negócio, enquanto os usuários recebem mensagens no idioma adequado.
+**PowerShell**:
 
----
-
-## 📦 ProblemDetails
-
-Todas as respostas de erro seguem um formato padronizado.
-
-Estrutura:
-
-```text
-timestamp
-status
-code
-error
-message
-path
+```powershell
+curl.exe -s http://localhost:8080/api/v1/categories/999999 -H 'Accept-Language: en'
 ```
 
-Nos casos de erro de validação também é retornada a lista:
+**bash**:
 
-```text
-fieldErrors
+```bash
+curl -s http://localhost:8080/api/v1/categories/999999 -H 'Accept-Language: en'
 ```
 
-com cada campo contendo sua mensagem já traduzida.
+Os erros de validação (422) também chegam traduzidos, campo a campo. Um exemplo completo com `fieldErrors` está em [ERROR-HANDLING.md](ERROR-HANDLING.md#3-validationerror).
 
----
+## 7. Testes
 
-## 🔄 Fluxo da Internacionalização
+| Teste | Tipo | O que garante |
+| --- | --- | --- |
+| `i18n/MessagesPropertiesTest` | Unidade | Os três arquivos têm as mesmas chaves; as traduções de uma chave usam os mesmos placeholders; toda chave usada no código de produção (literais `"{chave}"` e chaves passadas às exceções do pacote `service/exception`) existe nos três arquivos |
+| `integrations/i18n/AcceptLanguageIT` | Integração | Resposta em inglês com `en`, em espanhol com `es`, em português sem o cabeçalho e em português com um idioma não suportado; mensagens de validação em inglês com `en` |
 
-```java
-Cliente
+O `MessagesPropertiesTest` lê os arquivos Java de `src/main/java` como texto, procurando as chaves. Ele falha se uma chave for usada no código e esquecida em algum arquivo de mensagens.
 
-    │
+## 8. Adicionar uma mensagem
 
-Accept-Language
+1. Escolha uma chave no padrão do bloco a que ela pertence, por exemplo `error.product.outOfStock` ou `product.stock.positive`.
+2. Adicione a chave **nos três arquivos**, no mesmo bloco, com o texto traduzido. Se usar placeholders (`{min}`), use os mesmos nas três traduções.
+3. Use a chave no código:
+   - numa anotação: `@Positive(message = "{product.stock.positive}")`;
+   - numa exceção de negócio: `throw new ResourceNotFoundException("error.product.outOfStock")`.
+4. Rode o teste de mensagens:
 
-    │
+   ```powershell
+   cd backend
+   .\mvnw test '-Dtest=MessagesPropertiesTest'
+   ```
 
-    ▼
+   No bash: `./mvnw test -Dtest=MessagesPropertiesTest`.
 
-AcceptHeaderLocaleResolver
+## 9. Adicionar um idioma
 
-    │
+Exemplo com francês:
 
-    ▼
+1. Copie `messages_en.properties` para `messages_fr.properties`, na mesma pasta, salvando em UTF-8.
+2. Traduza todos os textos, sem mudar as chaves nem os placeholders.
+3. Inclua o arquivo novo no `MessagesPropertiesTest`: a lista `OTHER_FILES` hoje tem só `messages_en.properties` e `messages_es.properties`.
+4. Rode os testes (`./mvnw test`) e confira com `Accept-Language: fr`.
 
-Locale
+A classe `MessageSourceConfig` não precisa mudar: ela procura qualquer arquivo `messages_<idioma>.properties`.
 
-    │
+## 10. Limitações conhecidas
 
-    ▼
-
-ControllerExceptionHandler
-
-    │
-
-    ▼
-
-MessageSource
-
-    │
-
-    ▼
-
-messages_pt_BR.properties
-messages_en.properties
-messages_es.properties
-
-    │
-
-    ▼
-
-ProblemDetails
-
-    │
-
-    ▼
-
-Resposta JSON traduzida
-```
-
----
-
-## 🚀 Benefícios
-
-A arquitetura adotada oferece diversos benefícios:
-
-- completa separação entre lógica e textos;
-- facilidade para inclusão de novos idiomas;
-- mensagens consistentes em toda a aplicação;
-- compatibilidade total com Bean Validation;
-- integração nativa com o Spring Framework;
-- API preparada para clientes internacionais;
-- manutenção simplificada;
-- ausência de textos fixos no código-fonte.
-
----
-
-## 📈 Evolução da Implementação
-
-Inicialmente a aplicação utilizava um único arquivo:
-
-```
-ValidationMessages.properties
-```
-
-Durante a evolução do projeto, essa abordagem foi substituída por uma estrutura completa de internacionalização baseada em múltiplos arquivos de mensagens:
-
-```
-messages_pt_BR.properties
-
-messages_en.properties
-
-messages_es.properties
-```
-
-Essa mudança permitiu internacionalizar não apenas as mensagens de validação, mas também:
-
-- erros globais;
-- exceções de negócio;
-- respostas do `ControllerExceptionHandler`;
-- mensagens associadas ao `ApiErrorCode`;
-- validações customizadas;
-- mensagens do domínio.
-
-Com isso, toda a API passou a responder integralmente no idioma solicitado pelo consumidor.
-
----
-
-## 🎯 Boas Práticas Aplicadas
-
-Durante a implementação foram adotadas diversas práticas recomendadas pelo ecossistema Spring:
-
-| Boa prática                | Aplicação                               |
-| -------------------------- | --------------------------------------- |
-| Uso do `MessageSource`     | Centralização das mensagens             |
-| AcceptHeaderLocaleResolver | Resolução automática do idioma          |
-| UTF-8                      | Compatibilidade internacional           |
-| Locale padrão              | Português (Brasil)                      |
-| Separação por arquivos     | Um arquivo para cada idioma             |
-| Mensagens por chave        | Nenhum texto fixo na aplicação          |
-| ApiErrorCode               | Código estável independente da tradução |
-| ProblemDetails             | Respostas padronizadas                  |
-| Bean Validation            | Integração nativa                       |
-| ControllerExceptionHandler | Tradução centralizada                   |
-
----
-
-## 🎓 Aprendizados
-
-A implementação da internacionalização consolidou conhecimentos relacionados a:
-
-- Internationalization (i18n);
-- MessageSource;
-- Locale;
-- AcceptHeaderLocaleResolver;
-- Bean Validation internacionalizado;
-- tratamento global de exceções;
-- organização de arquivos de mensagens;
-- APIs multilíngues;
-- integração entre Spring MVC e Spring Validation.
-
----
-
-## 💼 Competências Desenvolvidas
-
-| Competência                   | Aplicação |
-| ----------------------------- | --------- |
-| Internationalization (i18n)   | ✔️        |
-| Spring MessageSource          | ✔️        |
-| AcceptHeaderLocaleResolver    | ✔️        |
-| Bean Validation               | ✔️        |
-| Validações Customizadas       | ✔️        |
-| Tratamento Global de Exceções | ✔️        |
-| ProblemDetails                | ✔️        |
-| ApiErrorCode                  | ✔️        |
-| APIs Multilíngues             | ✔️        |
-| Organização de Recursos       | ✔️        |
-
----
-
-## 🏁 Conclusão
-
-A implementação da internacionalização transformou o ASJCatalog em uma API preparada para consumidores de diferentes idiomas, utilizando exclusivamente recursos nativos do ecossistema Spring. A adoção do `MessageSource`, do `AcceptHeaderLocaleResolver` e da centralização das mensagens em arquivos de propriedades permitiu desacoplar completamente os textos da lógica da aplicação, tornando o sistema mais organizado, escalável e de fácil manutenção.
-
-Além das mensagens de validação, a internacionalização passou a abranger exceções de negócio, respostas padronizadas da API, códigos de erro, validações customizadas e mensagens do domínio, garantindo consistência em toda a comunicação com os clientes. Essa abordagem aproxima o projeto das boas práticas utilizadas em aplicações corporativas, facilitando a evolução para novos idiomas e ampliando sua capacidade de integração em ambientes internacionais.
-
----
-
-## 📚 Referências
-
-- Spring Framework – Internationalization
-  https://docs.spring.io/spring-framework/reference/core/beans/context-introduction.html
-
-- Spring MessageSource
-  https://docs.spring.io/spring-framework/reference/core/beans/context.html
-
-- Spring Validation
-  https://docs.spring.io/spring-framework/reference/core/validation/
-
-- Jakarta Bean Validation
-  https://jakarta.ee/specifications/bean-validation/
-
-- RFC 9110 – Accept-Language Header
-  https://www.rfc-editor.org/rfc/rfc9110.html
-
-- Unicode UTF-8
-  https://unicode.org/
-
----
-
-## 👨‍💻 Autor
-
-**Albert Silva de Jesus**  
-Desenvolvedor Backend Java | Spring Boot
-
----
-
-## 📎 Contato
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/albert-backend-java-spring-boot/)
-[![Gmail](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:albertinesilva.17@gmail.com)
+- **Os erros de `/oauth2/token` não são traduzidos.** As mensagens do login (`Invalid credentials`, `Your account has not been activated yet. Please check your email.`) são textos fixos em inglês no `CustomPasswordAuthenticationProvider`.
+- **O 401 do Resource Server não é traduzido.** Requisições sem token ou com token inválido em rotas protegidas são recusadas pelos filtros de segurança antes do `ControllerExceptionHandler`, e a resposta vem sem corpo.
+- **Textos fixos em outros pontos.** Os assuntos e textos dos e-mails (`Confirmação de Cadastro`, `Redefinição de Senha`) e as mensagens de log estão em português, direto no código.
+- **Uma chave inexistente aparece crua.** Se o handler receber uma chave que não está nos arquivos, o campo mostra a própria chave (ou a mensagem reserva do handler). O `MessagesPropertiesTest` evita isso para as chaves que ele consegue encontrar no código.

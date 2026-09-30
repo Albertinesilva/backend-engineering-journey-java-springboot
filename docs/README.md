@@ -18,14 +18,14 @@ O README da raiz do repositório apresenta o capítulo atual do projeto. Esta pa
 | [DOMAIN-MODEL](guides/DOMAIN-MODEL.md) | Entidades do domínio, seus relacionamentos e as regras que ficam dentro delas. | Disponível |
 | [DATA-ACCESS](guides/DATA-ACCESS.md) | Repositórios, consultas (derivadas, JPQL e nativas), paginação e a solução do problema N+1. | Disponível |
 | [DATABASE-MIGRATIONS](guides/DATABASE-MIGRATIONS.md) | Migrations do Flyway, pastas `schema`, `reference` e `data` e o que roda em cada perfil. | Disponível |
-| API-ENDPOINTS | Todos os endpoints da API, com permissões exigidas, corpo da requisição e respostas. | Em construção |
-| AUTHENTICATION | Como obter e renovar tokens, como funcionam as roles e como chamar rotas protegidas. | Em construção |
-| ACCOUNT-FLOWS | Cadastro, ativação de conta, recuperação e troca de senha e envio de e-mails. | Em construção |
-| VALIDATION | Regras de validação dos dados de entrada e validadores customizados. | Em construção |
-| ERROR-HANDLING | Formato das respostas de erro, códigos `ApiErrorCode` e status HTTP. | Em construção |
+| [API-ENDPOINTS](guides/API-ENDPOINTS.md) | Todos os endpoints da API, com permissões exigidas, corpo da requisição e respostas. | Disponível |
+| [AUTHENTICATION](guides/AUTHENTICATION.md) | Como obter e renovar tokens, como funcionam as roles e como chamar rotas protegidas. | Disponível |
+| [ACCOUNT-FLOWS](guides/ACCOUNT-FLOWS.md) | Cadastro, ativação de conta, recuperação e troca de senha e envio de e-mails. | Disponível |
+| [VALIDATION](guides/VALIDATION.md) | Regras de validação dos dados de entrada e validadores customizados. | Disponível |
+| [ERROR-HANDLING](guides/ERROR-HANDLING.md) | Formato das respostas de erro, códigos `ApiErrorCode` e status HTTP. | Disponível |
 | [INTERNATIONALIZATION](guides/INTERNATIONALIZATION.md) | Mensagens da API em português, inglês e espanhol, escolhidas pelo cabeçalho `Accept-Language`. | Disponível |
-| TESTING | Testes de unidade e de integração, como rodá-los e como estão organizados. | Em construção |
-| CONVENTIONS | Convenções de código, de commits e de branches. | Em construção |
+| [TESTING](guides/TESTING.md) | Testes de unidade e de integração, como rodá-los e como estão organizados. | Disponível |
+| [CONVENTIONS](guides/CONVENTIONS.md) | Convenções de código, de commits, de branches e de numeração de migrations. | Disponível |
 
 ## Contrato de segurança
 

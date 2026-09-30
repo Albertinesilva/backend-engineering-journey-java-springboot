@@ -78,6 +78,14 @@ Arquivos de `reference` e `data`:
 
 **A versão é global, não por pasta.** O Flyway junta os arquivos de todas as pastas configuradas e os ordena só pela versão. Por isso a V104, de `reference`, roda entre a V103 e a V105, de `data`, e duas pastas não podem ter a mesma versão.
 
+**Regra de numeração: global e sequencial.** Toda migration nova recebe a **maior versão existente + 1**, em qualquer pasta. Hoje a maior é V105, então as próximas são V106, V107, e assim por diante, seja em `schema`, `reference` ou `data`.
+
+- **A pasta define em quais perfis a migration roda** (seção 4).
+- **O número define a ordem** em que ela roda.
+- **Não se usa `outOfOrder`**, a opção do Flyway que aceitaria versões menores que a última aplicada.
+
+**Motivo.** Cada banco guarda a maior versão já aplicada: V105 em `dev` e V104 em `prod`. O Flyway só aceita como pendentes as migrations com versão **maior** que essa. Uma migration nova com número menor, como uma `V012` em `schema`, seria considerada fora de ordem, e a aplicação não subiria (veja [Limitações conhecidas](#8-limitações-conhecidas)). Com "maior + 1", toda migration nova é sempre a última, em qualquer ambiente. As faixas `V001`–`V011` e `V100`–`V105` são históricas e não indicam onde numerar a próxima. A mesma regra está em [CONVENTIONS.md](CONVENTIONS.md#8-migrations).
+
 Os vínculos da V102 e da V105 usam ids fixos (por exemplo `user_id = 1`). Eles dependem de os registros anteriores receberem os ids 1, 2, 3... na ordem de inserção.
 
 ## 4. O que roda em cada perfil
@@ -104,7 +112,7 @@ O `import.sql` só é executado quando o Hibernate cria as tabelas. Nos perfis `
    - Mudou a estrutura (tabela, coluna, índice, restrição)? Use `schema`.
    - São dados que precisam existir em todos os ambientes, inclusive produção? Use `reference`.
    - São dados de exemplo para desenvolvimento? Use `data`.
-2. **Escolha a versão.** Use uma versão **maior que a maior já existente em qualquer pasta**. Hoje a maior é V105, então a próxima é **V106**, qualquer que seja a pasta. Veja em [Limitações conhecidas](#8-limitações-conhecidas) por que não dá para usar V012 em `schema`.
+2. **Escolha a versão** pela regra da [seção 3](#3-pastas-e-versões): a maior versão existente em qualquer pasta + 1. Hoje a maior é V105, então a próxima é **V106**, qualquer que seja a pasta.
 3. **Crie o arquivo** com o nome no padrão, por exemplo `schema/V106__add_column_stock_to_product.sql`.
 4. **Escreva o SQL para PostgreSQL**, que é o banco de `dev` e `prod`.
 5. **Atualize as entidades** se a estrutura mudou. O perfil `prod` valida as entidades contra as tabelas, e o perfil `test` cria as tabelas a partir delas.
@@ -128,7 +136,7 @@ O `import.sql` só é executado quando o Hibernate cria as tabelas. Nos perfis `
 
 ## 8. Limitações conhecidas
 
-- **Migration nova de `schema` com versão V012 bloqueia a subida.** Num banco que já aplicou a V105 (ou a V104, em prod), uma migration com versão menor fica fora de ordem. Na configuração atual (sem `outOfOrder`), o Flyway recusa a subida com `Detected resolved migration not applied to database: 012`. Por isso a faixa V0xx de `schema` não pode mais ser usada para migrations novas, e toda migration nova precisa de versão maior que V105.
+- **Migration nova de `schema` com versão V012 bloqueia a subida.** Num banco que já aplicou a V105 (ou a V104, em prod), uma migration com versão menor fica fora de ordem. Na configuração atual (sem `outOfOrder`), o Flyway recusa a subida com `Detected resolved migration not applied to database: 012`. É o motivo da regra de numeração global e sequencial da seção 3. (Comportamento confirmado com o Flyway 11.7.2 do projeto contra um banco H2 de teste.)
 - **O `import.sql` é mantido à mão.** Nada garante que ele continue igual às pastas `data` e `reference`; ao mudar os dados de exemplo, atualize os dois.
 - **Os vínculos usam ids fixos.** A V102, a V105 e o `import.sql` supõem que categorias, produtos, usuários e roles recebem os ids na ordem de inserção.
 - **Flyway desligado nos testes.** Os testes usam tabelas criadas pelo Hibernate a partir das entidades, e não pelas migrations. Um erro de SQL numa migration não é detectado pelos testes: aparece só ao subir nos perfis `dev` ou `prod`.

@@ -167,7 +167,7 @@ O parâmetro `-Dspring-boot.run.arguments` repassa argumentos para a aplicação
 .\mvnw spring-boot:run '-Dspring-boot.run.arguments=--spring.mail.test-connection=false --server.port=8081'
 ```
 
-> **Atenção:** ao subir sem credenciais válidas, **os e-mails de ativação e de recuperação de senha não são enviados**. As requisições de cadastro e de recuperação respondem normalmente; a falha aparece só no log (`Erro ao enviar email de ativação para ...`). O token gerado fica gravado na tabela `tb_token`, e a conta cadastrada continua inativa. Os fluxos de conta são detalhados no guia ACCOUNT-FLOWS.
+> **Atenção:** ao subir sem credenciais válidas, **os e-mails de ativação e de recuperação de senha não são enviados**. As requisições de cadastro e de recuperação respondem normalmente; a falha aparece só no log (`Erro ao enviar email de ativação para ...`). O token gerado fica gravado na tabela `tb_token`, e a conta cadastrada continua inativa. Os fluxos de conta, e como ativar uma conta nesse modo, estão em [ACCOUNT-FLOWS.md](ACCOUNT-FLOWS.md#8-testar-os-fluxos-sem-servidor-de-e-mail).
 
 ## 6. Documentação interativa (Swagger)
 
@@ -233,7 +233,7 @@ As listagens de produtos e de categorias são públicas e não exigem token:
 curl.exe -s "http://localhost:8080/api/v1/products?size=2"
 ```
 
-A renovação do token e as regras de acesso de cada endpoint são explicadas no guia AUTHENTICATION.
+A renovação do token e as regras de acesso de cada endpoint são explicadas em [AUTHENTICATION.md](AUTHENTICATION.md).
 
 ## 9. Problemas comuns
 
