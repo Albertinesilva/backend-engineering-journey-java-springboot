@@ -14,23 +14,17 @@
 
 <img src="https://img.shields.io/badge/Architecture-Layered_Architecture-blue?style=for-the-badge" />
 
-<img src="https://img.shields.io/badge/Security-JWT%20%7C%20OAuth2-red?style=for-the-badge" />
-
 <img src="https://img.shields.io/badge/Database-PostgreSQL%20%7C%20H2-336791?style=for-the-badge&logo=postgresql&logoColor=white" />
-
-<img src="https://img.shields.io/badge/Tests-JUnit%20%7C%20Mockito-yellow?style=for-the-badge" />
-
-<img src="https://img.shields.io/badge/Container-Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
 
 <img src="https://img.shields.io/badge/Documentation-Swagger%20%7C%20JavaDoc-85EA2D?style=for-the-badge" />
 
-<img src="https://img.shields.io/github/license/Albertinesilva/backend-engineering-journey-java-springboot?style=for-the-badge" />
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" /></a>
 
 <img src="https://img.shields.io/github/last-commit/Albertinesilva/backend-engineering-journey-java-springboot?style=for-the-badge" />
 
 </p>
 
-O projeto **ASJ Catalog** foi estruturado seguindo boas práticas de desenvolvimento, adotando **arquitetura em camadas** e separação clara de responsabilidades. Além das operações básicas de CRUD, foram implementados conceitos importantes como:
+O projeto **ASJCatalog** foi estruturado seguindo boas práticas de desenvolvimento, adotando **arquitetura em camadas** e separação clara de responsabilidades. O nome ASJCatalog vem das iniciais de Albert Silva de Jesus: o projeto nasceu da base do DSCatalog, do curso DevSuperior, e evoluiu de forma independente. Além das operações básicas de CRUD, foram implementados conceitos importantes como:
 
 - Uso de **DTOs** para comunicação entre camadas, utilizando **records do Java** para estruturas imutáveis de dados;
 - Mapeamento com classes dedicadas (**Mapper**);
@@ -48,7 +42,7 @@ A aplicação contempla a organização em camadas: `controller`, `service` e `r
    - Criação, leitura, atualização e exclusão de **produtos** e **categorias** via API REST.
    - Endpoints bem estruturados: `GET`, `POST`, `PATCH`, `DELETE` com status HTTP adequado.
    - Serviços que fazem mapeamento **DTO ↔ entidade** usando **records** e **Mapper**.
-   - Validação e tratamento de exceções (`ResourceNotFoundException`, `DatabaseException`) com logs detalhados.
+   - Tratamento de exceções (`ResourceNotFoundException`, `DatabaseException`) com logs detalhados.
 
 2. **Paginação e filtragem**
    - Uso de `Pageable` para controlar páginas, tamanho e ordenação.
@@ -56,22 +50,22 @@ A aplicação contempla a organização em camadas: `controller`, `service` e `r
 
 3. **Mapeamento de relacionamentos**
    - Recebendo apenas **IDs de categorias** no request e resolvendo vínculos no backend.
-   - Atualização parcial de categorias, sem sobrescrever dados não enviados.
+   - Atualização parcial de categorias e produtos, sem sobrescrever dados não enviados.
 
 4. **Ambientes de desenvolvimento e testes**
 
-| Aspecto             | Ambiente de Testes (`test`)                       | Ambiente de Desenvolvimento (`dev`)                 |
-| ------------------- | ------------------------------------------------- | --------------------------------------------------- |
-| Banco de dados      | H2 in-memory (efêmero)                            | PostgreSQL local (persistente)                      |
-| Console             | `/h2-console` para inspeção manual                | Console SQL exibindo queries                        |
-| Migrations (Flyway) | Desativado                                        | Ativo (`db/migration/schema` + `db/migration/data`) |
-| Logs                | DEBUG/TRACE, JSON, `logs/test/dscatalog-test.log` | DEBUG/TRACE, JSON, `logs/dev/dscatalog-dev.log`     |
-| Banner              | N/A                                               | Banner personalizado (`banner-dev.txt`)             |
-| Objetivo            | Testes isolados, rápidos e reproduzíveis          | Desenvolvimento realista com dados persistentes     |
-| Observações         | Banco efêmero, reset a cada execução              | Controle de schema, rastreabilidade completa        |
+| Aspecto             | Ambiente de Testes (`test`)                         | Ambiente de Desenvolvimento (`dev`)                 |
+| ------------------- | --------------------------------------------------- | --------------------------------------------------- |
+| Banco de dados      | H2 in-memory (efêmero)                              | PostgreSQL local (persistente)                      |
+| Console             | `/h2-console` para inspeção manual                  | Console SQL exibindo queries                        |
+| Migrations (Flyway) | Desativado (dados carregados pelo `import.sql`)     | Ativo (`db/migration/schema` + `db/migration/data`) |
+| Logs                | DEBUG/TRACE, `logs/test/asjcatalog-test.log`        | DEBUG/TRACE, `logs/dev/asjcatalog-dev.log`          |
+| Banner              | Banner personalizado (`banner-dev.txt`)             | Banner personalizado (`banner-dev.txt`)             |
+| Objetivo            | Execução rápida, sem depender de um banco externo   | Desenvolvimento realista com dados persistentes     |
+| Observações         | Banco efêmero, reset a cada execução                | Controle de schema, rastreabilidade completa        |
 
 > [!IMPORTANT]
-> Essa separação garante testes **isolados, rápidos e reproduzíveis**, enquanto o desenvolvimento ocorre em ambiente realista com dados persistentes e migrations. Reflete boas práticas de engenharia de software.
+> Essa separação permite rodar a aplicação **de forma rápida e isolada**, sem depender de um banco externo, enquanto o desenvolvimento ocorre em ambiente realista com dados persistentes e migrations. Reflete boas práticas de engenharia de software.
 
 5. **Documentação da API e código**
    - **OpenAPI/Swagger** para documentação interativa;
@@ -84,7 +78,7 @@ A aplicação contempla a organização em camadas: `controller`, `service` e `r
 
 ---
 
-## 📦 Estrutura do Projeto `DSCatalog`
+## 📦 Estrutura do Projeto
 
 📦 `com.albertsilva.dev.asjcatalog`  
 ┣ 📂 `config`  
@@ -115,7 +109,7 @@ A aplicação contempla a organização em camadas: `controller`, `service` e `r
 ┃ ┣ 📄 `CategoryRepository.java`  
 ┃ ┗ 📄 `ProductRepository.java`  
 ┣ 📂 `service`  
-┃ ┣ 📂 `exceptions`  
+┃ ┣ 📂 `exception`  
 ┃ ┃ ┣ 📄 `DatabaseException.java`  
 ┃ ┃ ┗ 📄 `ResourceNotFoundException.java`  
 ┃ ┣ 📄 `CategoryService.java`  
@@ -124,21 +118,19 @@ A aplicação contempla a organização em camadas: `controller`, `service` e `r
 ┃ ┣ 📂 `controller`  
 ┃ ┃ ┣ 📄 `CategoryController.java`  
 ┃ ┃ ┗ 📄 `ProductController.java`  
-┃ ┗ 📂 `exceptions`  
+┃ ┗ 📂 `exception`  
 ┃ ┃ ┣ 📂 `enums`  
 ┃ ┃ ┃ ┗ 📄 `ErrorType.java`  
 ┃ ┃ ┣ 📂 `handler`  
 ┃ ┃ ┃ ┗ 📄 `ControllerExceptionHandler.java`  
 ┃ ┃ ┗ 📂 `response`  
 ┃ ┃ ┃ ┗ 📄 `ProblemDetails.java`  
-┣ 📄 `DscatalogApplication.java`  
+┣ 📄 `AsjcatalogApplication.java`  
 ┣ 📂 `resources`  
 ┃ ┣ 📂 `db`  
-┃ ┃ ┣ 📂 `data`  
-┃ ┃ ┣ 📂 `migration`  
-┃ ┃ ┗ 📂 `schema`  
-┃ ┣ 📂 `static`  
-┃ ┣ 📂 `templates`  
+┃ ┃ ┗ 📂 `migration`  
+┃ ┃ ┃ ┣ 📂 `schema`  
+┃ ┃ ┃ ┗ 📂 `data`  
 ┃ ┣ 📄 `application-dev.properties`  
 ┃ ┣ 📄 `application-prod.properties`  
 ┃ ┣ 📄 `application-test.properties`  
@@ -152,7 +144,7 @@ A aplicação contempla a organização em camadas: `controller`, `service` e `r
 
 A aplicação **ASJCatalog** segue a arquitetura tradicional **Controller → Service → Repository**, organizada em camadas bem definidas para garantir **manutenção mais fácil, testabilidade e escalabilidade**.
 
-<img src="https://raw.githubusercontent.com/Albertinesilva/devsuperior-java-springboot-bootcamp/chapter-01-crud/docs/assets/imgs/padrao-camadas.png" width="100%">
+<img src="docs/assets/imgs/padrao-camadas.png" width="100%">
 
 ## Padrão de Camadas
 
@@ -215,18 +207,18 @@ A aplicação **ASJCatalog** segue a arquitetura tradicional **Controller → Se
 
 ## 🛠️ Tecnologias Utilizadas
 
-O projeto **DSCatalog** foi desenvolvido utilizando um conjunto moderno de tecnologias voltadas para construção de APIs REST robustas, escaláveis e bem estruturadas.
+O projeto **ASJCatalog** foi desenvolvido utilizando um conjunto moderno de tecnologias voltadas para construção de APIs REST robustas, escaláveis e bem estruturadas.
 
 ### 📌 Stack Principal
 
-| Categoria    | Tecnologia             | Função                                                           |
-| ------------ | ---------------------- | ---------------------------------------------------------------- |
-| Linguagem    | Java 17                | Desenvolvimento backend moderno com recursos atuais da linguagem |
-| Framework    | Spring Boot 3.5.13     | Estrutura principal da aplicação e gerenciamento de dependências |
-| API REST     | Spring Web             | Criação de endpoints HTTP (RESTful APIs)                         |
-| Persistência | Spring Data JPA        | Abstração para acesso a dados e integração com ORM               |
-| ORM          | Hibernate              | Mapeamento objeto-relacional (Entity ↔ Tabela)                   |
-| Validação    | Spring Boot Validation | Validação de dados de entrada (Bean Validation)                  |
+| Categoria    | Tecnologia             | Função                                                                                              |
+| ------------ | ---------------------- | --------------------------------------------------------------------------------------------------- |
+| Linguagem    | Java 17                | Desenvolvimento backend moderno com recursos atuais da linguagem                                    |
+| Framework    | Spring Boot 3.5.13     | Estrutura principal da aplicação e gerenciamento de dependências                                    |
+| API REST     | Spring Web             | Criação de endpoints HTTP (RESTful APIs)                                                            |
+| Persistência | Spring Data JPA        | Abstração para acesso a dados e integração com ORM                                                  |
+| ORM          | Hibernate              | Mapeamento objeto-relacional (Entity ↔ Tabela)                                                      |
+| Validação    | Spring Boot Validation | Dependência declarada neste capítulo; as regras de validação são implementadas no capítulo 03       |
 
 ---
 
@@ -235,8 +227,8 @@ O projeto **DSCatalog** foi desenvolvido utilizando um conjunto moderno de tecno
 | Categoria       | Tecnologia  | Função                                                    |
 | --------------- | ----------- | --------------------------------------------------------- |
 | Banco Principal | PostgreSQL  | Banco relacional utilizado no ambiente de desenvolvimento |
-| Banco de Testes | H2 Database | Banco em memória para testes rápidos e isolados           |
-| Console DB      | H2 Console  | Interface web para inspeção de dados em ambiente de teste |
+| Banco de Testes | H2 Database | Banco em memória do perfil `test`, rápido e isolado       |
+| Console DB      | H2 Console  | Interface web para inspeção de dados no perfil `test`     |
 
 ---
 
@@ -257,14 +249,6 @@ O projeto **DSCatalog** foi desenvolvido utilizando um conjunto moderno de tecno
 
 > [!TIP]
 > A API conta com documentação automatizada via **Swagger/OpenAPI**, além de **JavaDocs** bem definidos nos controllers e services, facilitando o entendimento da lógica de negócio e manutenção do código.
-
----
-
-### 🧪 Testes
-
-| Tecnologia               | Função                           |
-| ------------------------ | -------------------------------- |
-| Spring Boot Starter Test | Testes unitários e de integração |
 
 ---
 
@@ -292,11 +276,10 @@ O projeto **DSCatalog** foi desenvolvido utilizando um conjunto moderno de tecno
 
 ### 📊 Observabilidade e Logs
 
-| Tecnologia       | Função                                        |
-| ---------------- | --------------------------------------------- |
-| Logback (Spring) | Gerenciamento de logs da aplicação            |
-| SLF4J            | Abstração de logging                          |
-| JSON Logging     | Logs estruturados para melhor rastreabilidade |
+| Tecnologia       | Função                                                         |
+| ---------------- | -------------------------------------------------------------- |
+| Logback (Spring) | Gerenciamento de logs da aplicação, com arquivos por ambiente  |
+| SLF4J            | Abstração de logging                                           |
 
 ---
 
@@ -307,20 +290,21 @@ O projeto **DSCatalog** foi desenvolvido utilizando um conjunto moderno de tecno
 
 ## 🚀 API REST — Endpoints
 
-A API do **DSCatalog** expõe endpoints REST seguindo boas práticas de design, utilizando JSON como formato padrão de comunicação.
+A API do **ASJCatalog** expõe endpoints REST seguindo boas práticas de design, utilizando JSON como formato padrão de comunicação.
 
 ---
 
 ### 📦 Categorias (`/api/v1/categories`)
 
-| Método | Endpoint             | Descrição                           |
-| ------ | -------------------- | ----------------------------------- |
-| POST   | `/categories`        | Cria uma nova categoria             |
-| GET    | `/categories`        | Lista categorias (paginado)         |
-| GET    | `/categories/{id}`   | Busca categoria por ID              |
-| GET    | `/categories/search` | Busca categorias por nome           |
-| PATCH  | `/categories/{id}`   | Atualiza parcialmente uma categoria |
-| DELETE | `/categories/{id}`   | Remove uma categoria                |
+| Método | Endpoint                      | Descrição                                     |
+| ------ | ----------------------------- | --------------------------------------------- |
+| POST   | `/categories`                 | Cria uma nova categoria (201)                 |
+| GET    | `/categories`                 | Lista categorias (paginado, filtro por nome)  |
+| GET    | `/categories/{id}`            | Busca categoria por ID                        |
+| PATCH  | `/categories/{id}`            | Atualiza parcialmente uma categoria           |
+| PATCH  | `/categories/{id}/activate`   | Ativa uma categoria (204)                     |
+| PATCH  | `/categories/{id}/deactivate` | Desativa uma categoria (204)                  |
+| DELETE | `/categories/{id}`            | Remove uma categoria (204; 409 se tiver produtos) |
 
 ---
 
@@ -328,7 +312,7 @@ A API do **DSCatalog** expõe endpoints REST seguindo boas práticas de design, 
 
 Base URL: `/api/v1/categories`
 
-Esta seção documenta todos os endpoints relacionados ao recurso **Categoria**, incluindo exemplos de requisição e resposta.
+Esta seção mostra os principais exemplos do recurso **Categoria**. Todos os endpoints, com seus exemplos, estão em [Endpoints da API](docs/guides/API-ENDPOINTS.md).
 
 ---
 
@@ -336,36 +320,29 @@ Esta seção documenta todos os endpoints relacionados ao recurso **Categoria**,
 
 **POST** `/api/v1/categories`
 
-Cria uma nova categoria no sistema.
-
 #### 🔸 Request Body
 
 ```json
 {
-  "name": "Eletrônicos",
-  "description": "Produtos eletrônicos em geral",
-  "active": true
+  "name": "Garden",
+  "description": "Garden tools"
 }
 ```
 
-> 💡 O campo active é opcional. Caso não seja informado, será definido como false.
+> 💡 A categoria é criada sempre ativa. O status muda pelos endpoints `activate` e `deactivate`.
 
 ### 🔸 Response (201 Created)
 
 ```json
 {
-  "id": 1,
-  "name": "Eletrônicos",
-  "description": "Produtos eletrônicos em geral",
+  "id": 16,
+  "name": "Garden",
+  "description": "Garden tools",
   "active": true
 }
 ```
 
-### 🔸 Headers
-
-```
-Location: /api/v1/categories/1
-```
+O cabeçalho `Location` aponta para a nova categoria (`/api/v1/categories/16`).
 
 ---
 
@@ -373,24 +350,21 @@ Location: /api/v1/categories/1
 
 **GET** `/api/v1/categories`
 
-Retorna uma lista paginada de categorias.
-
-> ⚠️ **Observação**  
-> Este padrão de parametrização de paginação foi definido explicitamente na API com o objetivo de padronizar a comunicação com o front-end. Apesar disso, o **Spring Data** já fornece suporte nativo à paginação e ordenação por meio do `Pageable`, tornando essa configuração manual opcional. A abordagem adotada aqui prioriza clareza no contrato da API e previsibilidade para o consumo no front-end.
+A paginação usa o padrão nativo do **Spring Data**, por meio do `Pageable`.
 
 #### 🔸 Query Params
 
-| Parâmetro    | Tipo   | Default | Descrição               |
-| ------------ | ------ | ------- | ----------------------- |
-| page         | int    | 0       | Número da página        |
-| linesPerPage | int    | 12      | Quantidade de registros |
-| orderBy      | string | name    | Campo de ordenação      |
-| direction    | string | ASC     | Direção (ASC ou DESC)   |
+| Parâmetro | Tipo   | Default       | Descrição                                   |
+| --------- | ------ | ------------- | ------------------------------------------- |
+| page      | int    | 0             | Número da página                            |
+| size      | int    | 20            | Quantidade de registros                     |
+| sort      | string | sem ordenação | Campo e direção (ex: `name,asc`)            |
+| name      | string | sem filtro    | Trecho do nome (case insensitive e parcial) |
 
 #### 🔸 Exemplo
 
 ```http
-GET /api/v1/categories?page=0&linesPerPage=10&orderBy=name&direction=ASC
+GET /api/v1/categories?page=0&size=2&sort=name,asc
 ```
 
 ### 🔸 Response (200 OK)
@@ -398,16 +372,12 @@ GET /api/v1/categories?page=0&linesPerPage=10&orderBy=name&direction=ASC
 ```json
 {
   "content": [
-    {
-      "id": 1,
-      "name": "Eletrônicos",
-      "description": "Produtos eletrônicos",
-      "active": true
-    }
+    { "id": 12, "name": "Automotive", "description": "Car parts and automotive accessories", "active": true },
+    { "id": 11, "name": "Beauty", "description": "Beauty and cosmetics products", "active": true }
   ],
-  "totalElements": 1,
-  "totalPages": 1,
-  "size": 10,
+  "totalElements": 15,
+  "totalPages": 8,
+  "size": 2,
   "number": 0
 }
 ```
@@ -417,117 +387,12 @@ GET /api/v1/categories?page=0&linesPerPage=10&orderBy=name&direction=ASC
 
 ---
 
-### 🔍 Buscar Categoria por ID
+### ✏️ Demais operações
 
-**GET** `/api/v1/categories/{id}`
-
-Retorna os dados de uma categoria específica.
-
-### 🔸 Response (200 OK)
-
-```json
-{
-  "id": 1,
-  "name": "Eletrônicos",
-  "description": "Produtos eletrônicos",
-  "active": true
-}
-```
-
-### 🔸 Erros possíveis
-
-```json
-{
-  "timestamp": "2026-04-09T18:42:25.491392800Z",
-  "status": 404,
-  "error": "Resource not found",
-  "message": "Entity not found id: 100",
-  "path": "/api/v1/categories/100"
-}
-```
-
----
-
-### 🔎 Buscar Categorias por Nome
-
-**GET** `/api/v1/categories/search`
-
-Busca categorias por nome (case insensitive e parcial).
-
-### 🔸 Query Params
-
-| Parâmetro | Tipo   | Descrição      |
-| --------- | ------ | -------------- |
-| name      | string | Termo de busca |
-
-### 🔸 Exemplo
-
-```http
-GET /api/v1/categories/search?name=eletrônicos
-```
-
-### 🔸 Response (200 OK)
-
-```json
-{
-  "content": [
-    {
-      "id": 1,
-      "name": "Eletrônicos",
-      "description": "Produtos eletrônicos",
-      "active": true
-    }
-  ]
-}
-```
-
----
-
-### ✏️ Atualizar Categoria (Parcial)
-
-**PATCH** `/api/v1/categories/{id}`
-
-Atualiza parcialmente os dados de uma categoria.
-
-### 🔸 Request Body
-
-```json
-{
-  "name": "Eletrônicos Atualizado",
-  "active": false
-}
-```
-
-> 💡 Apenas campos enviados são atualizados
-> 💡 Campos null são ignorados
-
-### 🔸 Response (200 OK)
-
-```json
-{
-  "id": 1,
-  "name": "Eletrônicos Atualizado",
-  "description": "Produtos eletrônicos",
-  "active": false
-}
-```
-
----
-
-### ❌ Remover Categoria
-
-**DELETE** `/api/v1/categories/{id}`
-
-Remove uma categoria do sistema.
-
-### 🔸 Response
-
-- 204 No Content
-
-### 🔸 Erros possíveis
-
-- 404 Not Found
-- 409 Conflict (violação de integridade)
+- **Buscar por ID** (`GET /api/v1/categories/{id}`): 200 com a categoria, ou 404.
+- **Atualizar parcialmente** (`PATCH /api/v1/categories/{id}`): só os campos enviados (`name`, `description`) são alterados; campos nulos são ignorados.
+- **Ativar e desativar** (`PATCH /api/v1/categories/{id}/activate` e `/deactivate`): 204.
+- **Remover** (`DELETE /api/v1/categories/{id}`): 204, 404 ou 409 se a categoria tiver produtos.
 
 ### ⚠️ Padrão de Erro
 
@@ -535,19 +400,19 @@ Remove uma categoria do sistema.
 
 ```json
 {
-  "timestamp": "2026-04-09T18:50:14.708743400Z",
+  "timestamp": "2026-09-30T01:27:43.886780700Z",
   "status": 404,
   "error": "Resource not found",
-  "message": "Entity not found id: 100",
-  "path": "/api/v1/categories/100"
+  "message": "Entity not found id: 9999",
+  "path": "/api/v1/categories/9999"
 }
 ```
 
 ```json
 {
-  "timestamp": "2026-04-09T18:50:44.722862600Z",
+  "timestamp": "2026-09-30T01:44:34.523364700Z",
   "status": 409,
-  "error": "Database error",
+  "error": "Conflict",
   "message": "Cannot delete resource because it has related entities",
   "path": "/api/v1/categories/1"
 }
@@ -560,13 +425,15 @@ Remove uma categoria do sistema.
 
 ### 📦 Produtos (`/api/v1/products`)
 
-| Método | Endpoint         | Descrição                        |
-| ------ | ---------------- | -------------------------------- |
-| POST   | `/products`      | Cria um novo produto             |
-| GET    | `/products`      | Lista produtos (paginado)        |
-| GET    | `/products/{id}` | Busca produto por ID (detalhado) |
-| PATCH  | `/products/{id}` | Atualiza parcialmente um produto |
-| DELETE | `/products/{id}` | Remove um produto                |
+| Método | Endpoint                    | Descrição                                       |
+| ------ | --------------------------- | ----------------------------------------------- |
+| POST   | `/products`                 | Cria um novo produto (201)                      |
+| GET    | `/products`                 | Lista produtos (paginado, filtro por nome)      |
+| GET    | `/products/{id}`            | Busca produto por ID (detalhado, com categorias) |
+| PATCH  | `/products/{id}`            | Atualiza parcialmente um produto                |
+| PATCH  | `/products/{id}/activate`   | Ativa um produto (204)                          |
+| PATCH  | `/products/{id}/deactivate` | Desativa um produto (204)                       |
+| DELETE | `/products/{id}`            | Remove um produto (204)                         |
 
 ---
 
@@ -574,7 +441,7 @@ Remove uma categoria do sistema.
 
 Base URL: `/api/v1/products`
 
-Esta seção documenta todos os endpoints relacionados ao recurso **Produto**, incluindo exemplos de requisição e resposta.
+Esta seção mostra os principais exemplos do recurso **Produto**. Todos os endpoints, com seus exemplos, estão em [Endpoints da API](docs/guides/API-ENDPOINTS.md).
 
 ---
 
@@ -582,19 +449,16 @@ Esta seção documenta todos os endpoints relacionados ao recurso **Produto**, i
 
 **POST** `/api/v1/products`
 
-Cria um novo produto no sistema.
-
 #### 🔸 Request Body
 
 ```json
 {
-  "name": "Notebook Gamer",
-  "description": "Notebook de alta performance",
-  "price": 4500.0,
-  "imgUrl": "https://image.com/notebook.png",
-  "date": "2025-01-01T10:00:00Z",
-  "active": true,
-  "categoryIds": [1, 2]
+  "name": "Garden Hose",
+  "description": "15m hose",
+  "price": 79.9,
+  "imgUrl": "https://example.com/hose.png",
+  "date": "2020-07-20T10:00:00Z",
+  "categoryIds": [2]
 }
 ```
 
@@ -605,71 +469,17 @@ Cria um novo produto no sistema.
 
 ```json
 {
-  "id": 1,
-  "name": "Notebook Gamer",
-  "description": "Notebook de alta performance",
-  "price": 4500.0,
-  "imgUrl": "https://image.com/notebook.png",
-  "date": "2025-01-01T10:00:00Z",
+  "id": 26,
+  "name": "Garden Hose",
+  "description": "15m hose",
+  "price": 79.9,
+  "imgUrl": "https://example.com/hose.png",
+  "date": "2020-07-20T10:00:00Z",
   "categories": []
 }
 ```
 
-### 🔸 Headers
-
-```http
-Location: /api/v1/products/1
-```
-
----
-
-### 📄 Listar Produtos (Paginado)
-
-**GET** `/api/v1/products`
-
-Retorna uma lista paginada de produtos.
-
-> ⚠️ **Observação**  
-> Neste endpoint foi adotado o padrão nativo de paginação do **Spring Data**, utilizando os parâmetros `page`, `size` e `sort`. Diferentemente do endpoint de categorias, essa abordagem demonstra a forma padrão recomendada pelo framework, evidenciando como a paginação pode ser implementada de maneira mais direta com o uso de `Pageable`.
-
-### 🔸 Query Params
-
-| Parâmetro | Tipo   | Descrição                |
-| --------- | ------ | ------------------------ |
-| page      | int    | Número da página         |
-| size      | int    | Quantidade de registros  |
-| sort      | string | Ordenação (ex: name,asc) |
-
-### 🔸 Exemplo
-
-```http
-GET /api/v1/products?page=0&size=10&sort=name,asc
-```
-
-### 🔸 Response (200 OK)
-
-```json
-{
-  "content": [
-    {
-      "id": 1,
-      "name": "Notebook Gamer",
-      "description": "Notebook de alta performance",
-      "price": 4500.0,
-      "imgUrl": "https://image.com/notebook.png",
-      "date": "2025-01-01T10:00:00Z",
-      "categories": []
-    }
-  ],
-  "totalElements": 1,
-  "totalPages": 1,
-  "size": 10,
-  "number": 0
-}
-```
-
-> 🛡️ Segurança (em desenvolvimento)  
-> Este endpoint será protegido com autenticação e controle de acesso (ROLE ADMIN) em versões futuras da API.
+> 💡 As categorias são gravadas, mas a resposta de criação, atualização e listagem traz `categories` vazio. Elas aparecem na busca por ID.
 
 ---
 
@@ -677,170 +487,83 @@ GET /api/v1/products?page=0&size=10&sort=name,asc
 
 **GET** `/api/v1/products/{id}`
 
-Retorna os detalhes completos de um produto, incluindo suas categorias.
+Retorna os detalhes do produto, incluindo suas categorias.
 
 ### 🔸 Response (200 OK)
 
 ```json
 {
-  "id": 1,
-  "name": "Notebook Gamer",
-  "description": "Notebook de alta performance",
-  "price": 4500.0,
-  "imgUrl": "https://image.com/notebook.png",
-  "date": "2025-01-01T10:00:00Z",
+  "id": 26,
+  "name": "Garden Hose",
+  "description": "15m hose",
+  "price": 79.9,
+  "imgUrl": "https://example.com/hose.png",
+  "date": "2020-07-20T10:00:00Z",
   "categories": [
-    {
-      "id": 1,
-      "name": "Eletrônicos",
-      "description": "Produtos eletrônicos",
-      "active": true
-    }
+    { "id": 2, "name": "Electronics", "description": "Electronic devices and gadgets", "active": true }
   ]
 }
 ```
 
-### 🔸 Erros possíveis
-
-```json
-{
-  "timestamp": "2026-04-09T18:42:25.491392800Z",
-  "status": 404,
-  "error": "Resource not found",
-  "message": "Entity not found id: 100",
-  "path": "/api/v1/products/100"
-}
-```
-
 ---
 
-### ✏️ Atualizar Produto (Parcial)
+### ✏️ Demais operações
 
-**PATCH** `/api/v1/products/{id}`
-
-Atualiza parcialmente os dados de um produto.
-
-### 🔸 Request Body
-
-```json
-{
-  "name": "Notebook Atualizado",
-  "price": 4200.0,
-  "categoryIds": [2, 3]
-}
-```
-
-> 💡 Apenas campos enviados são atualizados
-> 💡 Campos null são ignorados
-> 💡 Se categoryIds for informado, as categorias serão substituídas
-
-🔸 Response (200 OK)
-
-```json
-{
-  "id": 1,
-  "name": "Notebook Atualizado",
-  "description": "Notebook de alta performance",
-  "price": 4200.0,
-  "imgUrl": "https://image.com/notebook.png",
-  "date": "2025-01-01T10:00:00Z",
-  "categories": []
-}
-```
-
----
-
-### ❌ Remover Produto
-
-**DELETE** `/api/v1/products/{id}`
-
-Remove um produto do sistema.
-
-### 🔸 Response
-
-- 204 No Content
-
-### 🔸 Erros possíveis
-
-- 404 Not Found
-- 409 Conflict (violação de integridade)
-
-⚠️ Padrão de Erro
-
-Todos os erros seguem um padrão unificado:
-
-```json
-{
-  "timestamp": "2026-04-09T18:50:14.708743400Z",
-  "status": 404,
-  "error": "Resource not found",
-  "message": "Entity not found id: 100",
-  "path": "/api/v1/products/100"
-}
-```
-
-```json
-{
-  "timestamp": "2026-04-09T18:50:44.722862600Z",
-  "status": 409,
-  "error": "Database error",
-  "message": "Cannot delete resource because it has related entities",
-  "path": "/api/v1/products/1"
-}
-```
+- **Listar** (`GET /api/v1/products`): mesmos parâmetros de paginação e filtro das categorias (`page`, `size`, `sort`, `name`).
+- **Atualizar parcialmente** (`PATCH /api/v1/products/{id}`): campos nulos são ignorados; se `categoryIds` for informado, as categorias são substituídas.
+- **Ativar e desativar** (`PATCH /api/v1/products/{id}/activate` e `/deactivate`): 204.
+- **Remover** (`DELETE /api/v1/products/{id}`): 204, ou 404 se o produto não existir.
 
 > [!IMPORTANT]
 > A API segue boas práticas REST, utilizando corretamente os métodos HTTP (POST, GET, PATCH, DELETE), códigos de status e padronização de respostas, garantindo previsibilidade e facilidade de integração.
 
 ---
 
-### ▶️ Como Executar o Projeto
+### 🚀 Como Executar
 
-### 🔧 Pré-requisitos
+**Pré-requisitos:** JDK 17 e Git; PostgreSQL só para o perfil `dev`.
 
-- Java 17+
-- Maven 3.9+
-- PostgreSQL (para ambiente `dev`)
+Com o perfil `test`, a aplicação sobe com o banco H2 em memória, sem instalar nada além do JDK:
 
----
+**PowerShell**:
 
-### 🚀 Executando em ambiente de desenvolvimento
+```powershell
+git clone https://github.com/Albertinesilva/backend-engineering-journey-java-springboot.git
+cd backend-engineering-journey-java-springboot; git checkout chapter-01-crud
+cd backend
+.\mvnw spring-boot:run '-Dspring-boot.run.arguments=--spring.profiles.active=test'
+```
+
+**bash**:
 
 ```bash
-# Clonar o repositório
-git clone https://github.com/seu-usuario/seu-repo.git
-
-# Entrar na pasta do projeto
-cd dscatalog
-
-# Executar a aplicação
-mvn spring-boot:run
+git clone https://github.com/Albertinesilva/backend-engineering-journey-java-springboot.git
+cd backend-engineering-journey-java-springboot && git checkout chapter-01-crud
+cd backend
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--spring.profiles.active=test
 ```
 
-### ⚙️ Configuração do banco (PostgreSQL)
+O perfil `dev` (padrão) usa PostgreSQL: é preciso criar o banco `asjcatalog` e definir as variáveis `POSTGRES_DATASOURCE_USER` e `POSTGRES_DATASOURCE_PASSWORD`.
 
-Edite o arquivo: `src/main/resources/application-dev.properties`
-
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/dscatalog
-spring.datasource.username=seu_usuario
-spring.datasource.password=sua_senha
-```
+> [!TIP]
+> O passo a passo completo, com o perfil `dev`, o console do H2 e as primeiras chamadas, está em [Primeiros Passos](docs/guides/GETTING-STARTED.md).
 
 ---
 
-### 🧪 Executando em ambiente de teste (H2)
+### 📖 Documentação Técnica
 
-A aplicação utiliza banco em memória automaticamente:
-
-```properties
-spring.datasource.url=jdbc:h2:mem:dscatalog
-spring.datasource.driverClassName=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=
-```
-
-Console disponível em: `http://localhost:8080/h2-console`
+| 📘 Documento                                              | ⚡ Descrição                                                        |
+| --------------------------------------------------------- | ------------------------------------------------------------------ |
+| [🚀 Primeiros Passos](docs/guides/GETTING-STARTED.md)     | Como rodar localmente, com H2 ou PostgreSQL, e as primeiras chamadas |
+| [⚙️ Configuração e Perfis](docs/guides/CONFIGURATION.md)  | Perfis `dev`, `test` e `prod` e variáveis de ambiente              |
+| [🏗️ Arquitetura](docs/guides/ARCHITECTURE.md)             | Camadas, pacotes e caminho de uma requisição                       |
+| [🧩 Modelo de Domínio](docs/guides/DOMAIN-MODEL.md)       | Entidades `Category` e `Product` e o relacionamento entre elas     |
+| [🔍 Acesso a Dados](docs/guides/DATA-ACCESS.md)           | Repositórios, consultas, paginação e transações                    |
+| [🗄️ Migrations](docs/guides/DATABASE-MIGRATIONS.md)       | Flyway, `import.sql` e `create.sql`                                |
+| [🌐 Endpoints da API](docs/guides/API-ENDPOINTS.md)       | Os 14 endpoints, com exemplos reais                                |
+| [⚠️ Tratamento de Erros](docs/guides/ERROR-HANDLING.md)   | `ProblemDetails`, `ErrorType` e status HTTP                        |
+| [📐 Convenções](docs/guides/CONVENTIONS.md)               | Nomes, idioma, JavaDoc, commits, branches e migrations             |
+| [🏠 Índice da Documentação](docs/HOME.md)                 | Visão geral dos guias e do que chega nos próximos capítulos        |
 
 ---
 
@@ -850,9 +573,9 @@ A API disponibiliza documentação interativa utilizando **Swagger UI**, permiti
 
 ### 🔗 Acesso
 
-Após iniciar a aplicação, acesse:
+Após iniciar a aplicação (perfis `dev` ou `test`), acesse:
 
-- http://localhost:8080/swagger-ui.html
+- http://localhost:8080/docs-asjcatalog.html
 - http://localhost:8080/swagger-ui/index.html
 
 > [!TIP]
@@ -900,7 +623,7 @@ A API está preparada para evolução com segurança baseada em:
 - Controle de acesso por roles (ROLE ADMIN)
 
 > [!NOTE]
-> Atualmente não implementado, mas planejado para o proximo capítulo do curso.
+> Atualmente não implementado, mas planejado para o capítulo 03 do curso.
 
 ---
 
@@ -954,4 +677,4 @@ Desenvolvedor Backend Java | Spring Boot
 ### 📎 Contato
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/albert-backend-java-spring-boot/)
-[![Gmail](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:albertinesilva.17@gmail.com?subject=Contato%20sobre%20o%20projeto%20CAD-MOTOTAXISTA)
+[![Gmail](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:albertinesilva.17@gmail.com?subject=Contato%20sobre%20o%20projeto%20ASJCatalog)
