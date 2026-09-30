@@ -10,10 +10,10 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.albertsilva.dev</groupId>
-	<artifactId>dscatalog</artifactId>
+	<artifactId>asjcatalog</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>DSCatalog Backend</name>
-	<description>Backend REST API for the DSCatalog project built with Spring Boot</description>
+	<name>ASJCatalog Backend</name>
+	<description>Backend REST API for the ASJCatalog project built with Spring Boot</description>
 	<url>https://github.com/Albertinesilva/backend-engineering-journey-java-springboot</url>
 
 	<licenses>
