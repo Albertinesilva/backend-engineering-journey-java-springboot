@@ -20,8 +20,8 @@ public class SpringDocOpenApiConfig {
             .description(
                 "RESTful API para gerenciamento de catálogo de produtos, categorias e operações de vendas em um sistema de e-commerce")
             .version("v1")
-            .license(new License().name("Apache 2.0").url("https://www.apache.org/licenses/LICENSE-2.0"))
-            .contact(new Contact().name("Albert Silva de Jesus").email("albertinesilva,17@gmail.com")
+            .license(new License().name("MIT").url("https://opensource.org/licenses/MIT"))
+            .contact(new Contact().name("Albert Silva de Jesus").email("albertinesilva.17@gmail.com")
                 .url("https://github.com/Albertinesilva")));
   }
 
