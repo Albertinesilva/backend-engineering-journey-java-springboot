@@ -1,0 +1,67 @@
+package com.albertsilva.dev.asjcatalog.validation.product.annotation;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import com.albertsilva.dev.asjcatalog.validation.product.validator.ProductUpdateValidator;
+
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+
+/**
+ * Valida regras contextuais do processo de atualização
+ * de produtos.
+ *
+ * <p>
+ * Esta annotation executa validações em nível
+ * de classe ({@link ElementType#TYPE}), permitindo
+ * validar regras que dependem de múltiplos atributos
+ * do objeto validado.
+ *
+ * <p>
+ * A lógica de validação é implementada por
+ * {@link ProductUpdateValidator}.
+ *
+ * <p>
+ * Exemplo:
+ * 
+ * <pre>{@code
+ * @ProductUpdateValid
+ * public record ProductUpdateRequest(
+ *     String name,
+ *     Double price) {
+ * }
+ * }</pre>
+ */
+@Documented
+@Constraint(validatedBy = ProductUpdateValidator.class)
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ProductUpdateValid {
+
+  /**
+   * Mensagem padrão retornada quando a validação falha.
+   *
+   * @return mensagem padrão da validação
+   */
+  String message() default "Validation error";
+
+  /**
+   * Define grupos de validação associados
+   * à constraint.
+   *
+   * @return grupos de validação
+   */
+  Class<?>[] groups() default {};
+
+  /**
+   * Permite associar metadados adicionais
+   * à validação.
+   *
+   * @return payloads associados à constraint
+   */
+  Class<? extends Payload>[] payload() default {};
+}
