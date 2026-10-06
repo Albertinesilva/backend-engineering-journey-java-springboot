@@ -18,15 +18,11 @@
 
 <img src="https://img.shields.io/badge/Architecture-SOLID%20%7C%20TDD-black?style=for-the-badge" />
 
-<img src="https://img.shields.io/badge/Test_Strategy-Unit%20%7C%20Integration%20%7C%20Functional-purple?style=for-the-badge" />
-
-<img src="https://img.shields.io/badge/Coverage-Service%20%7C%20Repository%20%7C%20Controller-9cf?style=for-the-badge" />
-
 <img src="https://img.shields.io/badge/Quality-Regression_Safe-brightgreen?style=for-the-badge" />
 
 <img src="https://img.shields.io/badge/Focus-Testability%20%7C%20Maintainability-informational?style=for-the-badge" />
 
-<img src="https://img.shields.io/github/license/Albertinesilva/backend-engineering-journey-java-springboot?style=for-the-badge" />
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" /></a>
 
 <img src="https://img.shields.io/github/last-commit/Albertinesilva/backend-engineering-journey-java-springboot?style=for-the-badge" />
 
@@ -34,7 +30,7 @@
 
 <p align="justify">
 <em>
-Este capítulo apresenta a construção de uma estratégia profissional de testes automatizados aplicada ao projeto <strong>ASJCatalog</strong>, utilizando <code>Java</code>, <code>Spring Boot 3</code>, <code>JUnit 5</code>, <code>Mockito</code>, <code>MockMvc</code> e princípios sólidos de engenharia de software para garantir qualidade, previsibilidade, segurança evolutiva e manutenção sustentável.
+Este capítulo apresenta a construção de uma estratégia profissional de testes automatizados aplicada ao projeto <strong>ASJCatalog</strong>. O nome ASJCatalog vem das iniciais de Albert Silva de Jesus: o projeto nasceu da base do DSCatalog, do curso DevSuperior, e evoluiu de forma independente. A estratégia utiliza <code>Java</code>, <code>Spring Boot 3</code>, <code>JUnit 5</code>, <code>Mockito</code>, <code>MockMvc</code> e princípios sólidos de engenharia de software para garantir qualidade, previsibilidade, segurança evolutiva e manutenção sustentável.
 </em>
 </p>
 
@@ -58,7 +54,7 @@ Após a implementação da arquitetura em camadas no Capítulo 01, o projeto evo
 - **Mocking e isolamento de dependências**
 - **Factories para fixtures reutilizáveis**
 - **Tratamento de exceções**
-- **Princípios de TDD**
+- **TDD como prática estudada e aplicada no aprendizado**
 - **Aplicação de SOLID voltada à testabilidade**
 
 ---
@@ -114,6 +110,8 @@ Fixtures são estruturas reutilizáveis que evitam repetição e aumentam previs
 | `@BeforeEach` | `@Before`      | Antes de cada teste      |
 | `@AfterEach`  | `@After`       | Após cada teste          |
 
+Nos testes deste capítulo, só `@BeforeEach` é usado.
+
 ---
 
 ### 🏗️ Organização AAA
@@ -135,7 +133,6 @@ Fixtures são estruturas reutilizáveis que evitam repetição e aumentam previs
 | `@SpringBootTest`                         | Integração     | Carrega contexto completo                  |
 | `@SpringBootTest + @AutoConfigureMockMvc` | Integração Web | Testa aplicação completa sem servidor real |
 | `@WebMvcTest`                             | Web Layer      | Carrega apenas controllers                 |
-| `@ExtendWith(SpringExtension.class)`      | Unitário       | Recursos Spring sem contexto completo      |
 | `@ExtendWith(MockitoExtension.class)`     | Unitário       | Mockito puro                               |
 | `@DataJpaTest`                            | Repository     | Carrega camada JPA com rollback            |
 
@@ -170,7 +167,7 @@ Permite validar:
 | `@Mock`                      | Mock sem contexto       |
 | `Mockito.mock()`             | Mock manual             |
 | `@InjectMocks`               | Injeta mocks            |
-| `@MockBean` / `@MockitoBean` | Mock no contexto Spring |
+| `@MockitoBean`               | Mock no contexto Spring |
 | `when().thenReturn()`        | Simula retorno          |
 | `doThrow()`                  | Simula exceções         |
 | `doNothing()`                | Simula métodos void     |
@@ -179,12 +176,12 @@ Permite validar:
 
 ---
 
-### 🆚 `@Mock` vs `@MockBean`
+### 🆚 `@Mock` vs `@MockitoBean`
 
-| Recurso                      | Quando usar                | Características       |
-| ---------------------------- | -------------------------- | --------------------- |
-| `@Mock`                      | Testes unitários puros     | Mais rápido           |
-| `@MockBean` / `@MockitoBean` | Testes com contexto Spring | Substitui beans reais |
+| Recurso        | Quando usar                | Características       |
+| -------------- | -------------------------- | --------------------- |
+| `@Mock`        | Testes unitários puros     | Mais rápido           |
+| `@MockitoBean` | Testes com contexto Spring | Substitui beans reais |
 
 ---
 
@@ -193,7 +190,7 @@ Permite validar:
 | Camada     | Estratégia                  |
 | ---------- | --------------------------- |
 | Service    | `@Mock` + `@InjectMocks`    |
-| Controller | `@WebMvcTest` + `@MockBean` |
+| Controller | `@WebMvcTest` + `@MockitoBean` |
 | Repository | `@DataJpaTest`              |
 | Integração | `@SpringBootTest`           |
 
@@ -201,7 +198,7 @@ Permite validar:
 
 ### 5. Aplicar TDD e SOLID
 
-- Desenvolvimento orientado por testes
+- Estudar e aplicar o desenvolvimento orientado por testes no aprendizado
 - Código desacoplado
 - Arquitetura evolutiva
 - Refatoração segura
@@ -219,6 +216,8 @@ Permite validar:
 | Integração | Validar comunicação entre componentes | Banco/contexto  | Sim          |
 | Funcional  | Validar fluxo completo                | Sistema         | Sim          |
 
+Este capítulo tem testes unitários e de integração; testes funcionais não fazem parte do código desta branch.
+
 ---
 
 ## 🧪 Testes Unitários no Projeto
@@ -227,6 +226,8 @@ Permite validar:
 
 - `CategoryServiceTest`
 - `ProductServiceTest`
+- `CategoryTest`
+- `ProductTest`
 
 ### Cenários cobertos:
 
@@ -237,6 +238,9 @@ Permite validar:
 - FindAllPaged
 - SearchByName
 - Tratamento de exceções
+- Callbacks, `equals` e `hashCode` das entidades
+
+As operações `activate` e `deactivate` não têm teste em nenhuma camada.
 
 ### Benefícios:
 
@@ -251,7 +255,7 @@ Permite validar:
 
 ### Validam:
 
-- Persistência real
+- Persistência no banco H2 em memória
 - Geração de IDs
 - Paginação
 - Ordenação
@@ -261,26 +265,41 @@ Permite validar:
 
 ### Aplicação:
 
+Trecho real de `ProductRepositoryTest` (os demais campos e testes foram omitidos):
+
 ```java
 @DataJpaTest
-public class ProductRepositoryTest {
+@DisplayName("ProductRepository Tests")
+class ProductRepositoryTest {
 
-    @Autowired
-    private ProductRepository repository;
+  @Autowired
+  private ProductRepository productRepository;
+
+  // ...
+
+  @Nested
+  @DisplayName("Save Operations")
+  class SaveOperations {
 
     @Test
-    public void testInsert() {
+    @DisplayName("should persist product with auto-generated id when id is null")
+    void shouldPersistProductWithAutoGeneratedIdWhenIdIsNull() {
 
-        // Arrange
-        Product product = new Product(null, "Test Product", "Description", 10.0, "image.jpg");
+      // Arrange
+      long countBefore = productRepository.count();
 
-        // Act
-        Product savedProduct = repository.save(product);
+      Product product = ProductFactory.createProduct();
+      product.setId(null);
 
-        // Assert
-        Assertions.assertNotNull(savedProduct.getId());
-        Assertions.assertEquals("Test Product", savedProduct.getName());
+      // Act
+      Product savedProduct = productRepository.save(product);
+
+      // Assert
+      assertThat(savedProduct.getId()).as("Product id should be auto-generated").isNotNull().isPositive();
+
+      assertThat(productRepository.count()).as("Repository count should increase by one").isEqualTo(countBefore + 1);
     }
+  }
 }
 ```
 
@@ -307,6 +326,7 @@ public class ProductRepositoryTest {
 ### Ferramentas:
 
 - `@WebMvcTest`
+- `@MockitoBean`
 - `MockMvc`
 - `ObjectMapper`
 - `ControllerExceptionHandler`
@@ -315,8 +335,10 @@ public class ProductRepositoryTest {
 
 - POST
 - GET
-- PATCH
+- PATCH (atualização parcial)
 - DELETE
+
+Os endpoints `PATCH /{id}/activate` e `PATCH /{id}/deactivate` não têm teste.
 
 ### Validações:
 
@@ -325,6 +347,12 @@ public class ProductRepositoryTest {
 - Headers
 - Serialização
 - Exceções globais
+
+---
+
+## ▶️ Execução dos testes
+
+`./mvnw verify` executa **75 testes**. Os **47 testes de integração** (classes `*IT`) não entram nessa execução e rodam à parte, com `./mvnw test '-Dtest=*IT'`; um deles tem uma falha conhecida. A explicação e os comandos estão em [Testes Automatizados](docs/guides/TESTING.md#1-como-rodar-os-testes).
 
 ---
 
@@ -354,6 +382,8 @@ Segundo Kent Beck:
 | Red      | Criar teste falhando       |
 | Green    | Implementar solução mínima |
 | Refactor | Melhorar design            |
+
+Neste capítulo, o TDD foi estudado e aplicado como prática de aprendizado. O código não registra em que ordem testes e implementação foram escritos, então não há indicação de quais partes nasceram de um ciclo de TDD.
 
 ---
 
@@ -385,13 +415,13 @@ Segundo Kent Beck:
 
 ### ❌ Ruim:
 
-```java
+```text
 ProductService depende de ProductRepositoryImpl
 ```
 
 ### ✅ Correto:
 
-```java
+```text
 ProductService depende de ProductRepository (interface)
 ```
 
@@ -429,7 +459,7 @@ private ProductRepository repository;
 
 ### Estrutura:
 
-```java
+```text
 <ação>Should<resultado>When<cenário>
 ```
 
@@ -445,9 +475,9 @@ private ProductRepository repository;
 
 | Nome                                                             | Significado                  |
 | ---------------------------------------------------------------- | ---------------------------- |
-| `findByIdShouldReturnProductWhenIdExists`                        | Retorna produto se ID existe |
-| `deleteShouldThrowDatabaseExceptionWhenIntegrityViolationOccurs` | Lança exceção em violação    |
-| `updateShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist`   | Falha para ID inexistente    |
+| `findByIdShouldReturnProductWhenIdExists`                      | Retorna produto se ID existe |
+| `deleteShouldThrowDatabaseExceptionWhenDependentId`            | Lança exceção em violação    |
+| `updateShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist` | Falha para ID inexistente    |
 
 ---
 
@@ -503,7 +533,9 @@ Utilizadas:
 
 - ProductFactory
 - CategoryFactory
-- Benefícios:
+
+Benefícios:
+
 - Reuso
 - Consistência
 - Redução de duplicação
@@ -514,21 +546,21 @@ Utilizadas:
 ## 📂 Estrutura do Projeto de Testes
 
 ```text
-test/java/com/albertsilva/dev/dscatalog
-┣ entities
+test/java/com/albertsilva/dev/asjcatalog
+┣ entity
 ┣ factory
 ┣ integrations
-┣ repositories
-┣ services
+┣ repository
+┣ service
 ┣ web
-┗ DscatalogApplicationTests.java
+┗ AsjcatalogApplicationTests.java
 ```
 
 ---
 
 ## 📊 Pirâmide de Testes
 
-```
+```text
 Funcionais
 Integração
 Unitários
@@ -550,7 +582,7 @@ Unitários
 
 ## 🧠 Conclusão — Evolução Profissional
 
-Ao concluir este capítulo, o projeto DSCatalog consolida competências fundamentais para desenvolvimento backend profissional:
+Ao concluir este capítulo, o projeto ASJCatalog consolida competências fundamentais para desenvolvimento backend profissional:
 
 ### 🚀 Competências adquiridas
 
@@ -571,8 +603,68 @@ O projeto deixa de ser apenas uma API CRUD e passa a representar:
 - Base confiável para crescimento
 - Demonstração prática de maturidade em engenharia de software
 
-> [!SUCCESS]
+> [!NOTE]
 > Este capítulo consolida uma mentalidade de engenharia profissional: desenvolver software confiável, testável, sustentável e preparado para evolução contínua.
+
+---
+
+## 🚀 Como Executar
+
+Pré-requisitos: JDK 17 e Git. O Maven vem com o projeto (Maven Wrapper), e o perfil padrão (`test`) usa o banco H2 em memória, sem PostgreSQL.
+
+**PowerShell**:
+
+```powershell
+git clone https://github.com/Albertinesilva/backend-engineering-journey-java-springboot.git
+cd backend-engineering-journey-java-springboot
+git checkout chapter-02-tests
+cd backend
+.\mvnw spring-boot:run
+```
+
+**bash**:
+
+```bash
+git clone https://github.com/Albertinesilva/backend-engineering-journey-java-springboot.git
+cd backend-engineering-journey-java-springboot
+git checkout chapter-02-tests
+cd backend
+./mvnw spring-boot:run
+```
+
+A API sobe em `http://localhost:8080/api/v1`, e o Swagger fica em `http://localhost:8080/docs-asjcatalog.html`.
+
+Para rodar os testes, dentro de `backend`:
+
+```powershell
+.\mvnw verify
+```
+
+```bash
+./mvnw verify
+```
+
+Sobre os testes de integração, veja [Execução dos testes](#️-execução-dos-testes) e [Testes Automatizados](docs/guides/TESTING.md). O passo a passo completo, com o perfil `dev` e o PostgreSQL, está em [Primeiros Passos](docs/guides/GETTING-STARTED.md).
+
+---
+
+## 📖 Documentação Técnica
+
+| 📘 Documento                                              | ⚡ Descrição                                                                 |
+| --------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [🧪 Testes Automatizados](docs/guides/TESTING.md)         | Como rodar os testes, inventário, cada tipo de teste com trechos reais e TDD |
+| [🚀 Primeiros Passos](docs/guides/GETTING-STARTED.md)     | Como rodar localmente, com H2 ou PostgreSQL, primeiras chamadas e testes    |
+| [⚙️ Configuração e Perfis](docs/guides/CONFIGURATION.md)  | Perfis `test`, `dev` e `prod`, arquivos de log e variáveis de ambiente      |
+| [🏗️ Arquitetura](docs/guides/ARCHITECTURE.md)             | Camadas, pacotes e caminho de uma requisição                                |
+| [🧩 Modelo de Domínio](docs/guides/DOMAIN-MODEL.md)       | Entidades `Category` e `Product`, construtores e relacionamento             |
+| [🔍 Acesso a Dados](docs/guides/DATA-ACCESS.md)           | Repositórios, consultas, paginação e transações                             |
+| [🗄️ Migrations](docs/guides/DATABASE-MIGRATIONS.md)       | Flyway, `import.sql` (usado também pelos testes) e `create.sql`             |
+| [🌐 Endpoints da API](docs/guides/API-ENDPOINTS.md)       | Os 14 endpoints, com exemplos reais                                         |
+| [⚠️ Tratamento de Erros](docs/guides/ERROR-HANDLING.md)   | `ProblemDetails`, `ErrorType` e status HTTP                                 |
+| [📐 Convenções](docs/guides/CONVENTIONS.md)               | Nomes, organização dos testes, idioma, JavaDoc, commits e branches          |
+| [🏠 Índice da Documentação](docs/HOME.md)                 | Visão geral dos guias e do que chega nos próximos capítulos                 |
+
+---
 
 ## 👨‍💻 Autor
 
@@ -584,4 +676,4 @@ Desenvolvedor Backend Java | Spring Boot
 ### 📎 Contato
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/albert-backend-java-spring-boot/)
-[![Gmail](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:albertinesilva.17@gmail.com?subject=Contato%20sobre%20o%20projeto%20CAD-MOTOTAXISTA)
+[![Gmail](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:albertinesilva.17@gmail.com?subject=Contato%20sobre%20o%20projeto%20ASJCatalog)
