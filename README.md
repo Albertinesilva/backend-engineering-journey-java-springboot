@@ -28,7 +28,7 @@ This chapter focuses on building secure, production-ready backend APIs using <st
 
 <img src="https://img.shields.io/badge/Documentation-Swagger%20%7C%20OpenAPI-85EA2D?style=for-the-badge" />
 
-<img src="https://img.shields.io/github/license/Albertinesilva/backend-engineering-journey-java-springboot?style=for-the-badge" />
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" /></a>
 
 <img src="https://img.shields.io/github/last-commit/Albertinesilva/backend-engineering-journey-java-springboot?style=for-the-badge" />
 
@@ -36,7 +36,7 @@ This chapter focuses on building secure, production-ready backend APIs using <st
 
 <p align="justify">
 <em>
-Neste capítulo, o projeto <strong>ASJCatalog</strong> evolui para um cenário muito mais próximo de aplicações corporativas reais, incorporando mecanismos robustos de autenticação, autorização e validação de dados utilizando o ecossistema moderno do <strong>Spring Security 6</strong>.
+Neste capítulo, o projeto <strong>ASJCatalog</strong> evolui para um cenário muito mais próximo de aplicações corporativas reais, incorporando mecanismos robustos de autenticação, autorização e validação de dados utilizando o ecossistema moderno do <strong>Spring Security 6</strong>. O nome ASJCatalog vem das iniciais de Albert Silva de Jesus: o projeto nasceu da base do DSCatalog, do curso DevSuperior, e evoluiu de forma independente.
 
 Além da proteção de endpoints REST, foram aplicados conceitos fundamentais de segurança backend moderna, incluindo <strong>OAuth2 Authorization Server</strong>, <strong>Resource Server</strong>, autenticação stateless com <strong>JWT</strong>, controle de acesso baseado em roles, tratamento global de erros de validação e integração segura com Swagger/OpenAPI.
 </em>
@@ -53,7 +53,7 @@ Além da proteção de endpoints REST, foram aplicados conceitos fundamentais de
 
 | 🧩 Module                                                                     | ⚡ Description                                           |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------- |
-| [📚 Contexto do Projeto](#-contexto-do-projeto)                               | Evolução arquitetural da API DSCatalog                  |
+| [📚 Contexto do Projeto](#-contexto-do-projeto)                               | Evolução arquitetural da API ASJCatalog                 |
 | [🎯 Objetivos do Capítulo](#-objetivos-do-capítulo)                           | Estratégias e metas técnicas implementadas              |
 | [🧠 Conceitos Fundamentais Trabalhados](#-conceitos-fundamentais-trabalhados) | Authentication, Authorization, JWT, OAuth2 e Validation |
 | [🏛️ Arquitetura Geral de Segurança](#️-arquitetura-geral-de-segurança)       | Authorization Server + Resource Server                  |
@@ -74,6 +74,8 @@ Além da proteção de endpoints REST, foram aplicados conceitos fundamentais de
 | [💼 Competências Demonstradas](#-competências-demonstradas)                   | Skills backend e segurança aplicadas                    |
 | [🎓 Conclusão](#-conclusão)                                                   | Consolidação técnica do capítulo                        |
 | [📚 Referências Técnicas](#-referências-técnicas)                             | Materiais e documentações utilizadas                    |
+| [🚀 Como Executar](#-como-executar)                                           | Subida local, login de exemplo e testes                 |
+| [📖 Documentação Técnica](#-documentação-técnica)                             | Guias detalhados em `docs/`                             |
 
 ---
 
@@ -81,13 +83,13 @@ Além da proteção de endpoints REST, foram aplicados conceitos fundamentais de
 
 Após a consolidação da arquitetura em camadas e da estratégia de testes automatizados nos capítulos anteriores, o projeto evolui para uma nova etapa focada em autenticação, autorização e validação robusta.
 
-Neste capítulo, a API DSCatalog evolui para suportar aplicações robustas, incorporando mecanismos modernos de segurança utilizando Spring Security 6, OAuth2, JWT e Bean Validation, aproximando a aplicação de cenários reais utilizados em ambientes corporativos.
+Neste capítulo, a API ASJCatalog evolui para suportar aplicações robustas, incorporando mecanismos modernos de segurança utilizando Spring Security 6, OAuth2, JWT e Bean Validation, aproximando a aplicação de cenários reais utilizados em ambientes corporativos.
 
 ---
 
 # 🎯 Objetivos do Capítulo
 
-Este capítulo tem como objetivo transformar a API DSCatalog em uma aplicação backend preparada para APIs escaláveis, autenticação moderna e sistemas seguros.
+Este capítulo tem como objetivo transformar a API ASJCatalog em uma aplicação backend preparada para APIs escaláveis, autenticação moderna e sistemas seguros.
 
 Para atingir esse objetivo, foram implementados os seguintes pilares:
 
@@ -100,14 +102,15 @@ A aplicação passou a utilizar validações declarativas para garantir integrid
 ### Principais validações aplicadas
 
 - `@NotBlank`
-- `@NotNull`
 - `@Size`
-- `@Email`
+- `@Pattern`
 - `@Positive`
 - `@PastOrPresent`
-- Validações customizadas
+- `@NotEmpty`
+- Validações customizadas de campo: `@ValidEmail`, `@UniqueEmail`, `@StrongPassword` e `@ValidRoles`
+- Validações customizadas de classe: `@CategoryCreateValid`, `@ProductCreateValid`, `@UserCreateValid` e as equivalentes de atualização
 - Integração com banco de dados
-- Mensagens personalizadas
+- Mensagens personalizadas: as anotações padrão usam o `ValidationMessages.properties`, e os validadores customizados usam textos definidos no código
 - Tratamento global de erros
 
 ### Benefícios
@@ -171,21 +174,25 @@ A API passou a possuir controle de acesso baseado em autenticação e autorizaç
 
 ### Estratégia de acesso aplicada
 
-| Tipo de rota              | Acesso      |
-| ------------------------- | ----------- |
-| Swagger/OpenAPI           | Público     |
-| Categorias (GET)          | Público     |
-| Produtos (GET)            | Público     |
-| Demais endpoints          | Autenticado |
-| Endpoints administrativos | ROLE_ADMIN  |
+| Tipo de rota                                 | Acesso            |
+| -------------------------------------------- | ----------------- |
+| Swagger/OpenAPI                              | Público           |
+| Categorias e produtos (GET)                  | Público           |
+| Escrita de categorias e produtos             | ADMIN ou OPERATOR |
+| Usuários                                     | ADMIN             |
+| Demais endpoints                             | Autenticado       |
 
 ### Segurança em nível de método
 
 ```java
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+// Escrita de categorias e produtos
+@PreAuthorize("hasRole('ADMIN') or hasRole('OPERATOR')")
 
-@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_OPERATOR')")
+// Usuários
+@PreAuthorize("hasRole('ADMIN')")
 ```
+
+`hasRole('ADMIN')` confere a permissão `ROLE_ADMIN`: o Spring acrescenta o prefixo `ROLE_` na comparação. A tabela completa de permissões está em [Autenticação e Autorização](docs/guides/AUTHENTICATION.md#9-quem-pode-fazer-o-quê).
 
 ### 📌 Exemplo de configuração de autorização
 
@@ -216,7 +223,7 @@ Foram implementadas estratégias utilizadas em APIs REST modernas e ambientes co
 - Desabilitação controlada de CSRF
 - Separação entre Authorization Server e Resource Server
 - Configuração por perfis (`dev`, `test`, `prod`)
-- Proteção da documentação Swagger
+- Documentação Swagger pública, com autorização via Bearer Token para testar as rotas protegidas
 - Externalização de variáveis sensíveis
 
 ---
@@ -278,7 +285,7 @@ Essa separação permite maior desacoplamento, escalabilidade e aderência ao ec
 ┌────────────────────────────┐
 │     Protected Endpoints    │
 │ Products | Categories      │
-│ Users | Roles              │
+│ Users                      │
 └────────────────────────────┘
 ```
 
@@ -426,7 +433,7 @@ O projeto passou a possuir um modelo de autenticação baseado em:
 
 ## 🖼️ Modelagem de Usuários e Perfis
 
-<img src="https://raw.githubusercontent.com/Albertinesilva/backend-engineering-journey-java-springboot/chapter-03-validation-security/docs/assets/imgs/modelo-conceitual.png" width="80%">
+<img src="docs/assets/imgs/modelo-conceitual.png" width="80%">
 
 ## 🔐 Fluxo de Autenticação
 
@@ -445,28 +452,38 @@ O projeto passou a possuir um modelo de autenticação baseado em:
 
 ### Requisição de Login
 
+`POST /oauth2/token`
+
 ### Authorization
 
 ```text
 Type: Basic Auth
-Username: client-id
-Password: client-secret
+Username: myclientid
+Password: myclientsecret
 ```
+
+O client id e o secret vêm de `security.client-id` e `security.client-secret` (variáveis `CLIENT_ID` e `CLIENT_SECRET`); os valores acima são os padrões.
 
 ### Body (x-www-form-urlencoded)
 
 ```text
-username=alex@gmail.com
-password=123456
 grant_type=password
+username=albert@gmail.com
+password=123456
 ```
+
+> [!WARNING]
+> Os usuários de exemplo `albert@gmail.com` (OPERATOR) e `maria@gmail.com` (ADMIN e OPERATOR), ambos com a senha `123456`, são dados apenas de desenvolvimento, inseridos pelas migrations e pelo `import.sql`.
+
+Resposta: `{"access_token":"eyJ...","token_type":"Bearer","expires_in":86399}`. Comandos prontos para PowerShell e bash estão em [Autenticação e Autorização](docs/guides/AUTHENTICATION.md#3-login).
 
 ---
 
 ### Estrutura JWT
 
-Os tokens JWT utilizados carregam informações importantes como:
+Os tokens JWT são assinados com **RS256** (chave RSA gerada quando a aplicação sobe) e carregam informações como:
 
+- Client que pediu o token
 - Usuário autenticado
 - Authorities/Roles
 - Tempo de expiração
@@ -489,17 +506,19 @@ Os tokens JWT utilizados carregam informações importantes como:
 }
 ```
 
-As claims podem variar conforme a configuração do JWT Converter utilizado na aplicação.
-
 ### 📌 Significado dos campos
 
-| Campo         | Descrição                   |
-| ------------- | --------------------------- |
-| `sub`         | Usuário autenticado         |
-| `authorities` | Roles/permissões do usuário |
-| `iat`         | Data de emissão do token    |
-| `exp`         | Data de expiração           |
-| `iss`         | Emissor do token            |
+| Campo         | Descrição                                   |
+| ------------- | ------------------------------------------- |
+| `sub`         | Client id (`myclientid`), não o usuário     |
+| `aud`         | Client para o qual o token foi emitido      |
+| `username`    | E-mail do usuário autenticado               |
+| `authorities` | Roles/permissões do usuário                 |
+| `iat`         | Data de emissão do token                    |
+| `exp`         | Data de expiração                           |
+| `iss`         | Emissor do token                            |
+
+As claims `username` e `authorities` são acrescentadas pelo projeto, no `tokenCustomizer` do `AuthorizationServerConfig`.
 
 ---
 
@@ -562,9 +581,11 @@ O Resource Server é responsável por:
 ### 📌 Endpoint protegido
 
 ```http
-GET /products
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+GET /api/v1/users/2
+Authorization: Bearer eyJraWQiOi...
 ```
+
+A rota exige a role ADMIN; o token acima é o de `maria@gmail.com`. Sem token, a resposta é `401`; com o token de `albert@gmail.com` (só OPERATOR), é `403`.
 
 ---
 
@@ -572,51 +593,18 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
 
 ```json
 {
-  "content": [
-    {
-      "id": 1,
-      "name": "The Lord of the Rings",
-      "description": "Classico da literatura de fantasia que narra a jornada épica na Terra Média.",
-      "price": 90.5,
-      "imgUrl": "https://raw.githubusercontent.com/devsuperior/dscatalog-resources/master/backend/img/1-big.jpg",
-      "date": "2020-07-13T20:50:07.123450Z",
-      "categories": []
-    },
-    {
-      "id": 2,
-      "name": "Smart TV",
-      "description": "Smart TV com alta resolução, acesso a streaming e conectividade Wi-Fi.",
-      "price": 2190.0,
-      "imgUrl": "https://raw.githubusercontent.com/devsuperior/dscatalog-resources/master/backend/img/2-big.jpg",
-      "date": "2020-07-14T10:00:00Z",
-      "categories": []
-    }
-  ],
-  "pageable": {
-    "pageNumber": 0,
-    "pageSize": 2,
-    "sort": {
-      "empty": false,
-      "sorted": true,
-      "unsorted": false
-    },
-    "offset": 0,
-    "paged": true,
-    "unpaged": false
-  },
-  "totalElements": 25,
-  "totalPages": 13,
-  "last": false,
-  "size": 2,
-  "number": 0,
-  "sort": {
-    "empty": false,
-    "sorted": true,
-    "unsorted": false
-  },
-  "numberOfElements": 2,
-  "first": true,
-  "empty": false
+  "id" : 2,
+  "firstName" : "Maria",
+  "lastName" : "Green",
+  "email" : "maria@gmail.com",
+  "roles" : [ {
+    "id" : 1,
+    "authority" : "ROLE_OPERATOR"
+  }, {
+    "id" : 2,
+    "authority" : "ROLE_ADMIN"
+  } ],
+  "active" : true
 }
 ```
 
@@ -645,7 +633,7 @@ A estratégia adotada combina validações declarativas, validações customizad
 - Validações declarativas em DTOs
 - Integração com Hibernate Validator
 - Validações customizadas por domínio
-- Mensagens externalizadas
+- Mensagens das anotações padrão no `ValidationMessages.properties`; mensagens dos validadores customizados definidas no código
 - Integração com banco de dados
 - Tratamento global de exceções
 - Respostas padronizadas para erros de validação
@@ -654,28 +642,34 @@ A estratégia adotada combina validações declarativas, validações customizad
 
 ### 📌 Principais validações utilizadas
 
-| Validação         | Objetivo                              |
-| ----------------- | ------------------------------------- |
-| `@NotBlank`       | Garantir campos textuais obrigatórios |
-| `@NotNull`        | Impedir valores nulos                 |
-| `@Size`           | Restringir tamanho mínimo e máximo    |
-| `@Email`          | Validar formato de email              |
-| `@Positive`       | Garantir valores numéricos positivos  |
-| `@PastOrPresent`  | Validar datas válidas                 |
-| Custom Validators | Regras específicas da aplicação       |
+| Validação         | Objetivo                                                     |
+| ----------------- | ------------------------------------------------------------ |
+| `@NotBlank`       | Garantir campos textuais obrigatórios                        |
+| `@Size`           | Restringir tamanho mínimo e máximo                           |
+| `@Pattern`        | Restringir o formato com expressão regular (nomes, URL)      |
+| `@Positive`       | Garantir valores numéricos positivos                         |
+| `@PastOrPresent`  | Validar datas no passado ou no presente                      |
+| `@NotEmpty`       | Exigir ao menos um item (`categoryIds`, `roleIds`)           |
+| Custom Validators | Regras específicas da aplicação                              |
 
 ---
 
 ### Exemplos de validação
 
+Trecho real de `CategoryCreateRequest`: as anotações de campo usam chaves do `ValidationMessages.properties`, e a anotação de classe confere se o nome já existe.
+
 ```java
-@NotBlank(message = "Campo requerido")
+@CategoryCreateValid
+public record CategoryCreateRequest(
 
-@Email(message = "Email inválido")
+    @NotBlank(message = "{category.name.notBlank}")
+    @Size(min = 3, max = 80, message = "{category.name.size}")
+    @Pattern(regexp = "^[A-Za-zÀ-ÿ0-9\\s]+$", message = "{category.name.pattern}")
+    String name,
 
-@Size(min = 3, max = 80)
-
-@Positive(message = "Valor deve ser positivo")
+    @Pattern(regexp = "^$|^.{3,255}$", message = "{category.description.size}")
+    String description) {
+}
 ```
 
 ---
@@ -686,12 +680,17 @@ Além das validações padrão da especificação Bean Validation, a aplicação
 
 ### Exemplos
 
-- `@StrongPassword`
-- `@UniqueEmail`
-- `@ValidRoles`
-- `UserCreateValidator`
+| Anotação                                         | Regra                                                              |
+| ------------------------------------------------ | ------------------------------------------------------------------ |
+| `@StrongPassword`                                | Senha com 10+ caracteres, maiúscula, minúscula, número e especial  |
+| `@ValidEmail`                                    | Formato do e-mail e registro MX do domínio (consulta ao DNS)       |
+| `@UniqueEmail`                                   | E-mail ainda não cadastrado                                        |
+| `@ValidRoles`                                    | Todas as roles informadas existem                                  |
+| `@CategoryCreateValid` / `@CategoryUpdateValid`  | Nome de categoria único                                            |
+| `@ProductCreateValid` / `@ProductUpdateValid`    | Nome de produto único e categorias existentes                      |
+| `@UserCreateValid` / `@UserUpdateValid`          | Senha sem dados pessoais; na atualização, e-mail único             |
 
-Essas validações permitem aplicar regras mais complexas, incluindo integração com banco de dados e validações contextuais da aplicação.
+Essas validações permitem aplicar regras mais complexas, incluindo integração com banco de dados e validações contextuais da aplicação. As regras de cada DTO e exemplos reais de resposta estão em [Validação](docs/guides/VALIDATION.md).
 
 ---
 
@@ -778,6 +777,8 @@ A aplicação possui um mecanismo centralizado para tratamento de exceções e e
 }
 ```
 
+O formato das respostas de erro (422, 403, 404, 409 e o 401 sem corpo) está em [Tratamento de Erros](docs/guides/ERROR-HANDLING.md).
+
 ---
 
 ## 📂 Organização dos Packages
@@ -811,11 +812,16 @@ O objetivo foi estruturar cada responsabilidade de segurança de forma isolada e
 ┃ ┃ ┃ ┣ 📄 ProductDetailsResponse.java
 ┃ ┃ ┃ ┗ 📄 ProductResponse.java
 ┃ ┃
+┃ ┣ 📂 role
+┃ ┃ ┗ 📂 response
+┃ ┃ ┃ ┗ 📄 RoleResponse.java
+┃ ┃
 ┃ ┗ 📂 user
 ┃   ┣ 📂 request
 ┃   ┃ ┣ 📄 UserCreateRequest.java
 ┃   ┃ ┗ 📄 UserUpdateRequest.java
 ┃   ┗ 📂 response
+┃     ┣ 📄 UserDetailsResponse.java
 ┃     ┗ 📄 UserResponse.java
 ┃
 ┣ 📂 entity
@@ -832,6 +838,9 @@ O objetivo foi estruturar cada responsabilidade de segurança de forma isolada e
 ┃ ┗ 📂 user
 ┃   ┗ 📄 UserMapper.java
 ┃
+┣ 📂 projection
+┃ ┗ 📄 UserDetailsProjection.java
+┃
 ┣ 📂 repository
 ┃ ┣ 📄 CategoryRepository.java
 ┃ ┣ 📄 ProductRepository.java
@@ -847,10 +856,11 @@ O objetivo foi estruturar cada responsabilidade de segurança de forma isolada e
 ┃ ┃ ┃ ┗ 📂 config
 ┃ ┃ ┃   ┗ 📄 AuthorizationServerConfig.java
 ┃ ┃ ┃
-┃ ┃ ┣ 📂 grant_password
-┃ ┃ ┃ ┣ 📄 CustomPasswordAuthenticationConverter.java
-┃ ┃ ┃ ┣ 📄 CustomPasswordAuthenticationProvider.java
-┃ ┃ ┃ ┗ 📄 CustomPasswordAuthenticationToken.java
+┃ ┃ ┣ 📂 grant
+┃ ┃ ┃ ┗ 📂 password
+┃ ┃ ┃   ┣ 📄 CustomPasswordAuthenticationConverter.java
+┃ ┃ ┃   ┣ 📄 CustomPasswordAuthenticationProvider.java
+┃ ┃ ┃   ┗ 📄 CustomPasswordAuthenticationToken.java
 ┃ ┃ ┃
 ┃ ┃ ┗ 📂 resource
 ┃ ┃   ┗ 📄 ResourceServerConfig.java
@@ -859,7 +869,7 @@ O objetivo foi estruturar cada responsabilidade de segurança de forma isolada e
 ┃   ┗ 📄 AuthenticatedUser.java
 ┃
 ┣ 📂 service
-┃ ┣ 📂 exceptions
+┃ ┣ 📂 exception
 ┃ ┃ ┣ 📄 DatabaseException.java
 ┃ ┃ ┗ 📄 ResourceNotFoundException.java
 ┃ ┣ 📄 CategoryService.java
@@ -899,15 +909,15 @@ O objetivo foi estruturar cada responsabilidade de segurança de forma isolada e
 ┃     ┣ 📄 ProblemDetails.java
 ┃     ┗ 📄 ValidationError.java
 ┃
-┣ 📄 DscatalogApplication.java
+┣ 📄 AsjcatalogApplication.java
 ┃
 ┗ 📂 resources
   ┣ 📂 db
-  ┃ ┣ 📂 data
-  ┃ ┣ 📂 migration
-  ┃ ┗ 📂 schema
-  ┣ 📂 static
-  ┣ 📂 templates
+  ┃ ┗ 📂 migration
+  ┃   ┣ 📂 schema
+  ┃   ┗ 📂 data
+  ┣ 📂 META-INF
+  ┃ ┗ 📄 additional-spring-configuration-metadata.json
   ┣ 📄 application-dev.properties
   ┣ 📄 application-prod.properties
   ┣ 📄 application-test.properties
@@ -982,7 +992,7 @@ O **Resource Server** protege os endpoints da API e valida os `tokens JWT` receb
 | ---------------------- | ----------------------------------------------------------- |
 | `ResourceServerConfig` | Configuração de segurança da API e validação dos tokens JWT |
 
-### 🔐 security.oauth2.grant_password
+### 🔐 security.oauth2.grant.password
 
 Implementa o fluxo customizado de autenticação utilizando Password Grant.
 
@@ -1041,6 +1051,7 @@ validation
 ```
 
 Cada domínio possui:
+
 | Estrutura | Responsabilidade |
 | ------------ | ------------------------------- |
 | `annotation` | Define annotations customizadas |
@@ -1113,24 +1124,20 @@ A documentação da API foi integrada com autenticação JWT.
 
 ### Recursos implementados
 
-- Autorização via Bearer Token
+- Autorização via Bearer Token (botão **Authorize**)
 - Teste de endpoints protegidos
 - Documentação automática
-- Exploração segura da API
+- Documentação pública, sem token; as rotas protegidas exigem o token informado no Authorize
 
 ---
 
 ### 🔗 Acesso
 
 ```text
-http://localhost:8080/swagger-ui.html
+http://localhost:8080/docs-asjcatalog.html
 ```
 
-ou
-
-```text
-http://localhost:8080/swagger-ui/index.html
-```
+O endereço é público e redireciona para `/swagger-ui/index.html`. A especificação OpenAPI em JSON fica em `/docs-asjcatalog`.
 
 ---
 
@@ -1140,12 +1147,12 @@ A aplicação evolui também em termos de testes automatizados de autenticação
 
 ### 📌 Cenários testados
 
-- Usuário autenticado
-- Usuário não autenticado
-- Usuário sem permissão
-- Acesso por role
-- Respostas HTTP de segurança
-- Endpoints protegidos
+- Testes de integração com token real, obtido em `/oauth2/token` pelo `TokenUtil` com o usuário ADMIN de exemplo
+- Endpoints protegidos chamados com `Authorization: Bearer` em todas as camadas
+- Testes de controller com usuário simulado e roles definidas por `@WithMockUser`
+- Regras do `@PreAuthorize` avaliadas com a configuração de segurança real (`ResourceServerConfig`)
+
+O inventário completo, como rodar a suíte e o que ela ainda não cobre estão em [Testes Automatizados](docs/guides/TESTING.md).
 
 ---
 
@@ -1312,7 +1319,8 @@ Mais do que apenas proteger endpoints, a aplicação passa a incorporar conceito
 
 A implementação de OAuth2, JWT e Spring Security consolida competências extremamente relevantes para o desenvolvimento backend moderno com Java e Spring Boot.
 
-> [!IMPORTANT] Este capítulo representa um passo importante rumo à construção de APIs escaláveis, sistemas seguros e arquiteturas desacopladas alinhadas às práticas utilizadas no mercado profissional.
+> [!IMPORTANT]
+> Este capítulo representa um passo importante rumo à construção de APIs escaláveis, sistemas seguros e arquiteturas desacopladas alinhadas às práticas utilizadas no mercado profissional.
 
 ---
 
@@ -1343,6 +1351,76 @@ A implementação de OAuth2, JWT e Spring Security consolida competências extre
 
 ---
 
+## 🚀 Como Executar
+
+Pré-requisitos: JDK 17 e Git. O Maven vem com o projeto (Maven Wrapper), e o perfil `test` usa o banco H2 em memória, sem PostgreSQL.
+
+**PowerShell**:
+
+```powershell
+git clone https://github.com/Albertinesilva/backend-engineering-journey-java-springboot.git
+cd backend-engineering-journey-java-springboot
+git checkout chapter-03-validation-security
+cd backend
+.\mvnw spring-boot:run '-Dspring-boot.run.arguments=--spring.profiles.active=test'
+```
+
+**bash**:
+
+```bash
+git clone https://github.com/Albertinesilva/backend-engineering-journey-java-springboot.git
+cd backend-engineering-journey-java-springboot
+git checkout chapter-03-validation-security
+cd backend
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--spring.profiles.active=test
+```
+
+Sem o argumento, a aplicação sobe no perfil padrão `dev`, que exige um PostgreSQL com o banco `asjcatalog`.
+
+A API sobe em `http://localhost:8080/api/v1`, e o Swagger fica em `http://localhost:8080/docs-asjcatalog.html`. Para obter um token com o usuário de exemplo (dados apenas de desenvolvimento):
+
+```powershell
+curl.exe -s -u myclientid:myclientsecret -d "grant_type=password&username=maria@gmail.com&password=123456" http://localhost:8080/oauth2/token
+```
+
+```bash
+curl -s -u myclientid:myclientsecret -d "grant_type=password&username=maria@gmail.com&password=123456" http://localhost:8080/oauth2/token
+```
+
+Para rodar os testes, dentro de `backend`:
+
+```powershell
+.\mvnw verify '-Dspring.profiles.active=test'
+```
+
+```bash
+./mvnw verify -Dspring.profiles.active=test
+```
+
+O passo a passo completo, com o perfil `dev` e o PostgreSQL, está em [Primeiros Passos](docs/guides/GETTING-STARTED.md). O login e as permissões estão em [Autenticação e Autorização](docs/guides/AUTHENTICATION.md), e os testes, inclusive os de integração que rodam à parte, em [Testes Automatizados](docs/guides/TESTING.md).
+
+---
+
+## 📖 Documentação Técnica
+
+| 📘 Documento                                                  | ⚡ Descrição                                                              |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| [🧾 Validação](docs/guides/VALIDATION.md)                     | Regras por DTO, validadores customizados, senha forte e respostas 422    |
+| [🔐 Autenticação e Autorização](docs/guides/AUTHENTICATION.md) | Login OAuth2, JWT, cadeias de filtros, roles, 401/403 e CORS             |
+| [🚀 Primeiros Passos](docs/guides/GETTING-STARTED.md)         | Como rodar com H2 ou PostgreSQL, obter um token e as primeiras chamadas  |
+| [⚙️ Configuração e Perfis](docs/guides/CONFIGURATION.md)      | Perfis, propriedades de segurança, variáveis de ambiente e logs          |
+| [🏗️ Arquitetura](docs/guides/ARCHITECTURE.md)                 | Camadas, pacotes e caminho de uma requisição pela segurança e validação  |
+| [🧩 Modelo de Domínio](docs/guides/DOMAIN-MODEL.md)           | Entidades `Category`, `Product`, `User` e `Role`                         |
+| [🔍 Acesso a Dados](docs/guides/DATA-ACCESS.md)               | Repositórios, consultas, consulta do login, paginação e transações       |
+| [🗄️ Migrations](docs/guides/DATABASE-MIGRATIONS.md)           | Flyway (V001 a V105), `import.sql` e `create.sql`                        |
+| [🌐 Endpoints da API](docs/guides/API-ENDPOINTS.md)           | Os 21 endpoints, com permissões e exemplos reais                         |
+| [⚠️ Tratamento de Erros](docs/guides/ERROR-HANDLING.md)       | `ProblemDetails`, `ValidationError`, status HTTP e o 401 sem corpo       |
+| [🧪 Testes Automatizados](docs/guides/TESTING.md)             | Como rodar a suíte, inventário e testes com usuário simulado e token     |
+| [📐 Convenções](docs/guides/CONVENTIONS.md)                   | Nomes, validação, segurança, testes, idioma, commits e branches          |
+| [🏠 Índice da Documentação](docs/HOME.md)                     | Visão geral dos guias e do que chega nos próximos capítulos              |
+
+---
+
 ## 👨‍💻 Autor
 
 **Albert Silva de Jesus**  
@@ -1352,4 +1430,4 @@ Desenvolvedor Backend Java | Spring Boot
 ## 📎 Contato
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-%230077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/albert-backend-java-spring-boot/)
-[![Gmail](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:albertinesilva.17@gmail.com)
+[![Gmail](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:albertinesilva.17@gmail.com?subject=Contato%20sobre%20o%20projeto%20ASJCatalog)
