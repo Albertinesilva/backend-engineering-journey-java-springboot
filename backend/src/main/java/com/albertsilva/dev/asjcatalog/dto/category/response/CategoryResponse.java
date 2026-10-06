@@ -1,4 +1,4 @@
-package com.albertsilva.dev.dscatalog.dto.category.response;
+package com.albertsilva.dev.asjcatalog.dto.category.response;
 
 /**
  * DTO utilizado para retorno de dados de categoria na API.

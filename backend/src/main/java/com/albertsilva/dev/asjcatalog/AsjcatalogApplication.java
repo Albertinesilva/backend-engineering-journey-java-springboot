@@ -1,13 +1,13 @@
-package com.albertsilva.dev.dscatalog;
+package com.albertsilva.dev.asjcatalog;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class DscatalogApplication {
+public class AsjcatalogApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(DscatalogApplication.class, args);
+		SpringApplication.run(AsjcatalogApplication.class, args);
 	}
 
 }

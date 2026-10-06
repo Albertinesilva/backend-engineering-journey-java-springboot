@@ -1,4 +1,4 @@
-package com.albertsilva.dev.dscatalog.dto.product.request;
+package com.albertsilva.dev.asjcatalog.dto.product.request;
 
 import java.time.Instant;
 import java.util.List;

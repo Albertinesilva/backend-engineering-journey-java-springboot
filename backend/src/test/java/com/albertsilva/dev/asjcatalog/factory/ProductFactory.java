@@ -1,13 +1,13 @@
-package com.albertsilva.dev.dscatalog.factory;
+package com.albertsilva.dev.asjcatalog.factory;
 
 import java.time.Instant;
 import java.util.List;
 
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductUpdateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.response.ProductDetailsResponse;
-import com.albertsilva.dev.dscatalog.dto.product.response.ProductResponse;
-import com.albertsilva.dev.dscatalog.entity.Product;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductUpdateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.response.ProductDetailsResponse;
+import com.albertsilva.dev.asjcatalog.dto.product.response.ProductResponse;
+import com.albertsilva.dev.asjcatalog.entity.Product;
 
 public class ProductFactory {
 

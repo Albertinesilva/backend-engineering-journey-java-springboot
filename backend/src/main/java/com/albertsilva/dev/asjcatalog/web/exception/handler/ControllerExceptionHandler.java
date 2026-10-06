@@ -1,4 +1,4 @@
-package com.albertsilva.dev.dscatalog.web.exception.handler;
+package com.albertsilva.dev.asjcatalog.web.exception.handler;
 
 import java.time.Instant;
 
@@ -10,10 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.albertsilva.dev.dscatalog.service.exception.DatabaseException;
-import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
-import com.albertsilva.dev.dscatalog.web.exception.enums.ErrorType;
-import com.albertsilva.dev.dscatalog.web.exception.response.ProblemDetails;
+import com.albertsilva.dev.asjcatalog.service.exception.DatabaseException;
+import com.albertsilva.dev.asjcatalog.service.exception.ResourceNotFoundException;
+import com.albertsilva.dev.asjcatalog.web.exception.enums.ErrorType;
+import com.albertsilva.dev.asjcatalog.web.exception.response.ProblemDetails;
 
 import jakarta.servlet.http.HttpServletRequest;
 

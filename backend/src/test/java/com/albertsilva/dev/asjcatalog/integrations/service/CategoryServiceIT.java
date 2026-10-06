@@ -1,10 +1,10 @@
-package com.albertsilva.dev.dscatalog.integrations.service;
+package com.albertsilva.dev.asjcatalog.integrations.service;
 
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.COUNT_TOTAL_CATEGORIES;
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.DEPENDENT_ID;
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.EXISTING_ID;
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.NON_DEPENDENT_ID;
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.NON_EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.COUNT_TOTAL_CATEGORIES;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.DEPENDENT_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.NON_DEPENDENT_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.NON_EXISTING_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -23,13 +23,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.albertsilva.dev.dscatalog.dto.category.request.CategoryCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.category.request.CategoryUpdateRequest;
-import com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse;
-import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
-import com.albertsilva.dev.dscatalog.repository.CategoryRepository;
-import com.albertsilva.dev.dscatalog.service.CategoryService;
-import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
+import com.albertsilva.dev.asjcatalog.dto.category.request.CategoryCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.category.request.CategoryUpdateRequest;
+import com.albertsilva.dev.asjcatalog.dto.category.response.CategoryResponse;
+import com.albertsilva.dev.asjcatalog.factory.CategoryFactory;
+import com.albertsilva.dev.asjcatalog.repository.CategoryRepository;
+import com.albertsilva.dev.asjcatalog.service.CategoryService;
+import com.albertsilva.dev.asjcatalog.service.exception.ResourceNotFoundException;
 
 @SpringBootTest
 @Transactional

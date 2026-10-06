@@ -1,4 +1,4 @@
-package com.albertsilva.dev.dscatalog.web.controller;
+package com.albertsilva.dev.asjcatalog.web.controller;
 
 import java.net.URI;
 
@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductUpdateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.response.ProductDetailsResponse;
-import com.albertsilva.dev.dscatalog.dto.product.response.ProductResponse;
-import com.albertsilva.dev.dscatalog.service.ProductService;
-import com.albertsilva.dev.dscatalog.web.exception.response.ProblemDetails;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductUpdateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.response.ProductDetailsResponse;
+import com.albertsilva.dev.asjcatalog.dto.product.response.ProductResponse;
+import com.albertsilva.dev.asjcatalog.service.ProductService;
+import com.albertsilva.dev.asjcatalog.web.exception.response.ProblemDetails;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

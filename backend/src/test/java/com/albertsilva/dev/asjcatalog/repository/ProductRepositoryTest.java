@@ -1,4 +1,4 @@
-package com.albertsilva.dev.dscatalog.repository;
+package com.albertsilva.dev.asjcatalog.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -11,10 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import com.albertsilva.dev.dscatalog.entity.Category;
-import com.albertsilva.dev.dscatalog.entity.Product;
-import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
-import com.albertsilva.dev.dscatalog.factory.ProductFactory;
+import com.albertsilva.dev.asjcatalog.entity.Category;
+import com.albertsilva.dev.asjcatalog.entity.Product;
+import com.albertsilva.dev.asjcatalog.factory.CategoryFactory;
+import com.albertsilva.dev.asjcatalog.factory.ProductFactory;
 
 @DataJpaTest
 @DisplayName("ProductRepository Tests")

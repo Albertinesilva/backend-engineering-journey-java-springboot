@@ -1,16 +1,16 @@
-package com.albertsilva.dev.dscatalog.mapper.product;
+package com.albertsilva.dev.asjcatalog.mapper.product;
 
 import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
-import com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse;
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductUpdateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.response.ProductDetailsResponse;
-import com.albertsilva.dev.dscatalog.dto.product.response.ProductResponse;
-import com.albertsilva.dev.dscatalog.entity.Product;
+import com.albertsilva.dev.asjcatalog.dto.category.response.CategoryResponse;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductUpdateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.response.ProductDetailsResponse;
+import com.albertsilva.dev.asjcatalog.dto.product.response.ProductResponse;
+import com.albertsilva.dev.asjcatalog.entity.Product;
 
 /**
  * Componente responsável pela conversão entre DTOs e entidade {@link Product}.

@@ -1,4 +1,4 @@
-package com.albertsilva.dev.dscatalog.web.exception.response;
+package com.albertsilva.dev.asjcatalog.web.exception.response;
 
 import java.io.Serializable;
 import java.time.Instant;

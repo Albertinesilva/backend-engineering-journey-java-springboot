@@ -1,4 +1,4 @@
-package com.albertsilva.dev.dscatalog.repository;
+package com.albertsilva.dev.asjcatalog.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,10 +15,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.albertsilva.dev.dscatalog.entity.Category;
-import com.albertsilva.dev.dscatalog.entity.Product;
-import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
-import com.albertsilva.dev.dscatalog.factory.ProductFactory;
+import com.albertsilva.dev.asjcatalog.entity.Category;
+import com.albertsilva.dev.asjcatalog.entity.Product;
+import com.albertsilva.dev.asjcatalog.factory.CategoryFactory;
+import com.albertsilva.dev.asjcatalog.factory.ProductFactory;
 
 @DataJpaTest
 @DisplayName("CategoryRepository Tests")

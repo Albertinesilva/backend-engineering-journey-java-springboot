@@ -1,9 +1,9 @@
-package com.albertsilva.dev.dscatalog.factory;
+package com.albertsilva.dev.asjcatalog.factory;
 
-import com.albertsilva.dev.dscatalog.dto.category.request.CategoryCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.category.request.CategoryUpdateRequest;
-import com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse;
-import com.albertsilva.dev.dscatalog.entity.Category;
+import com.albertsilva.dev.asjcatalog.dto.category.request.CategoryCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.category.request.CategoryUpdateRequest;
+import com.albertsilva.dev.asjcatalog.dto.category.response.CategoryResponse;
+import com.albertsilva.dev.asjcatalog.entity.Category;
 
 public class CategoryFactory {
 

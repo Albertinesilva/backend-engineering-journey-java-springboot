@@ -1,9 +1,9 @@
-package com.albertsilva.dev.dscatalog.dto.product.response;
+package com.albertsilva.dev.asjcatalog.dto.product.response;
 
 import java.time.Instant;
 import java.util.List;
 
-import com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse;
+import com.albertsilva.dev.asjcatalog.dto.category.response.CategoryResponse;
 
 /**
  * DTO de resposta simplificada para produto.

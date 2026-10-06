@@ -1,4 +1,4 @@
-package com.albertsilva.dev.dscatalog.dto.category.request;
+package com.albertsilva.dev.asjcatalog.dto.category.request;
 
 /**
  * DTO utilizado para requisições de criação de categoria.

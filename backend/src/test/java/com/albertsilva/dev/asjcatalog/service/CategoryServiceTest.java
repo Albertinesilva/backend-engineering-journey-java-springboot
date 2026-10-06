@@ -1,8 +1,8 @@
-package com.albertsilva.dev.dscatalog.service;
+package com.albertsilva.dev.asjcatalog.service;
 
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.EXISTING_ID;
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.NON_EXISTING_ID;
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.COUNT_TOTAL_CATEGORIES;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.NON_EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.COUNT_TOTAL_CATEGORIES;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.util.List;
@@ -23,14 +23,14 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.albertsilva.dev.dscatalog.dto.category.request.CategoryCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.category.request.CategoryUpdateRequest;
-import com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse;
-import com.albertsilva.dev.dscatalog.entity.Category;
-import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
-import com.albertsilva.dev.dscatalog.mapper.category.CategoryMapper;
-import com.albertsilva.dev.dscatalog.repository.CategoryRepository;
-import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
+import com.albertsilva.dev.asjcatalog.dto.category.request.CategoryCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.category.request.CategoryUpdateRequest;
+import com.albertsilva.dev.asjcatalog.dto.category.response.CategoryResponse;
+import com.albertsilva.dev.asjcatalog.entity.Category;
+import com.albertsilva.dev.asjcatalog.factory.CategoryFactory;
+import com.albertsilva.dev.asjcatalog.mapper.category.CategoryMapper;
+import com.albertsilva.dev.asjcatalog.repository.CategoryRepository;
+import com.albertsilva.dev.asjcatalog.service.exception.ResourceNotFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
 

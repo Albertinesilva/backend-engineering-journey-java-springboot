@@ -1,8 +1,8 @@
-package com.albertsilva.dev.dscatalog.integrations.service;
+package com.albertsilva.dev.asjcatalog.integrations.service;
 
-import static com.albertsilva.dev.dscatalog.factory.ProductFactory.COUNT_TOTAL_PRODUCTS;
-import static com.albertsilva.dev.dscatalog.factory.ProductFactory.EXISTING_ID;
-import static com.albertsilva.dev.dscatalog.factory.ProductFactory.NON_EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.COUNT_TOTAL_PRODUCTS;
+import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NON_EXISTING_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -19,14 +19,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductUpdateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.response.ProductDetailsResponse;
-import com.albertsilva.dev.dscatalog.dto.product.response.ProductResponse;
-import com.albertsilva.dev.dscatalog.factory.ProductFactory;
-import com.albertsilva.dev.dscatalog.repository.ProductRepository;
-import com.albertsilva.dev.dscatalog.service.ProductService;
-import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductUpdateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.response.ProductDetailsResponse;
+import com.albertsilva.dev.asjcatalog.dto.product.response.ProductResponse;
+import com.albertsilva.dev.asjcatalog.factory.ProductFactory;
+import com.albertsilva.dev.asjcatalog.repository.ProductRepository;
+import com.albertsilva.dev.asjcatalog.service.ProductService;
+import com.albertsilva.dev.asjcatalog.service.exception.ResourceNotFoundException;
 
 import jakarta.transaction.Transactional;
 

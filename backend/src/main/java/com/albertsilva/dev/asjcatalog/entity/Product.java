@@ -1,4 +1,4 @@
-package com.albertsilva.dev.dscatalog.entity;
+package com.albertsilva.dev.asjcatalog.entity;
 
 import java.io.Serializable;
 import java.time.Instant;

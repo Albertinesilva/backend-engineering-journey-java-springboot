@@ -1,4 +1,4 @@
-package com.albertsilva.dev.dscatalog.entity;
+package com.albertsilva.dev.asjcatalog.entity;
 
 import java.time.Instant;
 
@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
-import com.albertsilva.dev.dscatalog.factory.ProductFactory;
+import com.albertsilva.dev.asjcatalog.factory.CategoryFactory;
+import com.albertsilva.dev.asjcatalog.factory.ProductFactory;
 
 @DisplayName("Tests for Product Entity")
 public class ProductTest {

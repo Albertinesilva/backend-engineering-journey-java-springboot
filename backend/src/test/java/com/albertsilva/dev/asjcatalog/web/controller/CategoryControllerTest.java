@@ -1,7 +1,7 @@
-package com.albertsilva.dev.dscatalog.web.controller;
+package com.albertsilva.dev.asjcatalog.web.controller;
 
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.EXISTING_ID;
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.NON_EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.NON_EXISTING_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -41,13 +41,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import com.albertsilva.dev.dscatalog.dto.category.request.CategoryCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.category.request.CategoryUpdateRequest;
-import com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse;
-import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
-import com.albertsilva.dev.dscatalog.service.CategoryService;
-import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
-import com.albertsilva.dev.dscatalog.web.exception.handler.ControllerExceptionHandler;
+import com.albertsilva.dev.asjcatalog.dto.category.request.CategoryCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.category.request.CategoryUpdateRequest;
+import com.albertsilva.dev.asjcatalog.dto.category.response.CategoryResponse;
+import com.albertsilva.dev.asjcatalog.factory.CategoryFactory;
+import com.albertsilva.dev.asjcatalog.service.CategoryService;
+import com.albertsilva.dev.asjcatalog.service.exception.ResourceNotFoundException;
+import com.albertsilva.dev.asjcatalog.web.exception.handler.ControllerExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(CategoryController.class)

@@ -1,4 +1,4 @@
-package com.albertsilva.dev.dscatalog.service;
+package com.albertsilva.dev.asjcatalog.service;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,16 +19,16 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductUpdateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.response.ProductDetailsResponse;
-import com.albertsilva.dev.dscatalog.dto.product.response.ProductResponse;
-import com.albertsilva.dev.dscatalog.entity.Product;
-import com.albertsilva.dev.dscatalog.factory.ProductFactory;
-import com.albertsilva.dev.dscatalog.mapper.product.ProductMapper;
-import com.albertsilva.dev.dscatalog.repository.ProductRepository;
-import com.albertsilva.dev.dscatalog.service.exception.DatabaseException;
-import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductUpdateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.response.ProductDetailsResponse;
+import com.albertsilva.dev.asjcatalog.dto.product.response.ProductResponse;
+import com.albertsilva.dev.asjcatalog.entity.Product;
+import com.albertsilva.dev.asjcatalog.factory.ProductFactory;
+import com.albertsilva.dev.asjcatalog.mapper.product.ProductMapper;
+import com.albertsilva.dev.asjcatalog.repository.ProductRepository;
+import com.albertsilva.dev.asjcatalog.service.exception.DatabaseException;
+import com.albertsilva.dev.asjcatalog.service.exception.ResourceNotFoundException;
 
 import jakarta.persistence.EntityNotFoundException;
 

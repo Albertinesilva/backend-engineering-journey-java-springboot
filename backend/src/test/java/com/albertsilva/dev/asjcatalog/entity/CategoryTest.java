@@ -1,10 +1,10 @@
-package com.albertsilva.dev.dscatalog.entity;
+package com.albertsilva.dev.asjcatalog.entity;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
+import com.albertsilva.dev.asjcatalog.factory.CategoryFactory;
 
 @DisplayName("Tests for Category Entity")
 public class CategoryTest {

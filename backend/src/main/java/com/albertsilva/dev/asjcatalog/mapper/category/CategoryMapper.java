@@ -1,12 +1,12 @@
-package com.albertsilva.dev.dscatalog.mapper.category;
+package com.albertsilva.dev.asjcatalog.mapper.category;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
-import com.albertsilva.dev.dscatalog.dto.category.request.CategoryCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.category.request.CategoryUpdateRequest;
-import com.albertsilva.dev.dscatalog.dto.category.response.CategoryResponse;
-import com.albertsilva.dev.dscatalog.entity.Category;
+import com.albertsilva.dev.asjcatalog.dto.category.request.CategoryCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.category.request.CategoryUpdateRequest;
+import com.albertsilva.dev.asjcatalog.dto.category.response.CategoryResponse;
+import com.albertsilva.dev.asjcatalog.entity.Category;
 
 /**
  * Componente responsável pela conversão entre DTOs e entidade {@link Category}.

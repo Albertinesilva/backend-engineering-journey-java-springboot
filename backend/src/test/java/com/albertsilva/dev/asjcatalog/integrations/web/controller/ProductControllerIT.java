@@ -1,7 +1,7 @@
-package com.albertsilva.dev.dscatalog.integrations.web.controller;
+package com.albertsilva.dev.asjcatalog.integrations.web.controller;
 
-import static com.albertsilva.dev.dscatalog.factory.ProductFactory.EXISTING_ID;
-import static com.albertsilva.dev.dscatalog.factory.ProductFactory.NON_EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NON_EXISTING_ID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -27,10 +27,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductUpdateRequest;
-import com.albertsilva.dev.dscatalog.factory.ProductFactory;
-import com.albertsilva.dev.dscatalog.repository.ProductRepository;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductUpdateRequest;
+import com.albertsilva.dev.asjcatalog.factory.ProductFactory;
+import com.albertsilva.dev.asjcatalog.repository.ProductRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest

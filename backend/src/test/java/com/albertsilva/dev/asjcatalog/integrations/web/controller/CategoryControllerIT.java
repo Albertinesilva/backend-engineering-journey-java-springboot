@@ -1,9 +1,9 @@
-package com.albertsilva.dev.dscatalog.integrations.web.controller;
+package com.albertsilva.dev.asjcatalog.integrations.web.controller;
 
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.EXISTING_ID;
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.NON_EXISTING_ID;
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.NON_DEPENDENT_ID;
-import static com.albertsilva.dev.dscatalog.factory.CategoryFactory.DEPENDENT_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.NON_EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.NON_DEPENDENT_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.DEPENDENT_ID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -25,10 +25,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.albertsilva.dev.dscatalog.dto.category.request.CategoryCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.category.request.CategoryUpdateRequest;
-import com.albertsilva.dev.dscatalog.factory.CategoryFactory;
-import com.albertsilva.dev.dscatalog.repository.CategoryRepository;
+import com.albertsilva.dev.asjcatalog.dto.category.request.CategoryCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.category.request.CategoryUpdateRequest;
+import com.albertsilva.dev.asjcatalog.factory.CategoryFactory;
+import com.albertsilva.dev.asjcatalog.repository.CategoryRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest

@@ -1,7 +1,7 @@
-package com.albertsilva.dev.dscatalog.web.controller;
+package com.albertsilva.dev.asjcatalog.web.controller;
 
-import static com.albertsilva.dev.dscatalog.factory.ProductFactory.EXISTING_ID;
-import static com.albertsilva.dev.dscatalog.factory.ProductFactory.NON_EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NON_EXISTING_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -34,14 +34,14 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductCreateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.request.ProductUpdateRequest;
-import com.albertsilva.dev.dscatalog.dto.product.response.ProductDetailsResponse;
-import com.albertsilva.dev.dscatalog.dto.product.response.ProductResponse;
-import com.albertsilva.dev.dscatalog.factory.ProductFactory;
-import com.albertsilva.dev.dscatalog.service.ProductService;
-import com.albertsilva.dev.dscatalog.service.exception.ResourceNotFoundException;
-import com.albertsilva.dev.dscatalog.web.exception.handler.ControllerExceptionHandler;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.request.ProductUpdateRequest;
+import com.albertsilva.dev.asjcatalog.dto.product.response.ProductDetailsResponse;
+import com.albertsilva.dev.asjcatalog.dto.product.response.ProductResponse;
+import com.albertsilva.dev.asjcatalog.factory.ProductFactory;
+import com.albertsilva.dev.asjcatalog.service.ProductService;
+import com.albertsilva.dev.asjcatalog.service.exception.ResourceNotFoundException;
+import com.albertsilva.dev.asjcatalog.web.exception.handler.ControllerExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(ProductController.class)
