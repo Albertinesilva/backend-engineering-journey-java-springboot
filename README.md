@@ -369,67 +369,7 @@ Este capítulo levou o ASJCatalog a um backend mais próximo dos padrões corpor
 
 ## 📚 Referências Técnicas
 
-### 🔹 Spring Boot
-
-- https://docs.spring.io/spring-boot/documentation.html
-- https://spring.io/projects/spring-boot
-
----
-
-### 🔹 Spring Data JPA e Persistência
-
-- https://spring.io/projects/spring-data-jpa
-- https://docs.spring.io/spring-data/jpa/reference/
-- https://jakarta.ee/specifications/persistence/
-- https://hibernate.org/orm/documentation/
-
----
-
-### 🔹 Hibernate ORM
-
-- https://hibernate.org/orm/
-- https://docs.jboss.org/hibernate/orm/current/userguide/html_single/Hibernate_User_Guide.html
-
----
-
-### 🔹 PostgreSQL
-
-- https://www.postgresql.org/docs/
-
----
-
-### 🔹 Flyway
-
-- https://flywaydb.org/documentation/
-- https://documentation.red-gate.com/flyway
-
----
-
-### 🔹 Spring Mail e Thymeleaf
-
-- https://docs.spring.io/spring-framework/reference/integration/email.html
-- https://www.thymeleaf.org/documentation.html
-
----
-
-### 🔹 OpenAPI e Swagger
-
-- https://swagger.io/specification/
-- https://springdoc.org/
-
----
-
-### 🔹 Domain-Driven Design (DDD)
-
-- https://domainlanguage.com/ddd/
-- Eric Evans — _Domain-Driven Design: Tackling Complexity in the Heart of Software_
-
----
-
-### 🔹 Arquitetura e Padrões
-
-- Martin Fowler — _Patterns of Enterprise Application Architecture_
-- https://martinfowler.com/eaaCatalog/
+As documentações oficiais e os livros usados no projeto, organizados por assunto e ligados aos guias, estão em [Referências Técnicas](docs/REFERENCES.md).
 
 ---
 
