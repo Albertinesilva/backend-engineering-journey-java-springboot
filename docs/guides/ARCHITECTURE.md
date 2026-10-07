@@ -149,6 +149,20 @@ Em uma requisição de escrita, como `POST /api/v1/categories`, entram mais duas
 | Tratamento de erro | `web.exception` | Handler global, formato da resposta de erro e códigos `ApiErrorCode` | Fica na camada web porque transforma exceções em respostas HTTP |
 | Configuração | `config` e `security.*.config` | Classes `@Configuration` | Separadas por assunto: documentação, idiomas e segurança |
 
+### Services
+
+Os casos de uso ficam nos seis services do pacote `service`. O `AuthenticatedUserService` também é um `@Service`, mas fica em `security.auth` porque lê a identidade do token.
+
+| Service | Pacote | Responsabilidade |
+| --- | --- | --- |
+| `CategoryService` | `service` | Busca paginada por nome, consulta, criação, atualização, ativação, desativação e remoção de categorias |
+| `ProductService` | `service` | Listagem paginada com filtros por nome e categorias (veja [DATA-ACCESS.md](DATA-ACCESS.md#5-o-problema-n1-e-a-listagem-de-produtos)), consulta, criação, atualização, ativação, desativação e remoção de produtos |
+| `UserService` | `service` | Busca paginada por nome, consulta, criação, atualização, ativação, desativação e remoção de usuários. Implementa `UserDetailsService` e carrega o usuário no login (`loadUserByUsername`) |
+| `AccountService` | `service` | Ciclo de vida da conta: cadastro, ativação, reenvio de ativação, recuperação e redefinição de senha, dados e senha do próprio usuário. Veja [ACCOUNT-FLOWS.md](ACCOUNT-FLOWS.md) |
+| `TokenService` | `service` | Cria, invalida e valida os tokens de ativação e de recuperação de senha. Todos os métodos públicos são transacionais (`@Transactional` na classe) |
+| `EmailService` | `service` | Monta os e-mails com Thymeleaf, envia pelo `JavaMailSender` e registra cada envio bem-sucedido em `tb_email` |
+| `AuthenticatedUserService` | `security.auth` | Lê o claim `userId` do JWT da requisição e carrega o usuário do banco. É usado pelo `AccountService`, por um validador de e-mail e pela regra `@PreAuthorize` do `UserController` (`isCurrentUser`) |
+
 ## 5. Origem do nome
 
 O projeto nasceu da base do **DSCatalog**, projeto do curso da DevSuperior, e evoluiu de forma independente. O nome atual, **ASJCatalog**, vem das iniciais do autor, Albert Silva de Jesus.
