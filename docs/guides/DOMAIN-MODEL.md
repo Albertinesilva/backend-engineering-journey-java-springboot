@@ -26,6 +26,8 @@ As entidades ficam em `com.albertsilva.dev.asjcatalog.domain`, divididas em trê
 | `domain.user` | `User`, `Role` | Usuários e permissões |
 | `domain.recovery` | `Token`, `Email` e as enums `TokenType`, `EmailStatus` | Ativação de conta, recuperação de senha e registro de e-mails |
 
+**Origem dessa organização.** Até junho de 2026, as entidades ficavam num pacote `entity`. O commit `1644d08` as moveu para `domain` e levou para lá a interface `Identifiable`. Dias depois, o commit `758a011` separou as entidades por contexto de negócio em `catalog`, `user` e `recovery`, e criou `Token` e `Email` para os fluxos de ativação de conta e recuperação de senha. A decisão está registrada em [DESIGN-DECISIONS.md](DESIGN-DECISIONS.md#d-02--pacote-domain-dividido-em-módulos).
+
 Na raiz do pacote fica a interface `Identifiable<ID>`, com um único método, `getId()`. Hoje ela é implementada por `Product` e pela projection `ProductProjection`, e é usada para reordenar resultados de consulta (veja [DATA-ACCESS.md](DATA-ACCESS.md#5-o-problema-n1-e-a-listagem-de-produtos)).
 
 Todas as entidades usam `id` do tipo `Long`, gerado pelo banco (`GenerationType.IDENTITY`). As datas usam `Instant` gravado como `TIMESTAMP WITHOUT TIME ZONE`.

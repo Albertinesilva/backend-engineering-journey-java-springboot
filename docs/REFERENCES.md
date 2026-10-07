@@ -18,7 +18,7 @@ Guia relacionado: [ARCHITECTURE](guides/ARCHITECTURE.md).
 
 ## Domain-Driven Design (DDD)
 
-Guia relacionado: [DOMAIN-MODEL](guides/DOMAIN-MODEL.md).
+Guias relacionados: [DOMAIN-MODEL](guides/DOMAIN-MODEL.md) e [DESIGN-DECISIONS](guides/DESIGN-DECISIONS.md).
 
 - [Domain Language — Domain-Driven Design](https://www.domainlanguage.com/ddd/)
 - Eric Evans — _Domain-Driven Design: Tackling Complexity in the Heart of Software_

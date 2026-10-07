@@ -363,7 +363,7 @@ Este capítulo levou o ASJCatalog a um backend mais próximo dos padrões corpor
 ## 📖 Documentação Técnica
 
 > [!TIP]
-> Os guias técnicos do backend (primeiros passos, configuração, arquitetura, domínio, acesso a dados, endpoints, autenticação, testes e outros), o contrato de segurança e o histórico de auditorias estão reunidos no [Índice da Documentação](docs/HOME.md).
+> Os guias técnicos do backend (primeiros passos, configuração, arquitetura, domínio, acesso a dados, endpoints, autenticação, testes e outros), o contrato de segurança e o histórico de auditorias estão reunidos no [Índice da Documentação](docs/HOME.md). O contexto e os motivos das principais escolhas técnicas estão em [Decisões Técnicas](docs/guides/DESIGN-DECISIONS.md).
 
 ---
 
