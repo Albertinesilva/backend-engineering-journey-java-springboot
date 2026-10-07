@@ -13,7 +13,7 @@ O README da raiz do repositório apresenta o capítulo atual do projeto. Esta pa
 
 O ASJCatalog nasceu da base do **DSCatalog**, projeto do curso da DevSuperior. O nome vem das iniciais do autor, **Albert Silva de Jesus**, e o projeto evoluiu de forma independente até se tornar praticamente outro projeto. O frontend também é independente e fica em outro repositório: [asjcatalog-frontend](https://github.com/Albertinesilva/asjcatalog-frontend).
 
-A evolução do backend é contada em capítulos, um por branch, cada um publicado no LinkedIn: `chapter-01-crud`, `chapter-02-tests`, `chapter-03-validation-security` e `chapter-04-domain-orm`. Faltam dois capítulos para encerrar essa evolução.
+A evolução do backend é contada em capítulos, um por branch, cada um publicado no LinkedIn: [`chapter-01-crud`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-01-crud), [`chapter-02-tests`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-02-tests), [`chapter-03-validation-security`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-03-validation-security) e [`chapter-04-domain-orm`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-04-domain-orm). Faltam dois capítulos para encerrar essa evolução.
 
 É um projeto open source e sem fins comerciais: um laboratório de aprendizado, uma fonte de consulta para o futuro e um material para ajudar desenvolvedores júnior.
 
