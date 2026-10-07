@@ -1,5 +1,7 @@
 # Autenticação e autorização
 
+⬅️ Anterior: [Internacionalização](INTERNATIONALIZATION.md) · [🏠 Índice](../HOME.md) · Próximo: [Fluxos de conta](ACCOUNT-FLOWS.md) ➡️
+
 Este guia explica como fazer login na API, como usar e renovar os tokens, o que vai dentro do token e como a API decide quem pode acessar cada rota.
 
 A referência completa, com o comportamento de cada classe e o que não pode ser alterado sem análise, está no [SECURITY-CONTRACT.md](../SECURITY-CONTRACT.md).
@@ -220,3 +222,7 @@ A tabela completa, rota por rota, está em [API-ENDPOINTS.md](API-ENDPOINTS.md).
 - **Os scopes ficam sempre vazios.** O cliente declara os scopes `read` e `write`, mas o login autoriza só as roles do usuário que coincidem com eles, e nenhuma coincide. Por isso a resposta do token não traz o campo `scope`.
 - **O login diferencia maiúsculas no e-mail.** `Maria@gmail.com` não encontra `maria@gmail.com` e responde `Invalid credentials`.
 - **Mensagens do login só em inglês.** Os erros de `/oauth2/token` não passam pelo sistema de tradução da API.
+
+---
+
+⬅️ Anterior: [Internacionalização](INTERNATIONALIZATION.md) · [🏠 Índice](../HOME.md) · Próximo: [Fluxos de conta](ACCOUNT-FLOWS.md) ➡️

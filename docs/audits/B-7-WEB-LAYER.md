@@ -2,6 +2,8 @@
 
 > **Registro de auditoria — 2026-09-21.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
 
+[🏠 Índice da documentação](../HOME.md)
+
 > **Fase:** B-7 — análise e documentação (JavaDoc) de `web` (controllers, tratamento de exceções, modelos de erro) e das configurações diretamente ligadas à exposição HTTP (`config/documentation`, `config/i18n`).
 > **Pré-requisitos:** [B-0](B-0-BACKEND-INVENTORY.md) a [B-6](B-6-SECURITY-OAUTH2-LAYER.md).
 > **Escopo alterado:** somente comentários JavaDoc nos 9 arquivos de `web` e nos 2 de `config` citados, mais esta documentação e notas pontuais nos anteriores. Nenhum endpoint, verbo, status, handler, formato de erro, CORS, OpenAPI, log ou comportamento foi alterado.

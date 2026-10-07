@@ -1,5 +1,7 @@
 # Tratamento de erros
 
+⬅️ Anterior: [Validação](VALIDATION.md) · [🏠 Índice](../HOME.md) · Próximo: [Internacionalização](INTERNATIONALIZATION.md) ➡️
+
 Este guia explica o formato das respostas de erro da API, qual status HTTP e qual código cada exceção gera, e como as mensagens são traduzidas.
 
 ## Sumário
@@ -155,3 +157,7 @@ Mais exemplos em [AUTHENTICATION.md](AUTHENTICATION.md#2-login).
 - **Erros de requisição viram 500.** Não há handler para JSON malformado, parâmetro obrigatório ausente ou tipo errado na URL (como `/categories/abc`): essas exceções do Spring caem no handler genérico e respondem `500 INTERNAL_SERVER_ERROR`, em vez de 400.
 - **Funcionalidade não implementada vira 500.** `POST /accounts/deactivate` lança `UnsupportedOperationException`, tratada como erro interno.
 - **`DisabledException` sem uso conhecido.** O handler existe, mas não encontrei no código um fluxo que leve essa exceção até um controller: o login de conta inativa é recusado dentro de `/oauth2/token`, com `invalid_grant`.
+
+---
+
+⬅️ Anterior: [Validação](VALIDATION.md) · [🏠 Índice](../HOME.md) · Próximo: [Internacionalização](INTERNATIONALIZATION.md) ➡️

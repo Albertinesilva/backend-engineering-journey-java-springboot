@@ -2,6 +2,8 @@
 
 > **Registro de auditoria — 2026-09-21.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
 
+[🏠 Índice da documentação](../HOME.md)
+
 > **Fase:** B-9 — correlação entre camadas. Última fase de **conhecimento** antes da análise dos testes.
 > **Base:** [B-0](B-0-BACKEND-INVENTORY.md), [B-1](B-1-DOMAIN-LAYER.md), [B-2](B-2-REPOSITORY-LAYER.md), [B-3](B-3-SERVICE-LAYER.md), [B-4](B-4-DTO-MAPPER-LAYER.md), [B-5](B-5-VALIDATION-LAYER.md), [B-6](B-6-SECURITY-OAUTH2-LAYER.md) (o arquivo real chama-se `B-6-SECURITY-OAUTH2-LAYER.md`), [B-7](B-7-WEB-LAYER.md), [B-8](B-8-CONFIG-INFRASTRUCTURE.md), conferidos contra o código quando a conclusão depende dele.
 > **Alterações desta fase:** somente este documento. Nenhum código, teste, propriedade, migration, template, dependência ou JavaDoc foi alterado; nenhum teste ou aplicação foi executado; nenhum commit.

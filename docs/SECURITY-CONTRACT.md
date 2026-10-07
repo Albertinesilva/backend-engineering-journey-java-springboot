@@ -1,5 +1,7 @@
 # SECURITY CONTRACT — ASJCatalog Backend
 
+[🏠 Índice](HOME.md)
+
 ## 1. Objetivo
 
 Este documento registra o comportamento atual e real do sistema de autenticação e autorização do backend do ASJCatalog. Ele serve como baseline/contrato de compatibilidade para futuras alterações pontuais e controladas.
@@ -956,3 +958,7 @@ Não corrigir automaticamente um risco identificado. Uma correção pode alterar
 Este contrato documenta o comportamento atual do backend do ASJCatalog. Ele foi construído somente com leitura do código real, das configurações e dos testes existentes. Nenhuma alteração foi aplicada ao backend, e nenhuma correção foi feita nos riscos identificados.
 
 O documento serve como base para futuras alterações pontuais e para análise de compatibilidade antes de qualquer mudança em segurança, autenticação, autorização, JWT, refresh token, CORS e regras de acesso.
+
+---
+
+[🏠 Índice](HOME.md)

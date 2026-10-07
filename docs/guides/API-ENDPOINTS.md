@@ -1,5 +1,7 @@
 # Endpoints da API
 
+⬅️ Anterior: [Migrations do banco de dados](DATABASE-MIGRATIONS.md) · [🏠 Índice](../HOME.md) · Próximo: [Validação](VALIDATION.md) ➡️
+
 Este guia lista todos os endpoints da API do ASJCatalog, quem pode acessar cada um, o que recebem e o que devolvem.
 
 ## Sumário
@@ -219,3 +221,7 @@ curl.exe -s http://localhost:8080/api/v1/categories/999999
 - **`PUT /users/{id}` não funciona para OPERATOR, nem no próprio id.** A regra `#id == authentication.principal.id` compara o id da URL com o claim `jti` do JWT, e não com o id do usuário. Veja [AUTHENTICATION.md](AUTHENTICATION.md#10-limitações-conhecidas).
 - **Parâmetros inválidos respondem 500.** Um id não numérico (`/categories/abc`), a falta do parâmetro `token` em `/activate` e um JSON malformado caem no tratamento genérico de exceções e devolvem 500 em vez de 400.
 - **Rota inexistente sem token responde 401.** Como toda rota fora das públicas exige autenticação, um endereço errado sem token devolve 401, e não 404.
+
+---
+
+⬅️ Anterior: [Migrations do banco de dados](DATABASE-MIGRATIONS.md) · [🏠 Índice](../HOME.md) · Próximo: [Validação](VALIDATION.md) ➡️

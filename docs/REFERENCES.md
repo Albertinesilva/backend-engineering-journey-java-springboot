@@ -1,5 +1,7 @@
 # Referências técnicas
 
+[🏠 Índice](HOME.md)
+
 Documentações oficiais e livros usados no ASJCatalog, organizados por assunto. Cada grupo indica o guia que mostra como o assunto foi aplicado no projeto. Quando a documentação é publicada por versão, o link aponta para a versão usada no projeto.
 
 ## Spring Boot
@@ -106,3 +108,7 @@ Guia relacionado: [TESTING](guides/TESTING.md).
 
 - [JUnit 5.12 — User Guide](https://docs.junit.org/5.12.2/user-guide/)
 - [Mockito — site oficial](https://site.mockito.org/)
+
+---
+
+[🏠 Índice](HOME.md)

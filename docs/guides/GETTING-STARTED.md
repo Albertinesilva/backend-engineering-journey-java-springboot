@@ -1,5 +1,7 @@
 # Primeiros passos
 
+[🏠 Índice](../HOME.md) · Próximo: [Configuração e perfis](CONFIGURATION.md) ➡️
+
 Este guia leva você do zero até a primeira requisição autenticada na API do ASJCatalog, rodando no seu computador.
 
 ## Sumário
@@ -252,3 +254,7 @@ A renovação do token e as regras de acesso de cada endpoint são explicadas em
   - **Na recuperação de senha**, responder sucesso é intencional: o endpoint sempre responde da mesma forma para não revelar se o e-mail está cadastrado.
   - **No cadastro**, a conta é criada inativa mesmo sem o e-mail. Depois que o envio voltar a funcionar, a pessoa pode pedir outro e-mail em `POST /api/v1/accounts/resend-activation` (veja [ACCOUNT-FLOWS.md](ACCOUNT-FLOWS.md#3-reenvio-de-ativação)).
 - **A variável ausente não é apontada pelo nome.** No perfil `dev`, esquecer `POSTGRES_DATASOURCE_USER` ou `POSTGRES_DATASOURCE_PASSWORD` não gera uma mensagem de "variável ausente": o erro aparece como falha de autenticação no PostgreSQL (veja a seção 9).
+
+---
+
+[🏠 Índice](../HOME.md) · Próximo: [Configuração e perfis](CONFIGURATION.md) ➡️

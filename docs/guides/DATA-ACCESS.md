@@ -1,5 +1,7 @@
 # Acesso a dados
 
+⬅️ Anterior: [Modelo de domínio](DOMAIN-MODEL.md) · [🏠 Índice](../HOME.md) · Próximo: [Migrations do banco de dados](DATABASE-MIGRATIONS.md) ➡️
+
 Este guia explica como o ASJCatalog lê e grava no banco: repositórios, tipos de consulta, projections, paginação, a solução do problema N+1 na listagem de produtos e o uso de transações.
 
 ## Sumário
@@ -179,3 +181,7 @@ O `EmailService` não declara transações: a gravação do registro de e-mail u
 - **O login diferencia maiúsculas no e-mail.** `searchUserAndRolesByEmail` compara com `=`, então `Maria@gmail.com` não encontra `maria@gmail.com`. Já as validações de e-mail repetido ignoram maiúsculas (`existsByEmailIgnoreCase`).
 - **Usuário sem role não consegue fazer login.** A consulta de login usa `INNER JOIN` com as roles; um usuário sem nenhuma role não é encontrado.
 - **Formato da página não é estável.** Os controllers devolvem `Page` diretamente, e o Spring Data avisa no log que serializar `PageImpl` como está não garante uma estrutura de JSON estável entre versões.
+
+---
+
+⬅️ Anterior: [Modelo de domínio](DOMAIN-MODEL.md) · [🏠 Índice](../HOME.md) · Próximo: [Migrations do banco de dados](DATABASE-MIGRATIONS.md) ➡️

@@ -2,6 +2,8 @@
 
 > **Registro de auditoria — 2026-09-21.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
 
+[🏠 Índice da documentação](../HOME.md)
+
 > **Etapa:** documentação complementar da produção (após B-9).
 > **Alteração em `src/main`:** somente JavaDoc em `util/IdentifiableUtils.java`. Nenhuma linha executável, assinatura, import ou teste foi alterado.
 

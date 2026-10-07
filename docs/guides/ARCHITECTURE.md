@@ -1,5 +1,7 @@
 # Arquitetura
 
+⬅️ Anterior: [Configuração e perfis](CONFIGURATION.md) · [🏠 Índice](../HOME.md) · Próximo: [Modelo de domínio](DOMAIN-MODEL.md) ➡️
+
 Este guia mostra como o backend do ASJCatalog está organizado em camadas e pacotes, e o caminho que uma requisição percorre do controller até o banco e de volta.
 
 ## Sumário
@@ -171,3 +173,7 @@ Alguns vestígios do nome antigo continuam no repositório de propósito:
 
 - as URLs de imagens do seed apontam para o repositório externo `devsuperior/dscatalog-resources`;
 - os registros históricos em [`docs/audits/`](../audits/) citam o pacote antigo `com.albertsilva.dev.dscatalog`, que foi renomeado para `com.albertsilva.dev.asjcatalog`.
+
+---
+
+⬅️ Anterior: [Configuração e perfis](CONFIGURATION.md) · [🏠 Índice](../HOME.md) · Próximo: [Modelo de domínio](DOMAIN-MODEL.md) ➡️

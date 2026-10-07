@@ -1,5 +1,7 @@
 # Configuração e perfis
 
+⬅️ Anterior: [Primeiros passos](GETTING-STARTED.md) · [🏠 Índice](../HOME.md) · Próximo: [Arquitetura](ARCHITECTURE.md) ➡️
+
 Este guia explica como a aplicação é configurada em cada ambiente (perfis `dev`, `test` e `prod`) e lista todas as variáveis de ambiente que ela lê.
 
 ## Sumário
@@ -160,3 +162,7 @@ Os detalhes estão em [INTERNATIONALIZATION.md](INTERNATIONALIZATION.md).
 - **Espaços em `CORS_ORIGINS` não são removidos.** O valor é dividido por vírgula sem retirar espaços; escreva a lista sem espaço depois da vírgula.
 - **Console do H2 sem autenticação no perfil `test`.** Quando o console está ligado, a aplicação cria uma cadeia de segurança própria para ele, sem regras de acesso. Não use o perfil `test` em um servidor acessível por outras pessoas.
 - **Segredos padrão versionados.** Os valores padrão de `CLIENT_ID`, `CLIENT_SECRET`, `MAIL_USERNAME` e `MAIL_PASSWORD` estão no `application.properties`, que é público. Eles servem só para desenvolvimento; em prod, as variáveis são obrigatórias.
+
+---
+
+⬅️ Anterior: [Primeiros passos](GETTING-STARTED.md) · [🏠 Índice](../HOME.md) · Próximo: [Arquitetura](ARCHITECTURE.md) ➡️

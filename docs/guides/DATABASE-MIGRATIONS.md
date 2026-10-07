@@ -1,5 +1,7 @@
 # Migrations do banco de dados
 
+⬅️ Anterior: [Acesso a dados](DATA-ACCESS.md) · [🏠 Índice](../HOME.md) · Próximo: [Endpoints da API](API-ENDPOINTS.md) ➡️
+
 Este guia explica como a estrutura e os dados iniciais do banco são criados e versionados com o Flyway, e como criar uma migration nova.
 
 ## Sumário
@@ -140,3 +142,7 @@ O `import.sql` só é executado quando o Hibernate cria as tabelas. Nos perfis `
 - **O `import.sql` é mantido à mão.** Nada garante que ele continue igual às pastas `data` e `reference`; ao mudar os dados de exemplo, atualize os dois.
 - **Os vínculos usam ids fixos.** A V102, a V105 e o `import.sql` supõem que categorias, produtos, usuários e roles recebem os ids na ordem de inserção.
 - **Flyway desligado nos testes.** Os testes usam tabelas criadas pelo Hibernate a partir das entidades, e não pelas migrations. Um erro de SQL numa migration não é detectado pelos testes: aparece só ao subir nos perfis `dev` ou `prod`.
+
+---
+
+⬅️ Anterior: [Acesso a dados](DATA-ACCESS.md) · [🏠 Índice](../HOME.md) · Próximo: [Endpoints da API](API-ENDPOINTS.md) ➡️

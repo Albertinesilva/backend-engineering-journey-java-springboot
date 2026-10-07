@@ -1,5 +1,7 @@
 # Convenções
 
+⬅️ Anterior: [Testes](TESTING.md) · [🏠 Índice](../HOME.md) · Próximo: [Decisões técnicas](DESIGN-DECISIONS.md) ➡️
+
 Este guia reúne as convenções seguidas no ASJCatalog: nomes de classes e pacotes, idioma, JavaDoc, testes, mensagens de commit, branches e numeração de migrations.
 
 ## Sumário
@@ -127,3 +129,7 @@ Também existem `main` (a branch padrão do repositório remoto) e `develop`. O 
 **Por quê.** Um banco já migrado anota no histórico do Flyway a maior versão aplicada (hoje V105 em `dev` e V104 em `prod`). Uma migration nova com número menor, como uma `V012` em `schema`, fica "fora de ordem", e o Flyway recusa a subida com `Detected resolved migration not applied to database`. Com a regra "maior + 1", toda migration nova é sempre a última, em qualquer ambiente. A faixa `V001`–`V011` de `schema` e a faixa `V100`–`V105` de `data` são históricas e não indicam onde numerar a próxima.
 
 Passo a passo para criar uma migration: [DATABASE-MIGRATIONS.md](DATABASE-MIGRATIONS.md#6-criar-uma-migration-nova).
+
+---
+
+⬅️ Anterior: [Testes](TESTING.md) · [🏠 Índice](../HOME.md) · Próximo: [Decisões técnicas](DESIGN-DECISIONS.md) ➡️

@@ -2,6 +2,8 @@
 
 > **Registro de auditoria — 2026-09-19.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
 
+[🏠 Índice da documentação](../HOME.md)
+
 > **Fase:** B-0 — Baseline e Inventário (somente leitura, análise e registro).
 > **Data do baseline:** 2026-09-19.
 > **Branch:** `chapter-04-domain-orm`.

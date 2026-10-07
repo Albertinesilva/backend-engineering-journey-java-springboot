@@ -2,6 +2,8 @@
 
 > **Registro de auditoria — 2026-09-21.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
 
+[🏠 Índice da documentação](../HOME.md)
+
 > **Fase:** B-3 — análise e documentação (JavaDoc) de `service`.
 > **Pré-requisitos:** [B-0](B-0-BACKEND-INVENTORY.md), [B-1](B-1-DOMAIN-LAYER.md) e [B-2](B-2-REPOSITORY-LAYER.md).
 > **Escopo alterado:** somente comentários JavaDoc em `src/main/java/**/service/*.java` (os 6 services) e esta documentação, com notas pontuais nos documentos B-0/B-1/B-2. Nenhuma linha de código executável, anotação, assinatura ou transação foi alterada.

@@ -1,5 +1,7 @@
 # Internacionalização
 
+⬅️ Anterior: [Tratamento de erros](ERROR-HANDLING.md) · [🏠 Índice](../HOME.md) · Próximo: [Autenticação e autorização](AUTHENTICATION.md) ➡️
+
 Este guia explica como a API responde em português, inglês ou espanhol, onde ficam as mensagens e como adicionar uma mensagem ou um idioma novo.
 
 ## Sumário
@@ -172,3 +174,7 @@ A classe `MessageSourceConfig` não precisa mudar: ela procura qualquer arquivo 
 - **O 401 do Resource Server não é traduzido.** Requisições sem token ou com token inválido em rotas protegidas são recusadas pelos filtros de segurança antes do `ControllerExceptionHandler`, e a resposta vem sem corpo.
 - **Textos fixos em outros pontos.** Os assuntos e textos dos e-mails (`Confirmação de Cadastro`, `Redefinição de Senha`) e as mensagens de log estão em português, direto no código.
 - **Uma chave inexistente aparece crua.** Se o handler receber uma chave que não está nos arquivos, o campo mostra a própria chave (ou a mensagem reserva do handler). O `MessagesPropertiesTest` evita isso para as chaves que ele consegue encontrar no código.
+
+---
+
+⬅️ Anterior: [Tratamento de erros](ERROR-HANDLING.md) · [🏠 Índice](../HOME.md) · Próximo: [Autenticação e autorização](AUTHENTICATION.md) ➡️

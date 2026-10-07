@@ -1,5 +1,7 @@
 # Testes
 
+⬅️ Anterior: [Fluxos de conta](ACCOUNT-FLOWS.md) · [🏠 Índice](../HOME.md) · Próximo: [Convenções](CONVENTIONS.md) ➡️
+
 Este guia explica como os testes do ASJCatalog estão organizados, como rodá-los e o que cada grupo cobre.
 
 ## Sumário
@@ -148,3 +150,7 @@ Sem acesso ao DNS, esses testes falham, porque o e-mail é considerado inválido
 - **Os testes dependem de internet** para a consulta de DNS da validação de e-mail.
 - **Flyway não é testado.** O perfil `test` cria as tabelas a partir das entidades, e não pelas migrations. Um erro numa migration só aparece ao subir nos perfis `dev` ou `prod`.
 - **Comportamentos sem teste.** Não há teste para `PUT /users/{id}` feito por um OPERATOR no próprio id, para `GET /accounts/me` sem token, para `GET /products?sort=price` nem para o comportamento após reiniciar a aplicação (tokens invalidados). Veja as limitações em [API-ENDPOINTS.md](API-ENDPOINTS.md#9-limitações-conhecidas) e [AUTHENTICATION.md](AUTHENTICATION.md#10-limitações-conhecidas).
+
+---
+
+⬅️ Anterior: [Fluxos de conta](ACCOUNT-FLOWS.md) · [🏠 Índice](../HOME.md) · Próximo: [Convenções](CONVENTIONS.md) ➡️

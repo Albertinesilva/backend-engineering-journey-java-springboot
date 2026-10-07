@@ -2,6 +2,8 @@
 
 > **Registro de auditoria — 2026-09-21.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
 
+[🏠 Índice da documentação](../HOME.md)
+
 > **Fase:** B-4 — análise e documentação (JavaDoc) de `dto` e `mapper`.
 > **Pré-requisitos:** [B-0](B-0-BACKEND-INVENTORY.md), [B-1](B-1-DOMAIN-LAYER.md), [B-2](B-2-REPOSITORY-LAYER.md), [B-3](B-3-SERVICE-LAYER.md).
 > **Escopo alterado:** somente comentários JavaDoc em `src/main/java/**/dto/**` (19 records) e `src/main/java/**/mapper/**` (3 mappers), mais esta documentação e notas pontuais nos documentos anteriores. Nenhum campo, tipo, anotação de validação, assinatura, nome ou regra de atualização foi alterado.

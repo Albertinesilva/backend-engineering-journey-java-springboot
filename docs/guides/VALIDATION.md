@@ -1,5 +1,7 @@
 # Validação
 
+⬅️ Anterior: [Endpoints da API](API-ENDPOINTS.md) · [🏠 Índice](../HOME.md) · Próximo: [Tratamento de erros](ERROR-HANDLING.md) ➡️
+
 Este guia explica como a API valida os dados recebidos: as anotações padrão do Bean Validation, os validadores próprios do projeto, as regras de senha e a validação de e-mail.
 
 ## Sumário
@@ -158,3 +160,7 @@ Qualquer falha na consulta, como falta de internet, DNS fora do ar ou domínio i
 - **Regras de e-mail diferentes.** `PUT /accounts/me` aceita e-mails que o `@ValidEmail` recusaria (domínios sem MX), porque usa só o `@Email`.
 - **Validação dependente de rede.** Uma falha temporária de DNS recusa e-mails válidos.
 - **`PATCH` de categoria exige o nome.** Apesar de ser um `PATCH` (atualização parcial), `CategoryUpdateRequest` tem `@NotBlank` no `name`.
+
+---
+
+⬅️ Anterior: [Endpoints da API](API-ENDPOINTS.md) · [🏠 Índice](../HOME.md) · Próximo: [Tratamento de erros](ERROR-HANDLING.md) ➡️

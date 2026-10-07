@@ -2,6 +2,8 @@
 
 > **Registro de auditoria — 2026-09-19.** Este documento registra uma auditoria feita nessa data e pode não refletir o código atual. A documentação atualizada está em [docs/guides/](../guides/).
 
+[🏠 Índice da documentação](../HOME.md)
+
 > **Fase:** B-1 — documentação (JavaDoc) da camada `domain`.
 > **Pré-requisito:** [B-0-BACKEND-INVENTORY.md](B-0-BACKEND-INVENTORY.md).
 > **Escopo alterado:** somente comentários JavaDoc em `src/main/java/**/domain/**` (nenhuma linha de código executável foi modificada) e este documento.

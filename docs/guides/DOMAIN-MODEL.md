@@ -1,5 +1,7 @@
 # Modelo de domínio
 
+⬅️ Anterior: [Arquitetura](ARCHITECTURE.md) · [🏠 Índice](../HOME.md) · Próximo: [Acesso a dados](DATA-ACCESS.md) ➡️
+
 Este guia descreve as entidades do ASJCatalog, seus campos, relacionamentos e as regras de negócio que ficam dentro delas.
 
 ## Sumário
@@ -223,3 +225,7 @@ O construtor recebe um `EmailRegisterRequest` e define `status = PENDING` e `cre
 - **Datas diferentes na criação.** `Product` preenche `createdAt` e `updatedAt` ao ser criado; `Category` preenche só `createdAt`, e seu `updatedAt` fica nulo até a primeira atualização.
 - **Igualdade por id.** `equals` e `hashCode` das entidades comparam só o `id`. Duas instâncias ainda não salvas (com `id` nulo) são consideradas iguais.
 - **Preço em ponto flutuante.** `price` é `Double`, um tipo que não representa todos os valores decimais de forma exata.
+
+---
+
+⬅️ Anterior: [Arquitetura](ARCHITECTURE.md) · [🏠 Índice](../HOME.md) · Próximo: [Acesso a dados](DATA-ACCESS.md) ➡️

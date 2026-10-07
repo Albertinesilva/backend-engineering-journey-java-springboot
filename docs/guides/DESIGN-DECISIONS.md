@@ -1,5 +1,7 @@
 # Decisões técnicas
 
+⬅️ Anterior: [Convenções](CONVENTIONS.md) · [🏠 Índice](../HOME.md)
+
 Este guia reúne as principais decisões técnicas do ASJCatalog: o contexto de cada uma, o que foi decidido, por quê, que alternativas existem e quais são as consequências.
 
 O projeto nasceu da base do DSCatalog, do curso DevSuperior, e evoluiu de forma independente. Por isso, várias decisões vieram dessa base e outras surgiram ao longo da evolução do projeto. Quando o motivo de uma decisão está registrado no código, no histórico de commits, nos guias ou nas [auditorias](../audits/), o campo **Por quê?** cita a fonte. Quando ainda não está, o campo traz uma pergunta para o autor responder.
@@ -243,3 +245,7 @@ Efeitos das decisões acima que o projeto conhece e mantém por enquanto. Os det
 | Preço em `Double` | Nem todo valor decimal é representado de forma exata | — | [DOMAIN-MODEL.md](DOMAIN-MODEL.md#9-limitações-conhecidas) |
 | `equals` e `hashCode` por id | Duas entidades ainda não salvas são consideradas iguais | — | [DOMAIN-MODEL.md](DOMAIN-MODEL.md#9-limitações-conhecidas) |
 | Segredos padrão versionados | Os valores de desenvolvimento ficam públicos no repositório; em `prod`, as variáveis são obrigatórias | D-08 | [CONFIGURATION.md](CONFIGURATION.md#7-limitações-conhecidas) |
+
+---
+
+⬅️ Anterior: [Convenções](CONVENTIONS.md) · [🏠 Índice](../HOME.md)

@@ -1,5 +1,7 @@
 # Fluxos de conta
 
+⬅️ Anterior: [Autenticação e autorização](AUTHENTICATION.md) · [🏠 Índice](../HOME.md) · Próximo: [Testes](TESTING.md) ➡️
+
 Este guia descreve o ciclo de vida da conta do usuário: cadastro, ativação, reenvio de ativação, recuperação e redefinição de senha, consulta e alteração dos próprios dados, além dos tokens de conta e do envio de e-mails.
 
 ## Sumário
@@ -202,3 +204,7 @@ O mesmo vale para a recuperação de senha: o token `PASSWORD_RECOVERY` vai no c
 - **Template não usado.** `reactivate_user_by_email_template.html` existe, mas nenhum código o usa: o reenvio de ativação usa o template do cadastro.
 - **Parágrafo vazio no e-mail de senha.** O template de redefinição exibe a variável `texto`, que o código não preenche para esse e-mail.
 - **Registro de e-mail incompleto.** Veja as limitações de `Email` em [DOMAIN-MODEL.md](DOMAIN-MODEL.md#9-limitações-conhecidas).
+
+---
+
+⬅️ Anterior: [Autenticação e autorização](AUTHENTICATION.md) · [🏠 Índice](../HOME.md) · Próximo: [Testes](TESTING.md) ➡️
