@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.albertsilva.dev</groupId>
-	<artifactId>dscatalog</artifactId>
+	<artifactId>asjcatalog</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>dscatalog</name>
-	<description>Demo project for Spring Boot</description>
+	<name>ASJCatalog Backend</name>
+	<description>Backend REST API for the ASJCatalog project built with Spring Boot</description>
 	<url/>
 	<licenses>
 		<license/>
