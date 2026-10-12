@@ -1,10 +1,10 @@
 # 🤝 Contribuindo para o Projeto
 
-Antes de tudo, obrigado pelo interesse em contribuir com este repositório 🚀
+Antes de tudo, obrigado pelo interesse em contribuir com o **ASJCatalog** 🚀
 
-Este projeto foi criado como parte de uma jornada prática de aprendizado em desenvolvimento backend com Java e Spring Boot, documentando evolução técnica, boas práticas e implementação progressiva de aplicações reais.
+Este projeto é open source e sem fins comerciais. Ele nasceu da base do DSCatalog, do curso DevSuperior, e evoluiu de forma independente como um laboratório de aprendizado em desenvolvimento backend com Java e Spring Boot.
 
-A proposta não é apenas compartilhar código, mas também incentivar aprendizado colaborativo, troca de conhecimento e construção de um ambiente saudável para desenvolvedores em evolução.
+A proposta não é apenas compartilhar código, mas também incentivar aprendizado colaborativo, troca de conhecimento e construção de um ambiente saudável para desenvolvedores em evolução. **Se você está começando, este guia foi escrito pensando em você.**
 
 ---
 
@@ -22,45 +22,59 @@ As contribuições devem ajudar a:
 
 ---
 
-# 📚 Estrutura do Projeto
+# 🌿 Como as Branches Funcionam
 
-O repositório está organizado por capítulos/branches, representando a evolução incremental da jornada:
+| Branch | Para que serve | Recebe Pull Request? |
+|---|---|---|
+| `develop` | Código atual e completo do projeto, com a documentação em `docs/` | ✅ **Sim, sempre** |
+| `main` | Página de entrada do repositório. Só recebe o código no deploy final | ❌ Não |
+| `chapter-*` | Registro de cada capítulo, como foi publicado | ❌ Não |
+
+Capítulos publicados:
 
 | Branch | Tema |
 |---|---|
-| `chapter-01-crud` | CRUD + Arquitetura em Camadas |
-| `chapter-02-tests` | Testes Automatizados |
-| `chapter-03-validation-security` | Validação e Segurança |
-| `chapter-04-domain` | Modelagem de Domínio |
-| `chapter-05-queries` | Consultas e Performance |
-| `chapter-06-docker` | Docker, Deploy e CI/CD |
+| `chapter-01-crud` | Operações CRUD com Spring Boot |
+| `chapter-02-tests` | Testes automatizados |
+| `chapter-03-validation-security` | Validação e segurança |
+| `chapter-04-domain-orm` | Domínio, ORM, casos de uso e acesso a dados |
 
-A branch `main` funciona como hub central de documentação e navegação.
+Ainda faltam dois capítulos para encerrar a evolução do projeto.
 
 ---
 
-# 🛠️ Stack e Tecnologias Utilizadas
+# 🔎 Escolhendo uma Issue
 
-- Java 17+
-- Spring Boot
-- Spring Web
-- Spring Data JPA
-- Hibernate ORM
-- Spring Security
-- OAuth2 / JWT
-- PostgreSQL
-- H2 Database
-- Flyway
-- JUnit 5
-- Mockito
-- MockMvc
-- AssertJ
-- Maven
-- Docker
-- JavaDoc Documentation
-- Swagger / OpenAPI
-- SLF4J / Logback
-- Git / GitHub
+As melhorias pendentes estão registradas como [issues](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/issues). Cada issue já traz três partes:
+
+- **Contexto**: o que acontece hoje e onde;
+- **O que fazer**: o caminho sugerido;
+- **Critérios de aceite**: o que precisa estar pronto para a issue ser considerada resolvida.
+
+## Labels
+
+| Label | Significado |
+|---|---|
+| `good first issue` | Boa para quem está começando no projeto. **Comece por aqui.** |
+| `bug` | Algo não funciona como deveria |
+| `security` | Vulnerabilidade ou regra de acesso |
+| `tech-debt` | Dívida técnica e qualidade de código |
+| `tests` | Testes automatizados |
+| `i18n` | Internacionalização e mensagens |
+| `documentation` | Melhorias ou acréscimos na documentação |
+| `enhancement` | Melhoria ou funcionalidade nova |
+| `production-readiness` | Necessário para rodar em produção |
+| `help wanted` | Precisa de atenção extra |
+
+## Milestone
+
+O milestone [Pronto para produção](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/milestone/1) reúne as issues que precisam ser resolvidas antes do deploy. São as prioridades do projeto.
+
+## Antes de começar
+
+**Comente na issue dizendo que vai trabalhar nela.** Isso evita que duas pessoas façam a mesma coisa. Se tiver dúvida sobre o caminho, pergunte ali mesmo.
+
+Encontrou um problema que ainda não tem issue? Abra uma nova usando os modelos de **Bug** ou **Melhoria**.
 
 ---
 
@@ -70,23 +84,39 @@ A branch `main` funciona como hub central de documentação e navegação.
 
 Crie um fork deste repositório para sua conta GitHub.
 
+> [!IMPORTANT]
+> Na tela de criação do fork, **desmarque a opção "Copy the `main` branch only"**. A `main` não tem o código atual, e você vai precisar da `develop`.
+
+Se o fork já foi criado só com a `main`, tudo bem: depois do clone (passo 2), traga a `develop` do repositório original:
+
+```bash
+git remote add upstream https://github.com/Albertinesilva/backend-engineering-journey-java-springboot.git
+git fetch upstream develop
+git checkout -b develop upstream/develop
+```
+
 ---
 
 ## 2. Clone o Projeto
 
 ```bash
-git clone https://github.com/SEU-USUARIO/jornada-java-springboot-bootcamp.git
+git clone https://github.com/SEU-USUARIO/backend-engineering-journey-java-springboot.git
+cd backend-engineering-journey-java-springboot
 ```
 
 ---
 
-## 3. Crie uma Branch
+## 3. Crie uma Branch a partir da `develop`
 
-Utilize nomes claros e descritivos:
+Sempre parta da `develop` atualizada:
 
 ```bash
-git checkout -b feature/nome-da-feature
+git checkout develop
+git pull
+git checkout -b fix/3-sort-price-produtos
 ```
+
+Utilize nomes claros e descritivos. Se a branch resolve uma issue, coloque o número dela no nome.
 
 Exemplos:
 
@@ -99,7 +129,15 @@ test/product-service-tests
 
 ---
 
-## 4. Realize as Alterações
+## 4. Rode o Projeto
+
+Você vai precisar do **JDK 17**, do **PostgreSQL** e de algumas variáveis de ambiente. Não é preciso instalar o Maven: o projeto traz o Maven Wrapper (`mvnw`).
+
+O passo a passo completo, do banco de dados até a primeira requisição autenticada, está no guia [Primeiros Passos (GETTING-STARTED)](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/blob/develop/docs/guides/GETTING-STARTED.md).
+
+---
+
+## 5. Realize as Alterações
 
 Boas práticas esperadas:
 
@@ -109,6 +147,7 @@ Boas práticas esperadas:
 - Baixo acoplamento
 - Coesão entre camadas
 - Seguir arquitetura existente
+- Ao mudar um comportamento, atualizar o JavaDoc e o guia correspondente em `docs/guides/`
 
 ---
 
@@ -120,11 +159,19 @@ Sempre que possível:
 - Garanta que os testes existentes continuem funcionando
 - Evite quebrar contratos da API
 
-Executar testes:
+Os comandos rodam dentro da pasta `backend`:
 
 ```bash
-./mvnw test
+cd backend
+./mvnw test     # só os testes de unidade
+./mvnw verify   # testes de unidade + testes de integração (*IT)
 ```
+
+No PowerShell, use `.\mvnw test` e `.\mvnw verify`.
+
+**Antes de abrir o Pull Request, rode `./mvnw verify`.** Os testes usam o banco H2 em memória e não precisam do PostgreSQL nem de servidor de e-mail.
+
+Como os testes estão organizados e como rodar uma classe só: guia [Testes (TESTING)](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/blob/develop/docs/guides/TESTING.md).
 
 ---
 
@@ -154,13 +201,32 @@ Controller → Service → Repository
 - Padronizar respostas HTTP
 - Centralizar tratamento no Exception Handler
 
+Todas as convenções do projeto (pacotes, nomes de classes, idioma, JavaDoc, testes e migrations) estão no guia [Convenções (CONVENTIONS)](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/blob/develop/docs/guides/CONVENTIONS.md).
+
 ---
 
 ## Commits
 
-Prefira commits pequenos e objetivos.
+Prefira commits pequenos e objetivos, no formato:
 
-Exemplos:
+```text
+tipo(escopo): descrição
+```
+
+- **tipo**: a natureza da mudança (tabela abaixo);
+- **escopo**: opcional, indica a área afetada (já usados: `i18n`, `flyway`, `config`);
+- **descrição**: em português, em letra minúscula, no presente e na terceira pessoa (`adiciona`, `corrige`, `remove`), sem ponto final.
+
+| Tipo | Uso | Exemplo real do histórico |
+|---|---|---|
+| `feat` | Funcionalidade nova | `feat(i18n): testa idioma por Accept-Language, remove config de locale sem efeito e atualiza banner` |
+| `fix` | Correção | `fix(flyway): move roles para a pasta reference e aplica em todos os perfis` |
+| `refactor` | Mudança de código sem mudar comportamento | `refactor: renomeia o pacote base de dscatalog para asjcatalog` |
+| `test` | Testes | `test: amplia a cobertura com ITs de conta, autorização, CORS e consultas nativas` |
+| `docs` | Documentação | `docs: adiciona o guia de decisões técnicas e a origem do pacote domain` |
+| `build` | Build e dependências | `build: adiciona o maven-failsafe-plugin para executar os testes *IT` |
+
+Outros exemplos:
 
 ```text
 feat: adiciona validação de categoria
@@ -173,18 +239,28 @@ docs: atualiza README do capítulo 02
 
 # 📥 Pull Requests
 
+> [!IMPORTANT]
+> **Abra o Pull Request sempre para a branch `develop`, nunca para a `main`.** Na tela do PR, confira se o campo **base** está como `develop`. A `main` só recebe o código no deploy final.
+
 Antes de abrir um Pull Request:
 
 - Verifique se o projeto compila
-- Execute os testes
+- Execute os testes com `./mvnw verify`
 - Revise o código
+- Confira os critérios de aceite da issue
 - Atualize documentação se necessário
+
+Na descrição do PR, cite a issue com `Refs #número` (por exemplo, `Refs #3`). O modelo de PR já traz esse campo.
+
+## Fechamento das issues
+
+O GitHub só fecha uma issue automaticamente (com palavras como `Closes #3` ou `Fixes #3`) quando o Pull Request entra na **branch padrão** do repositório, que aqui é a `main`. Como os PRs entram na `develop`, **a issue não fecha sozinha**: ela será fechada manualmente pelo mantenedor depois que o PR for aceito na `develop`.
 
 ---
 
 # 💬 Discussões e Sugestões
 
-Sugestões de melhoria são muito bem-vindas:
+Sugestões de melhoria são muito bem-vindas. Abra uma issue para conversar sobre:
 
 - Organização de projeto
 - Arquitetura
@@ -209,6 +285,8 @@ Este repositório prioriza:
 - Engenharia de software aplicada
 
 Mais importante do que apenas “fazer funcionar” é entender profundamente o que está sendo construído.
+
+Ao participar, siga o [Código de Conduta](CODE_OF_CONDUCT.md).
 
 ---
 

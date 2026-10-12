@@ -1,6 +1,17 @@
+<!-- Este Pull Request deve ter como base a branch develop. PRs para a main não são aceitos. -->
+
 # 📌 Descrição
 
 Explique de forma clara o objetivo deste Pull Request.
+
+---
+
+# 🔗 Issue relacionada
+
+Refs #
+
+<!-- Use "Refs #número". A issue será fechada manualmente após o merge na develop,
+     pois o fechamento automático só acontece na branch padrão (main). -->
 
 ---
 
@@ -19,12 +30,26 @@ Marque as opções aplicáveis:
 
 ---
 
+# 🎯 Destino
+
+- [ ] A base deste PR é a branch `develop`
+- [ ] Minha branch foi criada a partir da `develop` atualizada
+
+---
+
 # 🧪 O que foi validado?
 
-- [ ] Projeto compila corretamente
-- [ ] Testes executados com sucesso
-- [ ] Não existem erros de build
-- [ ] Documentação atualizada (se necessário)
+- [ ] `./mvnw verify` passou (testes de unidade e de integração), rodado na pasta `backend`
+- [ ] Testes novos ou ajustados para o que mudou
+- [ ] Os critérios de aceite da issue foram cumpridos
+
+---
+
+# 📖 Documentação
+
+- [ ] Guias em `docs/guides/` atualizados (se o comportamento mudou)
+- [ ] JavaDoc atualizado
+- [ ] Não se aplica
 
 ---
 
