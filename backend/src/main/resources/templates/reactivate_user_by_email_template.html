@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
+
+<head>
+    <title>ASJ Catalog</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ASJ Catalog - Catálogo de Produtos e Categorias" />
+    <meta name="author" content="ASJ Catalog" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 30px 15px;
+            background-color: #F8FAFC;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #334155;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08), 0 4px 10px rgba(15, 23, 42, 0.04);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1F6FEB 0%, #7C3AED 100%);
+            text-align: center;
+            padding: 40px 30px;
+        }
+
+        .logo {
+            width: 90px;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            margin: 0;
+            color: #FFFFFF;
+            font-size: 30px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .subtitle {
+            margin-top: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .content {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .message {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #475569;
+            margin-bottom: 32px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #1F6FEB 0%, #7C3AED 100%);
+            color: #FFFFFF !important;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            border: none;
+        }
+
+        .security-box {
+            margin-top: 35px;
+            padding: 18px;
+            background-color: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            text-align: left;
+        }
+
+        .security-title {
+            margin: 0 0 10px;
+            color: #0B1220;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .security-text {
+            margin: 0;
+            color: #64748B;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .footer {
+            background-color: #F8FAFC;
+            border-top: 1px solid #E2E8F0;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .footer-text {
+            margin: 0;
+            color: #64748B;
+            font-size: 13px;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 30px 24px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+
+            .button {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td align="center">
+                <table class="container" cellpadding="0" cellspacing="0" border="0">
+
+                    <!-- HEADER -->
+                    <tr>
+                        <td class="header">
+                            <img src="cid:logo" alt="ASJ Catalog" class="logo" />
+                            <h1 class="title">
+                                Bem-vindo(a) ao ASJ Catalog
+                            </h1>
+                            <p class="subtitle">
+                                Plataforma de gestão e catalogação de produtos
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- CONTENT -->
+                    <tr>
+                        <td class="content">
+                            <div class="message">
+                                Olá, <strong th:text="${nome}">[Nome]</strong>.
+                                <br><br>
+                                <span th:text="${texto}">
+                                    Seu texto será exibido aqui.
+                                </span>
+                            </div>
+                            <div th:if="${linkConfirmacao != null}">
+                                <a th:href="${linkConfirmacao}" class="button">
+                                    ✔ Reativar Conta
+                                </a>
+                            </div>
+                            <div class="security-box">
+                                <p class="security-title">
+                                    Segurança da sua conta
+                                </p>
+                                <p class="security-text">
+                                    Caso você não tenha solicitado esta ação,
+                                    ignore este e-mail com segurança.
+                                    Nenhuma alteração será realizada sem sua confirmação.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- FOOTER -->
+                    <tr>
+                        <td class="footer">
+                            <p class="footer-text">
+                                © 2026 ASJ Catalog. Todos os direitos reservados.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

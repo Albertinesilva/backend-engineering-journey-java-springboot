@@ -10,10 +10,10 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.albertsilva.dev</groupId>
-	<artifactId>dscatalog</artifactId>
+	<artifactId>asjcatalog</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>DSCatalog Backend</name>
-	<description>Backend REST API for the DSCatalog project built with Spring Boot</description>
+	<name>ASJCatalog Backend</name>
+	<description>Backend REST API for the ASJCatalog project built with Spring Boot</description>
 	<url>https://github.com/Albertinesilva/backend-engineering-journey-java-springboot</url>
 
 	<licenses>
@@ -28,7 +28,7 @@
 		<developer>
 			<id>albert</id>
 			<name>Albert Silva de Jesus</name>
-			<email>albertinesilva@.17gmail.com</email>
+			<email>albertinesilva.17@gmail.com</email>
 			<organization>Personal Project</organization>
 			<organizationUrl>https://github.com/Albertinesilva</organizationUrl>
 		</developer>
@@ -62,6 +62,18 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- Motor de templates Thymeleaf -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+
+		<!-- Envio de e-mails via Spring -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
 		<!-- =========================================================
@@ -155,6 +167,20 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<!-- Plugin de testes de integração (classes *IT, executadas no ./mvnw verify) -->
+			<!-- Versão gerenciada pelo spring-boot-starter-parent -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<!-- Plugin de compilação (controle do Java + parâmetros) -->
 			<plugin>

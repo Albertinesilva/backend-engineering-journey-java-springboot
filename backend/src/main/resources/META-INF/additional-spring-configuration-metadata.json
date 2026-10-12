@@ -1,22 +1,24 @@
-{"properties": [
-  {
-    "name": "security.client-id",
-    "type": "java.lang.String",
-    "description": "A description for 'security.client-id'"
-  },
-  {
-    "name": "security.client-secret",
-    "type": "java.lang.String",
-    "description": "A description for 'security.client-secret'"
-  },
-  {
-    "name": "security.jwt.duration",
-    "type": "java.lang.String",
-    "description": "A description for 'security.jwt.duration'"
-  },
-  {
-    "name": "cors.origins",
-    "type": "java.lang.String",
-    "description": "A description for 'cors.origins'"
-  }
-]}
+{
+  "properties": [
+    {
+      "name": "security.client-id",
+      "type": "java.lang.String",
+      "description": "OAuth2 client identifier used by the application."
+    },
+    {
+      "name": "security.client-secret",
+      "type": "java.lang.String",
+      "description": "OAuth2 client secret used for authentication."
+    },
+    {
+      "name": "security.jwt.duration",
+      "type": "java.lang.Long",
+      "description": "JWT expiration time in seconds."
+    },
+    {
+      "name": "cors.origins",
+      "type": "java.lang.String",
+      "description": "Comma-separated list of allowed CORS origins."
+    }
+  ]
+}
