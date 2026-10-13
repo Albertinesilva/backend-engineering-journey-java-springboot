@@ -250,6 +250,12 @@ Antes de abrir um Pull Request:
 - Confira os critérios de aceite da issue
 - Atualize documentação se necessário
 
+Depois de abrir o Pull Request:
+
+- Confira na aba **Commits** do PR se os seus commits aparecem. Se a lista estiver vazia ou só mostrar commits de outras pessoas, faltou o `git push` da sua branch.
+- O CI roda o `./mvnw verify` automaticamente no GitHub. Na sua primeira contribuição, o mantenedor precisa liberar a execução, então pode levar um tempinho até os testes começarem.
+- O merge só acontece com o CI passando e depois da revisão do mantenedor.
+
 Na descrição do PR, cite a issue com `Refs #número` (por exemplo, `Refs #3`). O modelo de PR já traz esse campo.
 
 ## Fechamento das issues

@@ -34,6 +34,7 @@ Marque as opções aplicáveis:
 
 - [ ] A base deste PR é a branch `develop`
 - [ ] Minha branch foi criada a partir da `develop` atualizada
+- [ ] Fiz o push dos meus commits e eles aparecem na aba **Commits** deste PR
 
 ---
 
