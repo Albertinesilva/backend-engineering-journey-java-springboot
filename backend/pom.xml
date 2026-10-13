@@ -182,6 +182,94 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- Plugin de cobertura de testes (relatórios de unidade, integração e consolidado) -->
+			<!-- Versão não gerenciada pelo spring-boot-starter-parent -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.15</version>
+				<configuration>
+					<!-- Classes sem lógica, fora do cálculo dos relatórios -->
+					<excludes>
+						<!-- Classe principal: só o main com SpringApplication.run -->
+						<exclude>com/albertsilva/dev/asjcatalog/AsjcatalogApplication.class</exclude>
+						<!-- DTOs: records sem lógica -->
+						<exclude>com/albertsilva/dev/asjcatalog/dto/**</exclude>
+						<!-- Projections: interfaces sem métodos default -->
+						<exclude>com/albertsilva/dev/asjcatalog/projection/**</exclude>
+						<!-- Configurações que só criam beans, sem desvios -->
+						<exclude>com/albertsilva/dev/asjcatalog/config/documentation/**</exclude>
+						<exclude>com/albertsilva/dev/asjcatalog/config/i18n/**</exclude>
+						<!-- Respostas de erro sem lógica (ValidationError fica, por causa do addError) -->
+						<exclude>com/albertsilva/dev/asjcatalog/web/exception/response/ProblemDetails.class</exclude>
+						<exclude>com/albertsilva/dev/asjcatalog/web/exception/response/FieldMessage.class</exclude>
+					</excludes>
+				</configuration>
+				<executions>
+					<!-- Agente nos testes de unidade (Surefire): grava target/jacoco.exec -->
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<!-- Relatório de unidade em target/site/jacoco -->
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+					<!-- Agente nos testes de integração (Failsafe): grava target/jacoco-it.exec -->
+					<execution>
+						<id>prepare-agent-integration</id>
+						<goals>
+							<goal>prepare-agent-integration</goal>
+						</goals>
+					</execution>
+					<!-- Relatório de integração em target/site/jacoco-it -->
+					<execution>
+						<id>report-integration</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>report-integration</goal>
+						</goals>
+					</execution>
+					<!-- Junta unidade e integração em target/jacoco-merged.exec -->
+					<execution>
+						<id>merge</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>merge</goal>
+						</goals>
+						<configuration>
+							<fileSets>
+								<fileSet>
+									<directory>${project.build.directory}</directory>
+									<includes>
+										<include>jacoco.exec</include>
+										<include>jacoco-it.exec</include>
+									</includes>
+								</fileSet>
+							</fileSets>
+							<destFile>${project.build.directory}/jacoco-merged.exec</destFile>
+						</configuration>
+					</execution>
+					<!-- Relatório consolidado em target/site/jacoco-merged -->
+					<execution>
+						<id>report-merged</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+						<configuration>
+							<dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+							<outputDirectory>${project.reporting.outputDirectory}/jacoco-merged</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<!-- Plugin de compilação (controle do Java + parâmetros) -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

@@ -4,6 +4,9 @@
 # Log file
 *.log
 
+# Logs gerados na execução (logging.file.name), inclusive os arquivos rotacionados (.gz)
+/logs/
+
 # BlueJ files
 *.ctxt
 
