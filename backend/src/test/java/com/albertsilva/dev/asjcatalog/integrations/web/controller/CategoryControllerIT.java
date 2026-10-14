@@ -161,7 +161,7 @@ class CategoryControllerIT extends AbstractIT {
         resultActions
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
-            .andExpect(jsonPath("$.message").value("Category not found"));
+            .andExpect(jsonPath("$.message").value("Category not found."));
       }
     }
 
@@ -222,7 +222,7 @@ class CategoryControllerIT extends AbstractIT {
       resultActions
           .andExpect(status().isUnprocessableEntity())
           .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-          .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'name')].message").value(hasItem("Category name is required")));
+          .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'name')].message").value(hasItem("Category name is required.")));
 
       assertEquals(initialCount, categoryRepository.count());
     }

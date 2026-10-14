@@ -171,6 +171,33 @@ class MessagesPropertiesTest {
     assertEquals(List.of(), missing, "Chaves referenciadas no código e ausentes nos arquivos de mensagens");
   }
 
+  @Test
+  @DisplayName("Messages should end with a single period and titles should start uppercase without final punctuation")
+  void messagesShouldFollowPunctuationConvention() throws Exception {
+    for (String file : allFiles()) {
+      Properties messages = load(file);
+      for (String key : messages.stringPropertyNames()) {
+        String message = messages.getProperty(key);
+        String location = file + " -> " + key;
+        if (key.endsWith(".title")) {
+          assertTrue(!message.isEmpty() && Character.isUpperCase(message.codePointAt(0)), location);
+          assertTrue(!message.matches(".*[\\p{Punct}]$"), location);
+        } else {
+          assertTrue(message.endsWith(".") && !message.endsWith(".."), location);
+        }
+      }
+    }
+  }
+
+  @Test
+  @DisplayName("English error titles should use sentence case")
+  void englishErrorTitlesShouldUseSentenceCase() throws Exception {
+    Properties messages = load("messages_en.properties");
+    assertEquals("Validation error", messages.getProperty("error.validation.title"));
+    assertEquals("Database error", messages.getProperty("error.database.title"));
+    assertEquals("Internal server error", messages.getProperty("error.internal.title"));
+  }
+
   private static Pattern exceptionKeyLiteralPattern() throws Exception {
     assertTrue(Files.isDirectory(CUSTOM_EXCEPTIONS), () -> "Pacote não encontrado: " + CUSTOM_EXCEPTIONS);
     String names;

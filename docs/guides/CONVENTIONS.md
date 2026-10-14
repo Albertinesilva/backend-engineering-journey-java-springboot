@@ -58,6 +58,10 @@ DTOs são `record`. Entidades são classes com construtor sem argumentos, *gette
 | Documentação em `docs/` | Português |
 | Mensagens de commit | Português |
 
+Nos arquivos `messages_*.properties`, títulos de erro (`*.title`) usam **capitalização de frase**: inicial maiúscula na primeira palavra, preservando siglas e nomes próprios, sem ponto final. Por exemplo, `Validation error` e `Internal server error`.
+
+As demais mensagens, inclusive erros específicos e mensagens de validação, terminam com **um único ponto final**. Por exemplo, `Categoria não encontrada.` e `Category name is required.`. Ao padronizar os textos, preserve as chaves, os placeholders e as traduções. Veja [INTERNATIONALIZATION.md](INTERNATIONALIZATION.md).
+
 ## 4. JavaDoc
 
 As classes de produção têm JavaDoc em português, escrito para explicar o **comportamento real**, inclusive limitações conhecidas (por exemplo, o JavaDoc do `EmailService` avisa que o `@Async` não tem efeito). Recursos usados:

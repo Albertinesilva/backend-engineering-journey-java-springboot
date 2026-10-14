@@ -212,7 +212,7 @@ class ProductControllerIT extends AbstractIT {
         resultActions
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
-            .andExpect(jsonPath("$.message").value("Product not found"));
+            .andExpect(jsonPath("$.message").value("Product not found."));
       }
     }
   }
@@ -300,7 +300,7 @@ class ProductControllerIT extends AbstractIT {
           .andExpect(status().isUnprocessableEntity())
           .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
           .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'categoryIds')].message")
-              .value(hasItem("Product must contain at least one category")));
+              .value(hasItem("Product must contain at least one category.")));
 
       assertEquals(initialCount, productRepository.count());
     }

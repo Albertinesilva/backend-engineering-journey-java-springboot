@@ -48,7 +48,7 @@ O **`MessageSource`** é o componente do Spring que busca um texto pela chave e 
 
 ## 3. Arquivos de mensagens
 
-Os três arquivos ficam em `backend/src/main/resources`, estão em UTF-8 e têm **exatamente as mesmas chaves** (hoje, 79). Muda só o texto. Cada arquivo é dividido em blocos comentados:
+Os três arquivos ficam em `backend/src/main/resources`, estão em UTF-8 e têm **exatamente as mesmas chaves** (hoje, 79). Muda só o texto. Títulos usam capitalização de frase e não têm ponto final; as demais mensagens, inclusive validações, terminam com um único ponto final. Veja a regra em [CONVENTIONS.md](CONVENTIONS.md#3-idioma). Cada arquivo é dividido em blocos comentados:
 
 | Bloco | Exemplos de chave |
 | --- | --- |
@@ -60,7 +60,7 @@ Os três arquivos ficam em `backend/src/main/resources`, estão em UTF-8 e têm 
 | User - Senha | `user.password.uppercase`, `user.password.personalData` |
 | Email - Validação | `email.sender.notBlank` |
 
-Algumas mensagens têm **placeholders**, trechos entre chaves que o Bean Validation substitui pelo valor da anotação. Por exemplo, `category.name.size=O nome da categoria deve ter entre {min} e {max} caracteres` recebe `{min}` e `{max}` do `@Size(min = 3, max = 80)`.
+Algumas mensagens têm **placeholders**, trechos entre chaves que o Bean Validation substitui pelo valor da anotação. Por exemplo, `category.name.size=O nome da categoria deve ter entre {min} e {max} caracteres.` recebe `{min}` e `{max}` do `@Size(min = 3, max = 80)`.
 
 O projeto não tem `ValidationMessages.properties`: todas as mensagens, inclusive as de validação, ficam nos arquivos `messages_*.properties`.
 
@@ -85,7 +85,7 @@ flowchart TD
     B --> C["Controller / Service<br/>lança ResourceNotFoundException('error.category.notFound')"]
     C --> D["ControllerExceptionHandler<br/>recebe o Locale"]
     D --> E["MessageSource<br/>busca a chave em messages_en.properties"]
-    E --> F["ProblemDetails<br/>error = Resource not found<br/>message = Category not found"]
+    E --> F["ProblemDetails<br/>error = Resource not found<br/>message = Category not found."]
 ```
 
 ## 6. Exemplos
@@ -100,7 +100,7 @@ Respostas reais de `GET /api/v1/categories/999999`.
   "status": 404,
   "code": "RESOURCE_NOT_FOUND",
   "error": "Recurso não encontrado",
-  "message": "Categoria não encontrada",
+  "message": "Categoria não encontrada.",
   "path": "/api/v1/categories/999999"
 }
 ```
@@ -113,7 +113,7 @@ Respostas reais de `GET /api/v1/categories/999999`.
   "status": 404,
   "code": "RESOURCE_NOT_FOUND",
   "error": "Resource not found",
-  "message": "Category not found",
+  "message": "Category not found.",
   "path": "/api/v1/categories/999999"
 }
 ```
@@ -136,7 +136,7 @@ Os erros de validação (422) também chegam traduzidos, campo a campo. Um exemp
 
 | Teste | Tipo | O que garante |
 | --- | --- | --- |
-| `i18n/MessagesPropertiesTest` | Unidade | Os três arquivos têm as mesmas chaves; as traduções de uma chave usam os mesmos placeholders; toda chave usada no código de produção (literais `"{chave}"` e chaves passadas às exceções do pacote `service/exception`) existe nos três arquivos |
+| `i18n/MessagesPropertiesTest` | Unidade | Os três arquivos têm as mesmas chaves; as traduções de uma chave usam os mesmos placeholders; toda chave usada no código de produção (literais `"{chave}"` e chaves passadas às exceções do pacote `service/exception`) existe nos três arquivos; as mensagens terminam com um único ponto final e os títulos seguem a convenção de capitalização e pontuação |
 | `integrations/i18n/AcceptLanguageIT` | Integração | Resposta em inglês com `en`, em espanhol com `es`, em português sem o cabeçalho e em português com um idioma não suportado; mensagens de validação em inglês com `en` |
 
 O `MessagesPropertiesTest` lê os arquivos Java de `src/main/java` como texto, procurando as chaves. Ele falha se uma chave for usada no código e esquecida em algum arquivo de mensagens.
@@ -144,7 +144,7 @@ O `MessagesPropertiesTest` lê os arquivos Java de `src/main/java` como texto, p
 ## 8. Adicionar uma mensagem
 
 1. Escolha uma chave no padrão do bloco a que ela pertence, por exemplo `error.product.outOfStock` ou `product.stock.positive`.
-2. Adicione a chave **nos três arquivos**, no mesmo bloco, com o texto traduzido. Se usar placeholders (`{min}`), use os mesmos nas três traduções.
+2. Adicione a chave **nos três arquivos**, no mesmo bloco, com o texto traduzido, seguindo a convenção de capitalização e pontuação. Se usar placeholders (`{min}`), use os mesmos nas três traduções.
 3. Use a chave no código:
    - numa anotação: `@Positive(message = "{product.stock.positive}")`;
    - numa exceção de negócio: `throw new ResourceNotFoundException("error.product.outOfStock")`.
