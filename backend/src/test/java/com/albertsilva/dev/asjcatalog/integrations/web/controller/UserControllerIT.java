@@ -141,7 +141,7 @@ class UserControllerIT extends AbstractIT {
         resultActions
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
-            .andExpect(jsonPath("$.message").value("User not found"));
+            .andExpect(jsonPath("$.message").value("User not found."));
       }
     }
   }
@@ -200,7 +200,7 @@ class UserControllerIT extends AbstractIT {
           .andExpect(status().isUnprocessableEntity())
           .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
           .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'firstName')].message")
-              .value(hasItem("First name is required")));
+              .value(hasItem("First name is required.")));
 
       assertEquals(initialCount, userRepository.count());
     }

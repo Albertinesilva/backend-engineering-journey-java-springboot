@@ -159,7 +159,7 @@ class AccountFlowIT extends AbstractIT {
       firstTokenResult
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.code").value("INVALID_TOKEN"))
-          .andExpect(jsonPath("$.message").value("Token is disabled"));
+          .andExpect(jsonPath("$.message").value("Token is disabled."));
       secondTokenResult.andExpect(status().isNoContent());
       assertTrue(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive());
     }
@@ -209,7 +209,7 @@ class AccountFlowIT extends AbstractIT {
       firstTokenResult
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.code").value("INVALID_TOKEN"))
-          .andExpect(jsonPath("$.message").value("Token is disabled"));
+          .andExpect(jsonPath("$.message").value("Token is disabled."));
       secondTokenResult.andExpect(status().isNoContent());
     }
   }
@@ -229,7 +229,7 @@ class AccountFlowIT extends AbstractIT {
       result
           .andExpect(status().isNotFound())
           .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
-          .andExpect(jsonPath("$.message").value("Token not found"));
+          .andExpect(jsonPath("$.message").value("Token not found."));
     }
 
     @Test
@@ -243,7 +243,7 @@ class AccountFlowIT extends AbstractIT {
       ResultActions result = activate(token.getToken());
 
       // Assert
-      expectInvalidToken(result, "Token is disabled");
+      expectInvalidToken(result, "Token is disabled.");
       assertFalse(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive());
     }
 
@@ -258,7 +258,7 @@ class AccountFlowIT extends AbstractIT {
       ResultActions result = activate(token.getToken());
 
       // Assert
-      expectInvalidToken(result, "Token expired");
+      expectInvalidToken(result, "Token expired.");
       assertFalse(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive());
     }
 
@@ -273,7 +273,7 @@ class AccountFlowIT extends AbstractIT {
       ResultActions result = activate(token.getToken());
 
       // Assert
-      expectInvalidToken(result, "Token type is invalid");
+      expectInvalidToken(result, "Token type is invalid.");
       assertFalse(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive());
     }
 
@@ -288,7 +288,7 @@ class AccountFlowIT extends AbstractIT {
       result
           .andExpect(status().isNotFound())
           .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
-          .andExpect(jsonPath("$.message").value("Token not found"));
+          .andExpect(jsonPath("$.message").value("Token not found."));
     }
 
     @Test
@@ -303,7 +303,7 @@ class AccountFlowIT extends AbstractIT {
       ResultActions result = resetPassword(token.getToken(), NEW_STRONG_PASSWORD);
 
       // Assert
-      expectInvalidToken(result, "Token is disabled");
+      expectInvalidToken(result, "Token is disabled.");
       assertPasswordUnchanged();
     }
 
@@ -319,7 +319,7 @@ class AccountFlowIT extends AbstractIT {
       ResultActions result = resetPassword(token.getToken(), NEW_STRONG_PASSWORD);
 
       // Assert
-      expectInvalidToken(result, "Token expired");
+      expectInvalidToken(result, "Token expired.");
       assertPasswordUnchanged();
     }
 
@@ -335,7 +335,7 @@ class AccountFlowIT extends AbstractIT {
       ResultActions result = resetPassword(token.getToken(), NEW_STRONG_PASSWORD);
 
       // Assert
-      expectInvalidToken(result, "Token type is invalid");
+      expectInvalidToken(result, "Token type is invalid.");
       assertPasswordUnchanged();
     }
   }

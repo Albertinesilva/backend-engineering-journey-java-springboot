@@ -50,7 +50,7 @@ class AcceptLanguageIT extends AbstractIT {
     resultActions
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.error").value("Resource not found"))
-        .andExpect(jsonPath("$.message").value("Category not found"));
+        .andExpect(jsonPath("$.message").value("Category not found."));
   }
 
   @Test
@@ -66,7 +66,7 @@ class AcceptLanguageIT extends AbstractIT {
     resultActions
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.error").value("Recurso no encontrado"))
-        .andExpect(jsonPath("$.message").value("Categoría no encontrada"));
+        .andExpect(jsonPath("$.message").value("Categoría no encontrada."));
   }
 
   @Test
@@ -81,7 +81,7 @@ class AcceptLanguageIT extends AbstractIT {
     resultActions
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.error").value("Recurso não encontrado"))
-        .andExpect(jsonPath("$.message").value("Categoria não encontrada"));
+        .andExpect(jsonPath("$.message").value("Categoria não encontrada."));
   }
 
   @Test
@@ -101,9 +101,9 @@ class AcceptLanguageIT extends AbstractIT {
     // Assert
     resultActions
         .andExpect(status().isUnprocessableEntity())
-        .andExpect(jsonPath("$.error").value("Validation Error"))
-        .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'token')].message").value(hasItem("Reset token is required")))
-        .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'password')].message").value(hasItem("New password is required")))
+        .andExpect(jsonPath("$.error").value("Validation error"))
+        .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'token')].message").value(hasItem("Reset token is required.")))
+        .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'password')].message").value(hasItem("New password is required.")))
         .andExpect(jsonPath("$.fieldErrors[*].message").value(everyItem(not(containsString("{")))));
   }
 
@@ -120,6 +120,6 @@ class AcceptLanguageIT extends AbstractIT {
     resultActions
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.error").value("Recurso não encontrado"))
-        .andExpect(jsonPath("$.message").value("Categoria não encontrada"));
+        .andExpect(jsonPath("$.message").value("Categoria não encontrada."));
   }
 }

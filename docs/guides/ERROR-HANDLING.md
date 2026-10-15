@@ -46,7 +46,7 @@ Resposta real de `GET /api/v1/categories/999999`:
   "status": 404,
   "code": "RESOURCE_NOT_FOUND",
   "error": "Recurso não encontrado",
-  "message": "Categoria não encontrada",
+  "message": "Categoria não encontrada.",
   "path": "/api/v1/categories/999999"
 }
 ```
@@ -59,7 +59,7 @@ A mesma requisição com `Accept-Language: en`:
   "status": 404,
   "code": "RESOURCE_NOT_FOUND",
   "error": "Resource not found",
-  "message": "Category not found",
+  "message": "Category not found.",
   "path": "/api/v1/categories/999999"
 }
 ```
@@ -78,16 +78,16 @@ Resposta real de `POST /api/v1/accounts/register` com e-mail inválido e senha `
   "status": 422,
   "code": "VALIDATION_ERROR",
   "error": "Erro de validação",
-  "message": "Um ou mais campos são inválidos",
+  "message": "Um ou mais campos são inválidos.",
   "path": "/api/v1/accounts/register",
   "fieldErrors": [
-    { "fieldName": "password", "message": "Senha deve conter ao menos uma letra minúscula" },
-    { "fieldName": "password", "message": "Senha deve conter ao menos um caractere especial" },
-    { "fieldName": "password", "message": "Senha deve possuir ao menos 10 caracteres" },
-    { "fieldName": "password", "message": "Senha deve conter ao menos uma letra maiúscula" },
-    { "fieldName": "password", "message": "Senha não pode conter sequências numéricas previsíveis" },
-    { "fieldName": "email", "message": "Email inválido" },
-    { "fieldName": "password", "message": "Senha contém padrões muito comuns e inseguros" }
+    { "fieldName": "password", "message": "Senha deve conter ao menos uma letra minúscula." },
+    { "fieldName": "password", "message": "Senha deve conter ao menos um caractere especial." },
+    { "fieldName": "password", "message": "Senha deve possuir ao menos 10 caracteres." },
+    { "fieldName": "password", "message": "Senha deve conter ao menos uma letra maiúscula." },
+    { "fieldName": "password", "message": "Senha não pode conter sequências numéricas previsíveis." },
+    { "fieldName": "email", "message": "Email inválido." },
+    { "fieldName": "password", "message": "Senha contém padrões muito comuns e inseguros." }
   ]
 }
 ```

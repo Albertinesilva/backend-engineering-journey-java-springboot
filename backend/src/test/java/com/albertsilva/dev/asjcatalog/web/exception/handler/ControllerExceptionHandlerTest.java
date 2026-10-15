@@ -30,7 +30,7 @@ class ControllerExceptionHandlerTest {
         .thenReturn("Recurso não encontrado");
     when(messageSource.getMessage(eq("error.resource.message"), any(), eq("error.resource.message"),
         any(Locale.class)))
-        .thenReturn("O recurso solicitado não foi encontrado");
+        .thenReturn("O recurso solicitado não foi encontrado.");
     when(messageSource.getMessage(eq("Entity not found"), isNull(), any(Locale.class)))
         .thenThrow(new NoSuchMessageException("Entity not found", Locale.forLanguageTag("pt-BR")));
 
@@ -45,7 +45,7 @@ class ControllerExceptionHandlerTest {
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().getCode()).isEqualTo(ApiErrorCode.RESOURCE_NOT_FOUND);
     assertThat(response.getBody().getError()).isEqualTo("Recurso não encontrado");
-    assertThat(response.getBody().getMessage()).isEqualTo("O recurso solicitado não foi encontrado");
+    assertThat(response.getBody().getMessage()).isEqualTo("O recurso solicitado não foi encontrado.");
     assertThat(response.getBody().getPath()).isEqualTo("/products/1");
   }
 
@@ -55,7 +55,7 @@ class ControllerExceptionHandlerTest {
     when(messageSource.getMessage(eq("error.resource.title"), isNull(), eq("error.resource.title"), any(Locale.class)))
         .thenReturn("Recurso não encontrado");
     when(messageSource.getMessage(eq("error.token.notFound"), isNull(), any(Locale.class)))
-        .thenReturn("Token não encontrado");
+        .thenReturn("Token não encontrado.");
 
     ControllerExceptionHandler handler = new ControllerExceptionHandler(messageSource);
     HttpServletRequest request = mock(HttpServletRequest.class);
@@ -65,6 +65,6 @@ class ControllerExceptionHandlerTest {
         new ResourceNotFoundException("error.token.notFound"), request, Locale.forLanguageTag("pt-BR"));
 
     assertThat(response.getBody()).isNotNull();
-    assertThat(response.getBody().getMessage()).isEqualTo("Token não encontrado");
+    assertThat(response.getBody().getMessage()).isEqualTo("Token não encontrado.");
   }
 }
