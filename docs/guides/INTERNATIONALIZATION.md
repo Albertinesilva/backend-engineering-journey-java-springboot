@@ -136,7 +136,7 @@ Os erros de validação (422) também chegam traduzidos, campo a campo. Um exemp
 
 | Teste | Tipo | O que garante |
 | --- | --- | --- |
-| `i18n/MessagesPropertiesTest` | Unidade | Os três arquivos têm as mesmas chaves; as traduções de uma chave usam os mesmos placeholders; toda chave usada no código de produção (literais `"{chave}"` e chaves passadas às exceções do pacote `service/exception`) existe nos três arquivos; as mensagens terminam com um único ponto final e os títulos seguem a convenção de capitalização e pontuação |
+| `i18n/MessagesPropertiesTest` | Unidade | Os três arquivos têm as mesmas chaves; as traduções de uma chave usam os mesmos placeholders; toda chave usada no código de produção (literais `"{chave}"` e chaves passadas às exceções do pacote `service/exception`) existe nos três arquivos; as mensagens terminam com um único ponto final e os títulos começam com letra maiúscula e não terminam com pontuação; um teste à parte confere a capitalização de frase dos títulos em inglês |
 | `integrations/i18n/AcceptLanguageIT` | Integração | Resposta em inglês com `en`, em espanhol com `es`, em português sem o cabeçalho e em português com um idioma não suportado; mensagens de validação em inglês com `en` |
 
 O `MessagesPropertiesTest` lê os arquivos Java de `src/main/java` como texto, procurando as chaves. Ele falha se uma chave for usada no código e esquecida em algum arquivo de mensagens.
