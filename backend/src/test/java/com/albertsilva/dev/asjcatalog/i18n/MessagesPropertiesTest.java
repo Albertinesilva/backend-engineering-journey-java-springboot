@@ -174,19 +174,25 @@ class MessagesPropertiesTest {
   @Test
   @DisplayName("Messages should end with a single period and titles should start uppercase without final punctuation")
   void messagesShouldFollowPunctuationConvention() throws Exception {
+    List<String> violations = new ArrayList<>();
     for (String file : allFiles()) {
       Properties messages = load(file);
-      for (String key : messages.stringPropertyNames()) {
+      for (String key : new TreeSet<>(messages.stringPropertyNames())) {
         String message = messages.getProperty(key);
         String location = file + " -> " + key;
         if (key.endsWith(".title")) {
-          assertTrue(!message.isEmpty() && Character.isUpperCase(message.codePointAt(0)), location);
-          assertTrue(!message.matches(".*[\\p{Punct}]$"), location);
-        } else {
-          assertTrue(message.endsWith(".") && !message.endsWith(".."), location);
+          if (message.isEmpty() || !Character.isUpperCase(message.codePointAt(0))) {
+            violations.add(location + ": título deve começar com letra maiúscula");
+          }
+          if (message.matches(".*\\p{Punct}$")) {
+            violations.add(location + ": título não deve terminar com pontuação");
+          }
+        } else if (!message.endsWith(".") || message.endsWith("..")) {
+          violations.add(location + ": mensagem deve terminar com um único ponto final");
         }
       }
     }
+    assertEquals(List.of(), violations, "Mensagens fora da convenção de capitalização e pontuação");
   }
 
   @Test
