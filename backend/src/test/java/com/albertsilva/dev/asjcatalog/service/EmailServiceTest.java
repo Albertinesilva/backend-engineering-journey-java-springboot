@@ -188,6 +188,7 @@ class EmailServiceTest {
     } else {
       assertThat(context.getVariable("token")).isEqualTo(token);
       assertThat(context.getVariable("linkRedefinicaoSenha")).isEqualTo(link);
+      assertThat(context.getVariable("texto")).isEqualTo("Para continuar, clique no botão abaixo.");
     }
   }
 

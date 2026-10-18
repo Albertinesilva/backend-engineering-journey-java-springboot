@@ -202,7 +202,6 @@ O mesmo vale para a recuperação de senha: o token `PASSWORD_RECOVERY` vai no c
 - **Trocar a senha não encerra as sessões.** Depois de `reset-password` ou `me/password`, os tokens JWT já emitidos continuam válidos até vencer.
 - **Mudança de e-mail e token.** Depois de `PUT /me` com e-mail novo, o login passa a usar o e-mail novo, mas o token atual continua funcionando (a API identifica o usuário pelo `userId`), e o claim `username` desse token mostra o e-mail antigo.
 - **Template não usado.** `reactivate_user_by_email_template.html` existe, mas nenhum código o usa: o reenvio de ativação usa o template do cadastro.
-- **Parágrafo vazio no e-mail de senha.** O template de redefinição exibe a variável `texto`, que o código não preenche para esse e-mail.
 - **Registro de e-mail incompleto.** Veja as limitações de `Email` em [DOMAIN-MODEL.md](DOMAIN-MODEL.md#9-limitações-conhecidas).
 
 ---
