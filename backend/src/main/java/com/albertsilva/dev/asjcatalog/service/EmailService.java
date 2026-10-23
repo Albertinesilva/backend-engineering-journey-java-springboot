@@ -231,7 +231,7 @@ public class EmailService {
     context.setVariable("nome", user.getFirstName());
     context.setVariable("token", token);
     context.setVariable("titulo", "Redefinição de Senha");
-    context.setVariable("texto", "Para continuar, clique no botão abaixo.");
+    context.setVariable("texto", "Recebemos uma solicitação para redefinir a senha da sua conta. Para criar uma nova senha, clique no botão abaixo. Se você não fez essa solicitação, ignore este e-mail.");
     context.setVariable("linkRedefinicaoSenha", frontendUrl + "/reset-password?token=" + token);
 
     String htmlBody = templateEngine.process("reset_password_email_template", context);
