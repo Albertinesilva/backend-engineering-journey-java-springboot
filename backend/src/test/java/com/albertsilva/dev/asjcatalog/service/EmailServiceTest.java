@@ -188,6 +188,7 @@ class EmailServiceTest {
     } else {
       assertThat(context.getVariable("token")).isEqualTo(token);
       assertThat(context.getVariable("linkRedefinicaoSenha")).isEqualTo(link);
+      assertThat(context.getVariable("texto")).isEqualTo("Recebemos uma solicitação para redefinir a senha da sua conta. Para criar uma nova senha, clique no botão abaixo. Se você não fez essa solicitação, ignore este e-mail.");
     }
   }
 

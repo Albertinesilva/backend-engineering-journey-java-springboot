@@ -210,8 +210,8 @@ public class EmailService {
    * token, o título e o link {@code frontend.url + "/reset-password?token=" +
    * token}; monta a mensagem HTML (assunto "Redefinição de Senha", mesmo
    * remetente e logo inline); envia; e grava o registro em {@code tb_email}. A
-   * variável {@code texto}, referenciada pelo template, não é definida por este
-   * método.
+   * variável {@code texto} é preenchida com a mensagem de orientação
+   * para redefinição de senha, utilizada pelo template.
    * </p>
    *
    * @param user  usuário que solicitou a recuperação (e-mail e primeiro nome)
@@ -231,6 +231,7 @@ public class EmailService {
     context.setVariable("nome", user.getFirstName());
     context.setVariable("token", token);
     context.setVariable("titulo", "Redefinição de Senha");
+    context.setVariable("texto", "Recebemos uma solicitação para redefinir a senha da sua conta. Para criar uma nova senha, clique no botão abaixo. Se você não fez essa solicitação, ignore este e-mail.");
     context.setVariable("linkRedefinicaoSenha", frontendUrl + "/reset-password?token=" + token);
 
     String htmlBody = templateEngine.process("reset_password_email_template", context);
