@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -130,7 +131,7 @@ class ProductUpdateValidatorTest {
   }
 
   private ProductUpdateRequest request(String name, List<Long> categoryIds) {
-    return new ProductUpdateRequest(name, "Product description", 100.0, "https://example.com/image.png",
+    return new ProductUpdateRequest(name, "Product description", new BigDecimal("100.00"), "https://example.com/image.png",
         categoryIds);
   }
 

@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -244,7 +245,7 @@ class ProductControllerIT extends AbstractIT {
           .andExpect(jsonPath("$.id").isNotEmpty())
           .andExpect(jsonPath("$.name").value(request.name()))
           .andExpect(jsonPath("$.description").value(request.description()))
-          .andExpect(jsonPath("$.price").value(request.price()))
+          .andExpect(jsonPath("$.price").value(org.hamcrest.Matchers.comparesEqualTo(request.price()),java.math.BigDecimal.class))
           .andExpect(jsonPath("$.date").doesNotExist());
 
       assertEquals(productRepository.count(), initialCount + 1);
@@ -283,7 +284,7 @@ class ProductControllerIT extends AbstractIT {
     void createShouldReturnUnprocessableEntityWhenCategoryIdsIsEmpty() throws Exception {
 
       // Arrange
-      ProductCreateRequest request = new ProductCreateRequest("Valid Product Name", "Valid description", 10.0,
+      ProductCreateRequest request = new ProductCreateRequest("Valid Product Name", "Valid description", new BigDecimal("10.00"),
           "https://img.com/product.png", null, List.of());
       long initialCount = productRepository.count();
 

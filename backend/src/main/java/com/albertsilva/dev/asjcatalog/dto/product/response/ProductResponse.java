@@ -1,5 +1,6 @@
 package com.albertsilva.dev.asjcatalog.dto.product.response;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.albertsilva.dev.asjcatalog.dto.category.response.CategoryResponse;
@@ -24,7 +25,7 @@ import com.albertsilva.dev.asjcatalog.dto.category.response.CategoryResponse;
  * @param id          identificador do produto
  * @param name        nome
  * @param description descrição (pode ser {@code null})
- * @param price       preço (pode ser {@code null})
+ * @param price       preço do produto, representado por {@link BigDecimal}
  * @param imgUrl      URL da imagem (pode ser {@code null})
  * @param categories  categorias do produto, com id e nome
  */
@@ -32,7 +33,7 @@ public record ProductResponse(
     Long id,
     String name,
     String description,
-    Double price,
+    BigDecimal price,
     String imgUrl,
     List<CategoryResponse> categories) {
 }
