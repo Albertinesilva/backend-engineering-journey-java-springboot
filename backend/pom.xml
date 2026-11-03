@@ -43,6 +43,9 @@
 	<properties>
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<!-- Limites mínimos de cobertura do goal check do JaCoCo (relatório consolidado) -->
+		<jacoco.minimum.line.coverage>0.85</jacoco.minimum.line.coverage>
+		<jacoco.minimum.branch.coverage>0.68</jacoco.minimum.branch.coverage>
 	</properties>
 	<dependencies>
 
@@ -266,6 +269,34 @@
 						<configuration>
 							<dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
 							<outputDirectory>${project.reporting.outputDirectory}/jacoco-merged</outputDirectory>
+						</configuration>
+					</execution>
+					<!-- Limite mínimo de cobertura sobre o consolidado: falha o build se ficar abaixo -->
+					<execution>
+						<id>check-merged</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${jacoco.minimum.line.coverage}</minimum>
+										</limit>
+										<limit>
+											<counter>BRANCH</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${jacoco.minimum.branch.coverage}</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
 						</configuration>
 					</execution>
 				</executions>
