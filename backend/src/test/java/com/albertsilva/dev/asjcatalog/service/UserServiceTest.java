@@ -9,7 +9,8 @@ import static com.albertsilva.dev.asjcatalog.factory.UserFactory.FIRST_NAME_FILT
 import static com.albertsilva.dev.asjcatalog.factory.UserFactory.NON_EXISTING_EMAIL;
 import static com.albertsilva.dev.asjcatalog.factory.UserFactory.NON_EXISTING_ID;
 import static com.albertsilva.dev.asjcatalog.factory.UserFactory.PASSWORD;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -22,9 +23,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -88,10 +87,6 @@ class UserServiceTest {
     responsePage = new PageImpl<>(List.of(UserFactory.createUserResponse()), pageable, 1);
   }
 
-  private static Set<String> authoritiesOf(UserDetails userDetails) {
-    return userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
-  }
-
   @Nested
   @DisplayName("Search Operations")
   class SearchOperations {
@@ -108,7 +103,7 @@ class UserServiceTest {
       Page<UserResponse> result = service.search("", pageable);
 
       // Assert
-      Assertions.assertEquals(responsePage, result);
+      assertThat(result).isEqualTo(responsePage);
       verify(repository, times(1)).findAll(pageable);
       verify(repository, never()).findByFirstNameContainingIgnoreCase(anyString(), any(Pageable.class));
     }
@@ -125,7 +120,7 @@ class UserServiceTest {
       Page<UserResponse> result = service.search(null, pageable);
 
       // Assert
-      Assertions.assertEquals(responsePage, result);
+      assertThat(result).isEqualTo(responsePage);
       verify(repository, times(1)).findAll(pageable);
       verify(repository, never()).findByFirstNameContainingIgnoreCase(anyString(), any(Pageable.class));
     }
@@ -142,7 +137,7 @@ class UserServiceTest {
       Page<UserResponse> result = service.search("   ", pageable);
 
       // Assert
-      Assertions.assertEquals(responsePage, result);
+      assertThat(result).isEqualTo(responsePage);
       verify(repository, times(1)).findAll(pageable);
       verify(repository, never()).findByFirstNameContainingIgnoreCase(anyString(), any(Pageable.class));
     }
@@ -159,7 +154,7 @@ class UserServiceTest {
       Page<UserResponse> result = service.search(FIRST_NAME_FILTER, pageable);
 
       // Assert
-      Assertions.assertEquals(responsePage, result);
+      assertThat(result).isEqualTo(responsePage);
       verify(repository, times(1)).findByFirstNameContainingIgnoreCase(FIRST_NAME_FILTER, pageable);
       verify(repository, never()).findAll(any(Pageable.class));
     }
@@ -176,7 +171,7 @@ class UserServiceTest {
       Page<UserResponse> result = service.search("  " + FIRST_NAME_FILTER + "  ", pageable);
 
       // Assert
-      Assertions.assertEquals(responsePage, result);
+      assertThat(result).isEqualTo(responsePage);
       verify(repository, times(1)).findByFirstNameContainingIgnoreCase(FIRST_NAME_FILTER, pageable);
     }
   }
@@ -201,7 +196,7 @@ class UserServiceTest {
       UserDetailsResponse result = service.findById(EXISTING_ID);
 
       // Assert
-      Assertions.assertEquals(expectedResponse, result);
+      assertThat(result).isEqualTo(expectedResponse);
       verify(repository, times(1)).findById(EXISTING_ID);
     }
 
@@ -213,15 +208,27 @@ class UserServiceTest {
       when(repository.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
       // Act & Assert
-      ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
-          () -> service.findById(NON_EXISTING_ID));
+      assertThatThrownBy(() -> service.findById(NON_EXISTING_ID))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage("error.user.notFound");
 
-      Assertions.assertEquals("error.user.notFound", exception.getMessage());
       verify(repository, times(1)).findById(NON_EXISTING_ID);
       verify(userMapper, never()).toDetailsResponse(any());
     }
   }
 
+  /**
+   * Testes de {@code UserService.create}.
+   *
+   * <p>
+   * <b>Cenários pendentes:</b>
+   * </p>
+   * <ul>
+   * <li>{@code roleIds} nulo ou vazio: o usuário é criado sem roles e não
+   * consegue fazer login; o comportamento correto (exigir uma role ou usar uma
+   * role padrão) ainda não foi decidido (#14).</li>
+   * </ul>
+   */
   @Nested
   @DisplayName("Create Operations")
   class CreateOperations {
@@ -247,9 +254,9 @@ class UserServiceTest {
       UserResponse result = service.create(request);
 
       // Assert
-      Assertions.assertEquals(expectedResponse, result);
-      Assertions.assertEquals(ENCODED_PASSWORD, user.getPassword());
-      Assertions.assertTrue(user.isActive());
+      assertThat(result).isEqualTo(expectedResponse);
+      assertThat(user.getPassword()).isEqualTo(ENCODED_PASSWORD);
+      assertThat(user.isActive()).isTrue();
       verify(roleRepository, times(1)).findAllById(request.roleIds());
       verify(passwordEncoder, times(1)).encode(PASSWORD);
       verify(repository, times(1)).save(user);
@@ -265,10 +272,10 @@ class UserServiceTest {
       when(roleRepository.findAllById(request.roleIds())).thenReturn(List.of());
 
       // Act & Assert
-      ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
-          () -> service.create(request));
+      assertThatThrownBy(() -> service.create(request))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage("error.role.ids.notFound");
 
-      Assertions.assertEquals("error.role.ids.notFound", exception.getMessage());
       verify(userMapper, never()).toEntity(any(UserCreateRequest.class), any());
       verify(repository, never()).save(any());
     }
@@ -290,11 +297,12 @@ class UserServiceTest {
       UserDetails result = service.loadUserByUsername(EXISTING_EMAIL);
 
       // Assert
-      Assertions.assertEquals(EXISTING_ID, ((User) result).getId());
-      Assertions.assertEquals(EXISTING_EMAIL, result.getUsername());
-      Assertions.assertEquals(ENCODED_PASSWORD, result.getPassword());
-      Assertions.assertTrue(result.isEnabled());
-      Assertions.assertEquals(Set.of(OPERATOR_AUTHORITY), authoritiesOf(result));
+      assertThat(((User) result).getId()).isEqualTo(EXISTING_ID);
+      assertThat(result.getUsername()).isEqualTo(EXISTING_EMAIL);
+      assertThat(result.getPassword()).isEqualTo(ENCODED_PASSWORD);
+      assertThat(result.isEnabled()).isTrue();
+      assertThat(result.getAuthorities()).extracting(GrantedAuthority::getAuthority)
+          .containsExactlyInAnyOrder(OPERATOR_AUTHORITY);
       verify(repository, times(1)).searchUserAndRolesByEmail(EXISTING_EMAIL);
     }
 
@@ -310,7 +318,8 @@ class UserServiceTest {
       UserDetails result = service.loadUserByUsername(EXISTING_EMAIL);
 
       // Assert
-      Assertions.assertEquals(Set.of(OPERATOR_AUTHORITY, ADMIN_AUTHORITY), authoritiesOf(result));
+      assertThat(result.getAuthorities()).extracting(GrantedAuthority::getAuthority)
+          .containsExactlyInAnyOrder(OPERATOR_AUTHORITY, ADMIN_AUTHORITY);
     }
 
     @Test
@@ -325,8 +334,8 @@ class UserServiceTest {
       UserDetails result = service.loadUserByUsername(EXISTING_EMAIL);
 
       // Assert
-      Assertions.assertEquals(EXISTING_EMAIL, result.getUsername());
-      Assertions.assertFalse(result.isEnabled());
+      assertThat(result.getUsername()).isEqualTo(EXISTING_EMAIL);
+      assertThat(result.isEnabled()).isFalse();
     }
 
     @Test
@@ -337,13 +346,23 @@ class UserServiceTest {
       when(repository.searchUserAndRolesByEmail(NON_EXISTING_EMAIL)).thenReturn(List.of());
 
       // Act & Assert
-      UsernameNotFoundException exception = Assertions.assertThrows(UsernameNotFoundException.class,
-          () -> service.loadUserByUsername(NON_EXISTING_EMAIL));
-
-      Assertions.assertEquals("User not found with email: " + NON_EXISTING_EMAIL, exception.getMessage());
+      assertThatThrownBy(() -> service.loadUserByUsername(NON_EXISTING_EMAIL))
+          .isInstanceOf(UsernameNotFoundException.class)
+          .hasMessage("User not found with email: " + NON_EXISTING_EMAIL);
     }
   }
 
+  /**
+   * Testes de {@code UserService.update}.
+   *
+   * <p>
+   * <b>Cenários pendentes:</b>
+   * </p>
+   * <ul>
+   * <li>{@code roleIds} vazio: todas as roles são removidas e o usuário perde
+   * o acesso; a regra ainda não foi decidida (#14).</li>
+   * </ul>
+   */
   @Nested
   @DisplayName("Update Operations")
   class UpdateOperations {
@@ -370,9 +389,9 @@ class UserServiceTest {
       UserResponse result = service.update(EXISTING_ID, request);
 
       // Assert
-      Assertions.assertEquals(expectedResponse, result);
-      Assertions.assertEquals(Set.of(operatorRole), user.getRoles());
-      Assertions.assertEquals(ENCODED_PASSWORD, user.getPassword());
+      assertThat(result).isEqualTo(expectedResponse);
+      assertThat(user.getRoles()).containsExactly(operatorRole);
+      assertThat(user.getPassword()).isEqualTo(ENCODED_PASSWORD);
       verify(userMapper, times(1)).updateEntity(request, user);
       verify(repository, times(1)).save(user);
     }
@@ -397,9 +416,9 @@ class UserServiceTest {
       UserResponse result = service.update(EXISTING_ID, request);
 
       // Assert
-      Assertions.assertEquals(expectedResponse, result);
-      Assertions.assertEquals(Set.of(adminRole), user.getRoles());
-      Assertions.assertEquals(PASSWORD, user.getPassword());
+      assertThat(result).isEqualTo(expectedResponse);
+      assertThat(user.getRoles()).containsExactly(adminRole);
+      assertThat(user.getPassword()).isEqualTo(PASSWORD);
       verify(roleRepository, never()).findAllById(any());
       verify(passwordEncoder, never()).encode(any());
       verify(repository, times(1)).save(user);
@@ -418,10 +437,10 @@ class UserServiceTest {
       when(roleRepository.findAllById(request.roleIds())).thenReturn(List.of());
 
       // Act & Assert
-      ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
-          () -> service.update(EXISTING_ID, request));
+      assertThatThrownBy(() -> service.update(EXISTING_ID, request))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage("error.role.ids.notFound");
 
-      Assertions.assertEquals("error.role.ids.notFound", exception.getMessage());
       verify(repository, never()).save(any());
     }
 
@@ -439,10 +458,10 @@ class UserServiceTest {
       doThrow(EntityNotFoundException.class).when(userMapper).updateEntity(request, reference);
 
       // Act & Assert
-      ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
-          () -> service.update(NON_EXISTING_ID, request));
+      assertThatThrownBy(() -> service.update(NON_EXISTING_ID, request))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage("error.user.notFound");
 
-      Assertions.assertEquals("error.user.notFound", exception.getMessage());
       verify(repository, never()).save(any());
     }
   }
@@ -462,7 +481,7 @@ class UserServiceTest {
       when(repository.findById(EXISTING_ID)).thenReturn(Optional.of(user));
 
       // Act
-      assertDoesNotThrow(() -> service.delete(EXISTING_ID));
+      service.delete(EXISTING_ID);
 
       // Assert
       verify(repository, times(1)).findById(EXISTING_ID);
@@ -477,10 +496,10 @@ class UserServiceTest {
       when(repository.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
       // Act & Assert
-      ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
-          () -> service.delete(NON_EXISTING_ID));
+      assertThatThrownBy(() -> service.delete(NON_EXISTING_ID))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage("error.user.notFound");
 
-      Assertions.assertEquals("error.user.notFound", exception.getMessage());
       verify(repository, never()).delete(any());
     }
   }
@@ -501,10 +520,10 @@ class UserServiceTest {
       when(repository.findById(EXISTING_ID)).thenReturn(Optional.of(user));
 
       // Act
-      assertDoesNotThrow(() -> service.activate(EXISTING_ID));
+      service.activate(EXISTING_ID);
 
       // Assert
-      Assertions.assertTrue(user.isActive());
+      assertThat(user.isActive()).isTrue();
       verify(repository, times(1)).findById(EXISTING_ID);
     }
 
@@ -521,10 +540,10 @@ class UserServiceTest {
       when(repository.findById(EXISTING_ID)).thenReturn(Optional.of(user));
 
       // Act
-      assertDoesNotThrow(() -> service.activate(EXISTING_ID));
+      service.activate(EXISTING_ID);
 
       // Assert
-      Assertions.assertTrue(user.isActive());
+      assertThat(user.isActive()).isTrue();
       verify(user, never()).activate();
     }
 
@@ -536,10 +555,10 @@ class UserServiceTest {
       when(repository.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
       // Act & Assert
-      ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
-          () -> service.activate(NON_EXISTING_ID));
+      assertThatThrownBy(() -> service.activate(NON_EXISTING_ID))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage("error.user.notFound");
 
-      Assertions.assertEquals("error.user.notFound", exception.getMessage());
       verify(repository, times(1)).findById(NON_EXISTING_ID);
     }
   }
@@ -560,10 +579,10 @@ class UserServiceTest {
       when(repository.findById(EXISTING_ID)).thenReturn(Optional.of(user));
 
       // Act
-      assertDoesNotThrow(() -> service.deactivate(EXISTING_ID));
+      service.deactivate(EXISTING_ID);
 
       // Assert
-      Assertions.assertFalse(user.isActive());
+      assertThat(user.isActive()).isFalse();
       verify(repository, times(1)).findById(EXISTING_ID);
     }
 
@@ -581,10 +600,10 @@ class UserServiceTest {
       when(repository.findById(EXISTING_ID)).thenReturn(Optional.of(user));
 
       // Act
-      assertDoesNotThrow(() -> service.deactivate(EXISTING_ID));
+      service.deactivate(EXISTING_ID);
 
       // Assert
-      Assertions.assertFalse(user.isActive());
+      assertThat(user.isActive()).isFalse();
       verify(user, never()).deactivate();
     }
 
@@ -596,10 +615,10 @@ class UserServiceTest {
       when(repository.findById(NON_EXISTING_ID)).thenReturn(Optional.empty());
 
       // Act & Assert
-      ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class,
-          () -> service.deactivate(NON_EXISTING_ID));
+      assertThatThrownBy(() -> service.deactivate(NON_EXISTING_ID))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage("error.user.notFound");
 
-      Assertions.assertEquals("error.user.notFound", exception.getMessage());
       verify(repository, times(1)).findById(NON_EXISTING_ID);
     }
   }

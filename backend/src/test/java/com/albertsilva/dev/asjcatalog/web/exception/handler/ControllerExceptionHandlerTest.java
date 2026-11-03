@@ -32,6 +32,22 @@ import com.albertsilva.dev.asjcatalog.web.exception.response.FieldMessage;
 import com.albertsilva.dev.asjcatalog.web.exception.response.ProblemDetails;
 import com.albertsilva.dev.asjcatalog.web.exception.response.ValidationError;
 
+/**
+ * Testes de {@code ControllerExceptionHandler}, com os arquivos de mensagens
+ * reais.
+ *
+ * <p>
+ * <b>Cenários pendentes:</b>
+ * </p>
+ * <ul>
+ * <li>{@code DatabaseException}: responde 400, mas a exclusão de entidade com
+ * vínculos deve passar a 409 (#5).</li>
+ * <li>{@code DataIntegrityViolationException}: responde 409 com mensagem
+ * genérica, que deve passar a ser específica (#5).</li>
+ * <li>{@code DisabledException}: o handler provavelmente não é alcançado por
+ * nenhum fluxo; a decisão de remover ou manter é da #25 (item 5).</li>
+ * </ul>
+ */
 @DisplayName("Tests for ControllerExceptionHandler")
 class ControllerExceptionHandlerTest {
 

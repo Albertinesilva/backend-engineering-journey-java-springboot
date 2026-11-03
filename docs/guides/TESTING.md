@@ -300,6 +300,36 @@ assertThat(result.getExpireDate())
 - Se o comportamento correto ainda não foi decidido (por exemplo, usuário criado sem roles, na #14), o caso fica sem teste. Cite a issue no commit.
 - Um teste que já existe e está ligado a uma issue aberta não é reforçado. Ele muda junto com a correção da issue.
 
+**Cenários pendentes.** Todo cenário que fica sem teste por causa de uma issue aberta é registrado no JavaDoc da classe `@Nested` da operação, numa seção "Cenários pendentes", com uma linha por cenário: o que não é testado, o motivo e o número da issue. Se a operação não tiver `@Nested`, o registro vai no JavaDoc da classe de teste. Assim, quem lê o teste sabe que a lacuna é intencional e onde ela será resolvida.
+
+```java
+/**
+ * Testes de {@code ProductService.create}.
+ *
+ * <p>
+ * <b>Cenários pendentes:</b>
+ * </p>
+ * <ul>
+ * <li>{@code categoryIds} nulo ou vazio: o produto seria criado sem categoria
+ * e não apareceria na listagem; hoje o {@code @NotEmpty} do DTO bloqueia o
+ * caso na API (#4).</li>
+ * </ul>
+ */
+@Nested
+@DisplayName("Create Operations")
+class CreateOperations {
+```
+
+**Teste ligado a uma issue.** Quando um teste existente passa por um comportamento com issue aberta e não é reforçado, um comentário curto acima do método cita a issue e o motivo.
+
+```java
+// #25, item 4: o catch de DataIntegrityViolationException talvez nunca dispare,
+// porque a exclusão só vai ao banco no commit. Mantido sem reforço até a decisão da issue.
+@Test
+@DisplayName("delete should throw DatabaseException when delete violates integrity")
+void deleteShouldThrowDatabaseExceptionWhenDeleteViolatesIntegrity() {
+```
+
 ### 7.8 Checklist de revisão
 
 Use esta lista ao escrever ou revisar um teste (inclusive em Pull Requests):
@@ -314,6 +344,7 @@ Use esta lista ao escrever ou revisar um teste (inclusive em Pull Requests):
 - [ ] O teste não depende de rede, de `sleep` nem da ordem de execução.
 - [ ] A classe usa um único estilo de asserção (AssertJ nos testes novos e retrabalhados).
 - [ ] Nenhum teste congela comportamento ligado a uma issue aberta.
+- [ ] Cenários sem teste por issue aberta estão na seção "Cenários pendentes" do JavaDoc, e testes ligados a issue têm o comentário citando-a.
 - [ ] Classe e métodos sem `public`.
 
 ## 8. Dependências externas
