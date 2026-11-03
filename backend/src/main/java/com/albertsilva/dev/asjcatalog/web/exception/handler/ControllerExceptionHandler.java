@@ -225,9 +225,10 @@ public class ControllerExceptionHandler {
   /**
    * {@code AuthenticatedUserNotFoundException} (JWT sem principal válido, sem
    * claim {@code userId} ou com usuário inexistente) → {@code 401},
-   * {@code AUTHENTICATION_REQUIRED}. Detalhe pela chave da exceção; a chave
-   * {@code error.auth.userId.claim.notFound} só existe no idioma português, e nos
-   * demais usa-se o texto padrão. Log {@code WARN}.
+   * {@code AUTHENTICATION_REQUIRED}. Detalhe pela chave da exceção
+   * ({@code error.auth.invalid.principal}, {@code error.auth.userId.claim.notFound}
+   * ou {@code error.auth.user.notFound}), traduzida nos três idiomas; se a chave
+   * não existir, usa {@code error.authentication.message}. Log {@code WARN}.
    */
   @ExceptionHandler(AuthenticatedUserNotFoundException.class)
   public ResponseEntity<ProblemDetails> handleAuthenticatedUserNotFound(AuthenticatedUserNotFoundException e,
