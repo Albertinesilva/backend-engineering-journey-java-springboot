@@ -74,13 +74,14 @@ Ao mudar um comportamento, atualize o JavaDoc junto.
 
 ## 5. Testes
 
-- Nome do método no padrão `<ação>Should<resultado>When<condição>`, por exemplo `findByIdShouldReturnCategoryWhenIdExists` ou `deleteShouldReturnForbiddenWithoutWriteRole`.
-- `@DisplayName` em inglês, descrevendo o cenário.
+- Nome do método no padrão `<método>Should<resultado>When<condição>`, por exemplo `findByIdShouldReturnCategoryWhenIdExists` ou `deleteShouldReturnForbiddenWithoutWriteRole`.
+- `@DisplayName` em inglês, dizendo o mesmo que o nome do método.
 - `@Nested` agrupa os testes de um mesmo método ou endpoint.
-- Dados de teste vêm das fábricas do pacote `factory`.
+- Dados de teste vêm das fábricas do pacote `factory`, sem valores escritos à mão.
+- Asserções com o AssertJ nos testes novos e retrabalhados.
 - Classes que sobem o contexto do Spring fixam o perfil com `@ActiveProfiles("test")`.
 
-Como rodar e organizar: [TESTING.md](TESTING.md).
+O padrão completo, com exemplos e o checklist de revisão, está em [TESTING.md, seção 7](TESTING.md#7-padrão-de-qualidade-dos-testes).
 
 ## 6. Mensagens de commit
 

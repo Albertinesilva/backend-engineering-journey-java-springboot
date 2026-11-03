@@ -90,7 +90,7 @@ Ele é um **mapa**: traz só as regras e os fatos que valem para toda tarefa. Os
 - **Mensagens:** toda chave nova entra nos três arquivos `messages_*.properties`. Títulos (`*.title`) usam capitalização de frase e não têm ponto final; as demais mensagens terminam com um único ponto final. O `MessagesPropertiesTest` confere chaves, placeholders e pontuação.
 - **Idioma:** nomes no código, nos testes e nos `@DisplayName` em inglês; JavaDoc, comentários, logs, documentação e commits em português.
 - **JavaDoc** descreve o comportamento real, inclusive as limitações. Ao mudar um comportamento, atualize o JavaDoc junto.
-- **Testes:** nome `<ação>Should<resultado>When<condição>`, `@Nested` por método ou endpoint, dados das fábricas do pacote `factory` e `@ActiveProfiles("test")` nas classes que sobem o contexto.
+- **Testes:** nome `<método>Should<resultado>When<condição>` com `@DisplayName` equivalente, `@Nested` por método ou endpoint, Arrange/Act/Assert, dados das fábricas do pacote `factory`, AssertJ nos testes novos e retrabalhados (sem misturar estilos na mesma classe) e `@ActiveProfiles("test")` nas classes que sobem o contexto. Padrão completo e checklist: [TESTING.md, seção 7](docs/guides/TESTING.md#7-padrão-de-qualidade-dos-testes).
 - Detalhes: [ARCHITECTURE.md](docs/guides/ARCHITECTURE.md), [CONVENTIONS.md](docs/guides/CONVENTIONS.md) e [DESIGN-DECISIONS.md](docs/guides/DESIGN-DECISIONS.md).
 
 ## 7. Segurança
@@ -216,8 +216,11 @@ Atualizado em 03/11/2026.
   - Etapa 1: JaCoCo 0.8.15 com relatórios de unidade, integração e consolidado, e exclusões. **Concluída** (`b1cb5cf`).
   - Etapa 2: limite mínimo de cobertura (`check`) com 0,85 de linhas e 0,68 de branches no BUNDLE, sobre o consolidado. **Concluída.** Execução `check-merged` na fase `verify`; os limites ficam nas propriedades `jacoco.minimum.line.coverage` e `jacoco.minimum.branch.coverage` do `pom.xml` e podem ser trocados por `-D` na linha de comando. Medição nesta data: 0,89 de linhas (1417/1592) e 0,72 de branches (327/454); 314 testes de unidade e 150 de integração.
   - Etapa 3a: issue #20 (dependência de DNS nos testes), por ser infraestrutura de testes e pré-requisito do CI. **Concluída.** A consulta MX saiu do `ValidEmailValidator` para o `MxRecordLookup`/`JndiMxRecordLookup` (`validation.user.dns`), sem mudar o comportamento em produção. Com o DNS simulado fora do ar (`-Djava.naming.provider.url=dns://127.0.0.1:9`), 19 testes falhavam antes e nenhum falha depois. Medição nesta data: 0,89 de linhas (1429/1600) e 0,73 de branches (331/454); 321 testes de unidade e 150 de integração. A #20 deve ser fechada manualmente depois do commit.
-  - **A próxima é a Etapa 3b.**
-  - Etapa 3b: só testes novos para as lacunas de cobertura (handler de exceções, mappers, `Token.isValid`, provider de login, validador de e-mail da própria conta e contratos de `equals`/`hashCode`), seguidos de nova medição e reajuste dos limites com cerca de 3 pontos de folga.
+  - Etapa 3b: qualidade dos testes existentes e lacunas de cobertura. **Em andamento.** Auditoria feita e plano aprovado, com uma parada para commit por item:
+    - item 0: padrão de qualidade dos testes ([TESTING.md, seção 7](docs/guides/TESTING.md#7-padrão-de-qualidade-dos-testes)). **Concluído.**
+    - itens seguintes, nesta ordem: 1 `ControllerExceptionHandlerTest`; 2 `CategoryServiceTest`, `ProductServiceTest` e migração do `UserServiceTest` para AssertJ; 3 `AccountServiceTest`, `TokenServiceTest` e `EmailServiceTest`; 4 provider e converter do login; 5 `@WebMvcTest` dos controllers; 6 mappers (testes novos); 7 validadores (inclui remover o teste que congela o `NullPointerException` do `UserUpdateValidatorTest` e criar o `UniqueEmailForAuthenticatedUserValidatorTest`); 8 entidades (`TokenTest`, `EmailTest`, `RoleTest`, `equals`/`hashCode`); 9 repositórios; 10 ITs; 11 nova medição e reajuste dos limites com cerca de 3 pontos de folga.
+    - Decisões: AssertJ nos testes novos e em cada classe retrabalhada, sem misturar estilos na mesma classe e sem migração em massa; o `andExpect` do MockMvc continua nos testes HTTP.
+    - Trechos sem teste por terem issue aberta: #4, #5, #9, #13, #14, #25, #28, #36, #39 e #44 (lista por classe na auditoria). Um comentário na #25 vai registrar o código sem uso encontrado (texto mostrado antes de publicar).
   - Etapa 4: documentação e README do capítulo 05:
     - TESTING (cobertura, contagens e CI);
     - DESIGN-DECISIONS;

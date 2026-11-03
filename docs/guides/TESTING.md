@@ -12,7 +12,7 @@ Este guia explica como os testes do ASJCatalog estão organizados, como rodá-lo
 4. [Perfil test, H2 e import.sql](#4-perfil-test-h2-e-importsql)
 5. [Infraestrutura de teste](#5-infraestrutura-de-teste)
 6. [O que cada grupo cobre](#6-o-que-cada-grupo-cobre)
-7. [Convenções](#7-convenções)
+7. [Padrão de qualidade dos testes](#7-padrão-de-qualidade-dos-testes)
 8. [Dependências externas](#8-dependências-externas)
 9. [Limitações conhecidas](#9-limitações-conhecidas)
 
@@ -140,9 +140,181 @@ O formato do e-mail continua validado pela expressão regular real; só a consul
 | `account/AccountFlowIT` | Cadastro, ativação, login, reenvio, recuperação e redefinição de senha, tokens inválidos e endpoints `/me` |
 | `i18n/AcceptLanguageIT` | Respostas em inglês, espanhol e português conforme o `Accept-Language` |
 
-## 7. Convenções
+## 7. Padrão de qualidade dos testes
 
-Nomes de método no padrão `<ação>Should<resultado>When<condição>`, `@DisplayName` em inglês e `@Nested` para agrupar testes do mesmo método. Detalhes em [CONVENTIONS.md](CONVENTIONS.md#5-testes).
+Regras que todo teste novo ou alterado segue. Cada regra traz um exemplo de "evitar" e "preferir" tirado do próprio projeto. O `UserServiceTest` é a referência de estrutura, nomes e dados.
+
+### 7.1 Nomes e `@DisplayName`
+
+- Nome do método: `<método>Should<resultado>When<condição>`. O `<método>` é o método testado (no teste HTTP, o método do controller, como `create` ou `findById`). O `When<condição>` só fica de fora quando o comportamento não depende de condição, como em `allMessageFilesShouldContainSameKeys`.
+- `@DisplayName` em inglês, dizendo **o mesmo** que o nome:
+  - teste de unidade: `"<método> should <resultado> when <condição>"`;
+  - teste HTTP: `"<VERBO> <rota> should <resultado> when <condição>"`.
+- `@Nested`: `"<Método> Operations"` nos testes de unidade e `"<VERBO> <rota>"` nos testes HTTP. Classe: `"Tests for <Classe>"`.
+- Se o teste espera `UsernameNotFoundException`, o nome não pode dizer `ResourceNotFoundException`: nome e `@DisplayName` descrevem exatamente o que é conferido.
+
+```java
+// Evitar: não diz qual método é testado
+void shouldReturnCategoryWhenIdExists()
+
+// Preferir
+void findByIdShouldReturnCategoryWhenIdExists()
+```
+
+```java
+// Evitar: igual em três operações; no relatório não se sabe qual falhou
+@DisplayName("Should return 404 when id does not exist")
+
+// Preferir
+@DisplayName("DELETE /categories/{id} should return 404 when id does not exist")
+```
+
+### 7.2 Estrutura
+
+- Comentários `// Arrange`, `// Act` e `// Assert` separam preparação, execução e conferência. Quando a execução e a conferência são a mesma linha (exceção), use `// Act & Assert`.
+- Um `@Nested` por método ou endpoint.
+- **Um comportamento por teste.** Dois cenários (por exemplo, "usuário inativo" e "usuário já ativo") são dois testes. Nos testes de integração de fluxo, como o `AccountFlowIT`, vários passos no mesmo teste são aceitos, porque o fluxo é o comportamento testado.
+- Classes e métodos de teste sem `public`: o JUnit 5 não exige o modificador.
+
+```java
+// Evitar
+public class CategoryTest {
+
+// Preferir
+class CategoryTest {
+```
+
+### 7.3 Asserções
+
+**Biblioteca.** Os testes usam o **AssertJ** (`assertThat`), que já vem no `spring-boot-starter-test`. A regra vale para os testes novos e para cada classe que for retrabalhada; as classes que ainda usam as `Assertions` do JUnit migram quando forem alteradas, sem uma migração em massa. **Dentro de uma mesma classe, não misture os dois estilos.** Nos testes HTTP, a conferência da resposta continua com o `andExpect` do MockMvc.
+
+| JUnit | AssertJ |
+| --- | --- |
+| `assertEquals(expected, result)` | `assertThat(result).isEqualTo(expected)` |
+| `assertTrue(user.isActive())` | `assertThat(user.isActive()).isTrue()` |
+| `assertThrows(...)` + `assertEquals(..., e.getMessage())` | `assertThatThrownBy(() -> ...).isInstanceOf(...).hasMessage(...)` |
+
+**Compare o valor esperado por inteiro.** Conferir só que algo existe não prova que está certo.
+
+```java
+// Evitar
+assertNotNull(category.getCreatedAt());
+resultActions.andExpect(header().exists("Location"));
+
+// Preferir
+assertThat(result).isEqualTo(expectedResponse);
+resultActions.andExpect(header().string("Location", "http://localhost/api/v1/users/1"));
+```
+
+**Exceções: confira o tipo e a mensagem completa.** As exceções de negócio carregam a chave da mensagem; compare a chave inteira. Mensagens montadas com valores são comparadas pelo texto completo, montado com as mesmas constantes.
+
+```java
+// Evitar: qualquer ResourceNotFoundException passaria
+assertThrows(ResourceNotFoundException.class, () -> service.findById(NON_EXISTING_ID));
+
+// Preferir
+assertThatThrownBy(() -> service.findById(NON_EXISTING_ID))
+    .isInstanceOf(ResourceNotFoundException.class)
+    .hasMessage("error.user.notFound");
+
+assertThatThrownBy(() -> service.loadUserByUsername(NON_EXISTING_EMAIL))
+    .isInstanceOf(UsernameNotFoundException.class)
+    .hasMessage("User not found with email: " + NON_EXISTING_EMAIL);
+```
+
+**`verify` e `never`.** O `verify` do Mockito confere que um método do mock foi chamado. Use-o com o argumento esperado sempre que ele for conhecido; `any()` só quando o argumento não importa ou é criado dentro do código testado (nesse caso, capture-o com `ArgumentCaptor` e confira os campos). Nos caminhos de erro, `never()` confirma que não houve efeito colateral, como uma gravação.
+
+```java
+// Evitar
+verify(userService).create(any(UserCreateRequest.class));
+
+// Preferir
+verify(userService).create(request);
+verify(repository, never()).save(any());
+```
+
+### 7.4 Dados de teste
+
+- Dados vêm das fábricas do pacote `factory` (`UserFactory`, `RoleFactory`, `CategoryFactory`, `ProductFactory`, `UserDetailsFactory`) e das constantes delas, como `EXISTING_ID`, `NON_EXISTING_EMAIL` e `RoleFactory.OPERATOR_ROLE_ID`.
+- **Sem valores mágicos**: ids, e-mails, nomes, senhas e roles escritos à mão no teste.
+- Se faltar uma constante, acrescente-a na fábrica correspondente, com um nome que diga o que ela representa. Não crie constantes que nenhum teste usa.
+
+```java
+// Evitar
+Role role = new Role(1L, "ROLE_OPERATOR");
+when(roleRepository.existsById(1L)).thenReturn(true);
+
+// Preferir
+Role role = RoleFactory.createOperatorRole();
+when(roleRepository.existsById(RoleFactory.OPERATOR_ROLE_ID)).thenReturn(true);
+```
+
+### 7.5 Mocks, spies e testes parametrizados
+
+- **Mock** (objeto falso criado pelo Mockito) só para **colaboradores**: repositórios, outros services, o encoder de senha. DTOs são `record`s simples e vêm das fábricas, não de mocks.
+- **Stub** é o comportamento programado num mock (`when(...).thenReturn(...)`). Com o `MockitoExtension`, um stub que o teste não usa faz o teste falhar (`UnnecessaryStubbingException`), o que ajuda a manter o teste enxuto. Use `lenient()` só quando o stub do `@BeforeEach` serve a todos os testes da classe.
+- **Spy** é um objeto real "espionado": os métodos funcionam de verdade, mas podem ser conferidos com `verify`. Use só quando o resultado final é o mesmo em dois caminhos e é preciso provar qual deles foi seguido, com um comentário explicando o motivo (exemplo: `activateShouldNotChangeUserWhenUserIsAlreadyActive`, no `UserServiceTest`).
+- **`@ParameterizedTest`** roda o mesmo teste com vários valores de entrada. Use quando o comportamento é o mesmo para todos eles (por exemplo, senhas fracas recusadas pelo mesmo motivo), com `name = "{0}"` para que o relatório mostre cada valor. Valores que levam a comportamentos diferentes continuam em testes separados.
+
+```java
+// Evitar
+CategoryUpdateRequest request = Mockito.mock(CategoryUpdateRequest.class);
+
+// Preferir
+CategoryUpdateRequest request = CategoryFactory.createCategoryUpdateRequest();
+```
+
+```java
+// Preferir (um teste por valor no relatório)
+@ParameterizedTest(name = "{0}")
+@ValueSource(strings = { "user.example.com", "user@@example.com", "user@" })
+@DisplayName("isValid should reject email when format is invalid")
+void isValidShouldRejectEmailWhenFormatIsInvalid(String email) {
+```
+
+### 7.6 Determinismo
+
+Um teste precisa dar o mesmo resultado em qualquer máquina, em qualquer ordem e a qualquer hora.
+
+- **Sem rede.** A consulta de DNS do `@ValidEmail` é substituída nos testes (seção 5).
+- **Sem depender da ordem.** Não use `@Order`. Os testes de integração que gravam no banco são `@Transactional`: o que cada teste grava é desfeito ao final.
+- **Relógio.** O código de produção usa `Instant.now()` sem um `Clock` injetável. Por isso, confira datas por intervalo, e não com um único `isAfter(Instant.now())`, que não prova a duração.
+- **Sem `Thread.sleep`.** A única exceção é `shouldRefreshOnlyUpdatedAtWhenPersistedProductIsModified`, no `ProductRepositoryTest`: sem um `Clock` nem um `setUpdatedAt` na entidade, a pausa é o único jeito de garantir instantes diferentes sem mudar o código de produção.
+
+```java
+// Evitar: não prova que a validade é de 24 horas
+assertThat(result.getExpireDate()).isAfter(Instant.now());
+
+// Preferir
+Instant before = Instant.now();
+Token result = service.createActivationToken(user);
+Instant after = Instant.now();
+
+assertThat(result.getExpireDate())
+    .isBetween(before.plus(24, ChronoUnit.HOURS), after.plus(24, ChronoUnit.HOURS));
+```
+
+### 7.7 Comportamento com issue aberta
+
+- Não escreva teste que congele um comportamento errado, nem teste que dependa de um bug já estar corrigido.
+- Se o comportamento correto ainda não foi decidido (por exemplo, usuário criado sem roles, na #14), o caso fica sem teste. Cite a issue no commit.
+- Um teste que já existe e está ligado a uma issue aberta não é reforçado. Ele muda junto com a correção da issue.
+
+### 7.8 Checklist de revisão
+
+Use esta lista ao escrever ou revisar um teste (inclusive em Pull Requests):
+
+- [ ] O nome segue `<método>Should<resultado>When<condição>`, e o `@DisplayName` diz o mesmo.
+- [ ] Há um `@Nested` por método ou endpoint, e um comportamento por teste.
+- [ ] Os comentários `// Arrange`, `// Act` e `// Assert` estão presentes.
+- [ ] As asserções comparam o valor esperado por inteiro; exceções conferem tipo e mensagem completa.
+- [ ] `verify` usa o argumento esperado, e os caminhos de erro conferem `never()` nos efeitos colaterais.
+- [ ] Os dados vêm das fábricas e constantes, sem valores mágicos.
+- [ ] Mocks só para colaboradores; `spy` e `lenient()` só com justificativa.
+- [ ] O teste não depende de rede, de `sleep` nem da ordem de execução.
+- [ ] A classe usa um único estilo de asserção (AssertJ nos testes novos e retrabalhados).
+- [ ] Nenhum teste congela comportamento ligado a uma issue aberta.
+- [ ] Classe e métodos sem `public`.
 
 ## 8. Dependências externas
 
@@ -156,6 +328,7 @@ Para conferir, rode a suíte com o DNS simulado fora do ar (comando na seção 3
 
 ## 9. Limitações conhecidas
 
+- **Testes ainda fora do padrão da seção 7.** A adequação das classes existentes está em andamento no capítulo 05; até lá, parte delas usa as `Assertions` do JUnit, nomes sem o método testado ou valores escritos à mão.
 - **Flyway não é testado.** O perfil `test` cria as tabelas a partir das entidades, e não pelas migrations. Um erro numa migration só aparece ao subir nos perfis `dev` ou `prod`.
 - **Comportamentos sem teste.** Não há teste para `PUT /users/{id}` feito por um OPERATOR no próprio id, para `GET /accounts/me` sem token, para `GET /products?sort=price` nem para o comportamento após reiniciar a aplicação (tokens invalidados). Veja as limitações em [API-ENDPOINTS.md](API-ENDPOINTS.md#9-limitações-conhecidas) e [AUTHENTICATION.md](AUTHENTICATION.md#10-limitações-conhecidas).
 
