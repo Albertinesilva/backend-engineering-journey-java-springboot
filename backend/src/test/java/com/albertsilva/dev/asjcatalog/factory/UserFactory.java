@@ -14,10 +14,14 @@ public class UserFactory {
   public static final Long NON_EXISTING_ID = 1000L;
   public static final Long COUNT_TOTAL_USERS = 2L;
   public static final String EXISTING_EMAIL = "maria@gmail.com";
+  public static final String NON_EXISTING_EMAIL = "naoexiste@gmail.com";
   public static final Long OPERATOR_USER_ID = 1L;
+  public static final String PASSWORD = "JAVA!@#ResTIc18";
+  public static final String ENCODED_PASSWORD = "encoded_password";
+  public static final String FIRST_NAME_FILTER = "João";
 
   public static User createUser() {
-    return new User(null, "João", "Silva", "joao@gmail.com", "JAVA!@#ResTIc18", true);
+    return new User(null, FIRST_NAME_FILTER, "Silva", "joao@gmail.com", PASSWORD, true);
   }
 
   public static UserResponse createUserResponse() {
@@ -30,11 +34,17 @@ public class UserFactory {
   }
 
   public static UserCreateRequest createUserCreateRequest() {
-    return new UserCreateRequest("Pedro", "Santos", "pedro@gmail.com", "JAVA!@#ResTIc18", Set.of(1L));
+    return new UserCreateRequest("Pedro", "Santos", "pedro@gmail.com", PASSWORD,
+        Set.of(RoleFactory.OPERATOR_ROLE_ID));
   }
 
   public static UserUpdateRequest createUserUpdateRequest() {
-    return new UserUpdateRequest("Pedro", "Santos Updated", "pedro@gmail.com", "JAVA!@#ResTIc18", Set.of(1L));
+    return new UserUpdateRequest("Pedro", "Santos Updated", "pedro@gmail.com", PASSWORD,
+        Set.of(RoleFactory.OPERATOR_ROLE_ID));
+  }
+
+  public static UserUpdateRequest createUserUpdateRequestWithoutRolesAndPassword() {
+    return new UserUpdateRequest("Pedro", "Santos Updated", "pedro@gmail.com", null, null);
   }
 
   public static UserResponse createUpdatedUserResponse() {
