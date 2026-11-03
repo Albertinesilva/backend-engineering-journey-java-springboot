@@ -46,6 +46,8 @@
 		<!-- Limites mínimos de cobertura do goal check do JaCoCo (relatório consolidado) -->
 		<jacoco.minimum.line.coverage>0.85</jacoco.minimum.line.coverage>
 		<jacoco.minimum.branch.coverage>0.68</jacoco.minimum.branch.coverage>
+		<!-- Tags de teste fora do build padrão; para incluir o teste de DNS real: -Dsurefire.excludedGroups=none -->
+		<surefire.excludedGroups>dns</surefire.excludedGroups>
 	</properties>
 	<dependencies>
 
@@ -170,6 +172,16 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<!-- Plugin de testes de unidade (classes *Test e *Tests, executadas no ./mvnw test) -->
+			<!-- Versão gerenciada pelo spring-boot-starter-parent -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!-- Tags excluídas do build padrão (dns: testes que consultam o DNS real) -->
+					<excludedGroups>${surefire.excludedGroups}</excludedGroups>
+				</configuration>
 			</plugin>
 			<!-- Plugin de testes de integração (classes *IT, executadas no ./mvnw verify) -->
 			<!-- Versão gerenciada pelo spring-boot-starter-parent -->

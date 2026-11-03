@@ -16,6 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.albertsilva.dev.asjcatalog.validation.user.dns.MxRecordLookup;
+
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
 
@@ -27,6 +29,9 @@ class ValidEmailValidatorTest {
 
   @InjectMocks
   private ValidEmailValidator validator;
+
+  @Mock
+  private MxRecordLookup mxRecordLookup;
 
   @Mock
   private ConstraintValidatorContext context;
@@ -50,7 +55,7 @@ class ValidEmailValidatorTest {
       boolean result = validator.isValid(null, context);
 
       assertThat(result).isTrue();
-      verifyNoInteractions(context);
+      verifyNoInteractions(context, mxRecordLookup);
     }
 
     @Test
@@ -59,7 +64,45 @@ class ValidEmailValidatorTest {
       boolean result = validator.isValid("   ", context);
 
       assertThat(result).isTrue();
+      verifyNoInteractions(context, mxRecordLookup);
+    }
+  }
+
+  @Nested
+  @DisplayName("MX record validation")
+  class MxRecordValidationTests {
+
+    @Test
+    @DisplayName("isValid should accept a valid email when domain has MX record")
+    void isValidShouldAcceptEmailWhenDomainHasMxRecord() {
+      when(mxRecordLookup.hasMxRecord("gmail.com")).thenReturn(true);
+
+      boolean result = validator.isValid("user@gmail.com", context);
+
+      assertThat(result).isTrue();
+      verify(mxRecordLookup).hasMxRecord("gmail.com");
       verifyNoInteractions(context);
+    }
+
+    @Test
+    @DisplayName("isValid should normalize surrounding spaces and case before validation")
+    void isValidShouldNormalizeEmailBeforeValidation() {
+      when(mxRecordLookup.hasMxRecord("gmail.com")).thenReturn(true);
+
+      boolean result = validator.isValid("  USER@GMAIL.COM  ", context);
+
+      assertThat(result).isTrue();
+      verify(mxRecordLookup).hasMxRecord("gmail.com");
+      verifyNoInteractions(context);
+    }
+
+    @Test
+    @DisplayName("isValid should reject email when domain has no MX record")
+    void isValidShouldRejectEmailWhenDomainHasNoMxRecord() {
+      when(mxRecordLookup.hasMxRecord("gmail.com")).thenReturn(false);
+
+      assertInvalidEmail("user@gmail.com");
+      verify(mxRecordLookup).hasMxRecord("gmail.com");
     }
   }
 
@@ -68,63 +111,52 @@ class ValidEmailValidatorTest {
   class FormatValidationTests {
 
     @Test
-    @DisplayName("isValid should accept a valid email with a public MX domain")
-    void isValidShouldAcceptEmailWithMxRecord() {
-      boolean result = validator.isValid("user@gmail.com", context);
-
-      assertThat(result).isTrue();
-      verifyNoInteractions(context);
-    }
-
-    @Test
-    @DisplayName("isValid should normalize surrounding spaces and case before validation")
-    void isValidShouldNormalizeEmailBeforeValidation() {
-      boolean result = validator.isValid("  USER@GMAIL.COM  ", context);
-
-      assertThat(result).isTrue();
-      verifyNoInteractions(context);
-    }
-
-    @Test
     @DisplayName("isValid should reject an email without at sign")
     void isValidShouldRejectEmailWithoutAtSign() {
       assertInvalidEmail("user.example.com");
+      verifyNoInteractions(mxRecordLookup);
     }
 
     @Test
     @DisplayName("isValid should reject an email with multiple at signs")
     void isValidShouldRejectEmailWithMultipleAtSigns() {
       assertInvalidEmail("user@@example.com");
+      verifyNoInteractions(mxRecordLookup);
     }
 
     @Test
     @DisplayName("isValid should reject an email without domain")
     void isValidShouldRejectEmailWithoutDomain() {
       assertInvalidEmail("user@");
+      verifyNoInteractions(mxRecordLookup);
     }
 
     @Test
     @DisplayName("isValid should reject an email without a valid extension")
     void isValidShouldRejectEmailWithoutValidExtension() {
       assertInvalidEmail("user@example.c");
+      verifyNoInteractions(mxRecordLookup);
     }
 
     @Test
     @DisplayName("isValid should reject whitespace inside an email")
     void isValidShouldRejectWhitespaceInsideEmail() {
       assertInvalidEmail("user name@example.com");
+      verifyNoInteractions(mxRecordLookup);
     }
 
     @Test
     @DisplayName("isValid should reject an email with unsupported local-part characters")
     void isValidShouldRejectUnsupportedLocalPartCharacters() {
       assertInvalidEmail("user/name@example.com");
+      verifyNoInteractions(mxRecordLookup);
     }
 
     @Test
     @DisplayName("isValid should reject an email with an invalid domain character")
     void isValidShouldRejectInvalidDomainCharacter() {
       assertInvalidEmail("user@example_domain.com");
+      verifyNoInteractions(mxRecordLookup);
     }
   }
 

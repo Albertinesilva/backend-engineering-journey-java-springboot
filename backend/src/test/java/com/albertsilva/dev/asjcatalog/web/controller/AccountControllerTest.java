@@ -40,11 +40,12 @@ import com.albertsilva.dev.asjcatalog.security.oauth2.resource.config.ResourceSe
 import com.albertsilva.dev.asjcatalog.service.AccountService;
 import com.albertsilva.dev.asjcatalog.service.exception.InvalidTokenException;
 import com.albertsilva.dev.asjcatalog.service.exception.PasswordUpdateException;
+import com.albertsilva.dev.asjcatalog.utils.MxRecordLookupTestConfig;
 import com.albertsilva.dev.asjcatalog.web.exception.handler.ControllerExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(AccountController.class)
-@Import({ ControllerExceptionHandler.class, ResourceServerConfig.class })
+@Import({ ControllerExceptionHandler.class, ResourceServerConfig.class, MxRecordLookupTestConfig.class })
 @ActiveProfiles("test")
 @TestPropertySource(properties = { "spring.h2.console.enabled=false" })
 @DisplayName("Tests for AccountController")

@@ -54,13 +54,14 @@ import com.albertsilva.dev.asjcatalog.factory.UserFactory;
 import com.albertsilva.dev.asjcatalog.security.oauth2.resource.config.ResourceServerConfig;
 import com.albertsilva.dev.asjcatalog.service.UserService;
 import com.albertsilva.dev.asjcatalog.service.exception.ResourceNotFoundException;
+import com.albertsilva.dev.asjcatalog.utils.MxRecordLookupTestConfig;
 import com.albertsilva.dev.asjcatalog.web.exception.handler.ControllerExceptionHandler;
 import com.albertsilva.dev.asjcatalog.repository.RoleRepository;
 import com.albertsilva.dev.asjcatalog.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(UserController.class)
-@Import({ ControllerExceptionHandler.class, ResourceServerConfig.class })
+@Import({ ControllerExceptionHandler.class, ResourceServerConfig.class, MxRecordLookupTestConfig.class })
 @ActiveProfiles("test")
 @TestPropertySource(properties = { "spring.h2.console.enabled=false" })
 @DisplayName("Tests for UserController")

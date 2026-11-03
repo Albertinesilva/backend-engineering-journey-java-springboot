@@ -213,7 +213,7 @@ O campo **Alternativas possíveis** lista opções reais do ecossistema. Ele nã
   - **Pergunta:** Por que o `@ValidEmail` consulta o registro MX do domínio no DNS, além de conferir o formato, se a ativação por e-mail já confirma que o endereço existe?
   - **Resposta:** _a preencher pelo autor_
 - **Alternativas possíveis:** conferir só o formato com o `@Email` padrão e deixar a confirmação para o e-mail de ativação.
-- **Consequências:** e-mails de domínios sem servidor de e-mail são recusados já no cadastro. A validação depende de internet: uma falha de DNS recusa e-mails válidos, e os testes que usam `@ValidEmail` falham sem acesso ao DNS. `PUT /accounts/me` usa só o `@Email`, então aceita e-mails que o cadastro recusaria.
+- **Consequências:** e-mails de domínios sem servidor de e-mail são recusados já no cadastro. A validação depende de internet: uma falha de DNS recusa e-mails válidos. Nos testes, a consulta de MX é substituída e não há essa dependência (#20). `PUT /accounts/me` usa só o `@Email`, então aceita e-mails que o cadastro recusaria.
 - **Guia relacionado:** [VALIDATION.md](VALIDATION.md#6-validação-de-e-mail)
 
 ### D-19 — Testes de integração no Maven Failsafe
@@ -241,7 +241,7 @@ Efeitos das decisões acima que o projeto conhece e mantém por enquanto. Os det
 | E-mail comparado com `=` no login | `Maria@gmail.com` não encontra `maria@gmail.com` | D-05 | [DATA-ACCESS.md](DATA-ACCESS.md#8-limitações-conhecidas) |
 | `Page` serializado diretamente | O formato do JSON paginado não é garantido entre versões do Spring Data | — | [DATA-ACCESS.md](DATA-ACCESS.md#8-limitações-conhecidas) |
 | Migrations não testadas | Um erro numa migration só aparece em `dev` ou `prod` | D-09 | [TESTING.md](TESTING.md#9-limitações-conhecidas) |
-| Validação de e-mail dependente de DNS | Sem internet, e-mails válidos são recusados e testes falham | D-18 | [VALIDATION.md](VALIDATION.md#7-limitações-conhecidas) |
+| Validação de e-mail dependente de DNS | Sem internet, e-mails válidos são recusados (os testes não dependem de DNS desde o capítulo 05) | D-18 | [VALIDATION.md](VALIDATION.md#7-limitações-conhecidas) |
 | Preço em `Double` | Nem todo valor decimal é representado de forma exata | — | [DOMAIN-MODEL.md](DOMAIN-MODEL.md#9-limitações-conhecidas) |
 | `equals` e `hashCode` por id | Duas entidades ainda não salvas são consideradas iguais | — | [DOMAIN-MODEL.md](DOMAIN-MODEL.md#9-limitações-conhecidas) |
 | Segredos padrão versionados | Os valores de desenvolvimento ficam públicos no repositório; em `prod`, as variáveis são obrigatórias | D-08 | [CONFIGURATION.md](CONFIGURATION.md#7-limitações-conhecidas) |

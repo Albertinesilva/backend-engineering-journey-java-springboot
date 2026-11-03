@@ -51,6 +51,8 @@ Os comandos partem da pasta `backend`. No PowerShell, argumentos `-D` com ponto 
 | Só os testes de integração (`*IT`) | `.\mvnw verify '-Dtest=NenhumTeste' '-Dsurefire.failIfNoSpecifiedTests=false'` | `./mvnw verify -Dtest=NenhumTeste -Dsurefire.failIfNoSpecifiedTests=false` |
 | Uma classe de unidade | `.\mvnw test '-Dtest=StrongPasswordValidatorTest'` | `./mvnw test -Dtest=StrongPasswordValidatorTest` |
 | Uma classe de integração | `.\mvnw verify '-Dtest=NenhumTeste' '-Dsurefire.failIfNoSpecifiedTests=false' '-Dit.test=CategoryControllerIT'` | `./mvnw verify -Dtest=NenhumTeste -Dsurefire.failIfNoSpecifiedTests=false -Dit.test=CategoryControllerIT` |
+| Teste opcional contra o DNS real (precisa de internet) | `.\mvnw test '-Dtest=JndiMxRecordLookupDnsTest' '-Dsurefire.excludedGroups=none'` | `./mvnw test -Dtest=JndiMxRecordLookupDnsTest -Dsurefire.excludedGroups=none` |
+| Todos os testes com o DNS simulado fora do ar | `.\mvnw clean verify '-Djava.naming.provider.url=dns://127.0.0.1:9'` | `./mvnw clean verify -Djava.naming.provider.url=dns://127.0.0.1:9` |
 
 Como funciona o comando "só os testes de integração": `-Dtest` filtra o Surefire, e `NenhumTeste` não corresponde a nenhuma classe; `-Dsurefire.failIfNoSpecifiedTests=false` impede que isso seja tratado como erro. O Failsafe usa outro filtro (`-Dit.test`), e por isso roda todos os `*IT`.
 
@@ -101,6 +103,14 @@ Os testes `integrations/service/*ServiceIT` não estendem `AbstractIT`: usam `@S
 
 Um **`@MockitoBean`** substitui um bean do contexto do Spring por um mock durante o teste.
 
+**Consulta de MX substituída.** O `@ValidEmail` não consulta o DNS diretamente: ele recebe um `MxRecordLookup` (pacote `validation.user.dns`), cuja implementação de produção é o `JndiMxRecordLookup`. Nos testes:
+
+- `ValidEmailValidatorTest` usa um mock de `MxRecordLookup`;
+- `JndiMxRecordLookupTest` testa a consulta JNDI com um `DirContext` falso (domínio com MX, sem MX, MX vazio e falha de consulta), sem rede;
+- `utils/MxRecordLookupTestConfig` (`@TestConfiguration`) registra um `MxRecordLookup` `@Primary` que considera que todo domínio tem MX. Ele é importado pelo `AbstractIT` (todos os testes de integração com MockMvc) e pelo `UserControllerTest` e pelo `AccountControllerTest`. Nesses dois `@WebMvcTest`, o import é obrigatório: o `@WebMvcTest` não carrega `@Component` comuns, e sem ele o validador ficaria sem a dependência.
+
+O formato do e-mail continua validado pela expressão regular real; só a consulta de MX é substituída.
+
 ## 6. O que cada grupo cobre
 
 **Testes de unidade (Surefire):**
@@ -110,7 +120,7 @@ Um **`@MockitoBean`** substitui um bean do contexto do Spring por um mock durant
 | `domain` | `CategoryTest`, `ProductTest`, `UserTest` | Java puro | Construtores, callbacks `@PrePersist`/`@PreUpdate`, `equals` e regras das entidades |
 | `repository` | 6 classes `*RepositoryTest` | `@DataJpaTest` (sobe só a camada JPA, com H2) | Consultas derivadas, JPQL e nativas |
 | `service` | 6 classes `*ServiceTest` | Mockito | Regras de negócio de cada service, com repositórios e outros services falsos |
-| `validation` | 10 classes `*ValidatorTest` | Mockito | Cada validador customizado, incluindo senha forte, dados pessoais e e-mail |
+| `validation` | 10 classes `*ValidatorTest` e `JndiMxRecordLookupTest` | Mockito | Cada validador customizado, incluindo senha forte, dados pessoais e e-mail, e a consulta de MX |
 | `security` | `CustomPasswordAuthenticationConverterTest`, `CustomPasswordAuthenticationProviderTest`, `AuthenticatedUserServiceTest` | Mockito ou Java puro | Leitura dos parâmetros do login, regras do login e leitura do usuário a partir do JWT |
 | `web.controller` | 4 classes `*ControllerTest` | `@WebMvcTest` (sobe só a camada web) com os services como `@MockitoBean` | Rotas, status HTTP e JSON dos controllers |
 | `web.exception.handler` | `ControllerExceptionHandlerTest` | Java puro | Montagem das respostas de erro |
@@ -138,16 +148,14 @@ Nomes de método no padrão `<ação>Should<resultado>When<condição>`, `@Displ
 
 **Servidor SMTP: não é necessário.** O `application.properties` liga `spring.mail.test-connection`, que faz a subida testar a conexão com o servidor de e-mail. O `application-test.properties` desliga esse teste (`spring.mail.test-connection=false`), e nenhum teste envia e-mail de verdade (seção 5). Por isso **os testes não precisam das variáveis `MAIL_USERNAME` e `MAIL_PASSWORD`**: sem elas, `./mvnw verify` passou com 301 e 150 testes, sem erros.
 
-**DNS (internet).** Esta é a única dependência externa dos testes. O validador `@ValidEmail` consulta o registro MX do domínio do e-mail pela internet (veja [VALIDATION.md](VALIDATION.md#6-validação-de-e-mail)). Testes que dependem disso:
+**DNS (internet): não é necessário.** Em produção, o `@ValidEmail` consulta o registro MX do domínio do e-mail pela internet (veja [VALIDATION.md](VALIDATION.md#6-validação-de-e-mail)). Nos testes, essa consulta é substituída (seção 5), e `./mvnw verify` passa sem acesso à rede.
 
-- `ValidEmailValidatorTest`, que valida `user@gmail.com` consultando o DNS real;
-- testes de integração que enviam e-mails para endpoints com `@ValidEmail`, como o `AccountFlowIT` (cadastro com `joana.flowit@gmail.com`).
+Para conferir, rode a suíte com o DNS simulado fora do ar (comando na seção 3). A propriedade `java.naming.provider.url` aponta o JNDI para uma porta do próprio computador em que nada responde, e qualquer consulta real de DNS falha. Antes da correção da #20, 19 testes falhavam assim (8 de unidade e 11 de integração); hoje, nenhum falha.
 
-Sem acesso ao DNS, esses testes falham, porque o e-mail é considerado inválido.
+**Teste opcional contra o DNS real.** O `JndiMxRecordLookupDnsTest` consulta o DNS de verdade (`gmail.com` tem MX; `asjcatalog.invalid` não existe) e confere que a consulta JNDI de produção continua funcionando. Ele tem a tag `dns`, que fica fora do build padrão: o `pom.xml` passa a propriedade `surefire.excludedGroups` (valor `dns`) ao `excludedGroups` do Surefire. Para rodá-lo, troque o valor por uma tag que nenhum teste usa, como `none` (comando na seção 3). Sem internet, o teste de `gmail.com` falha.
 
 ## 9. Limitações conhecidas
 
-- **Os testes dependem de internet** para a consulta de DNS da validação de e-mail.
 - **Flyway não é testado.** O perfil `test` cria as tabelas a partir das entidades, e não pelas migrations. Um erro numa migration só aparece ao subir nos perfis `dev` ou `prod`.
 - **Comportamentos sem teste.** Não há teste para `PUT /users/{id}` feito por um OPERATOR no próprio id, para `GET /accounts/me` sem token, para `GET /products?sort=price` nem para o comportamento após reiniciar a aplicação (tokens invalidados). Veja as limitações em [API-ENDPOINTS.md](API-ENDPOINTS.md#9-limitações-conhecidas) e [AUTHENTICATION.md](AUTHENTICATION.md#10-limitações-conhecidas).
 

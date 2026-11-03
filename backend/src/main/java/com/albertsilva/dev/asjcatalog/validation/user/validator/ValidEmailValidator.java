@@ -1,12 +1,7 @@
 package com.albertsilva.dev.asjcatalog.validation.user.validator;
 
-import java.util.Hashtable;
-
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.InitialDirContext;
-
 import com.albertsilva.dev.asjcatalog.validation.user.annotation.ValidEmail;
+import com.albertsilva.dev.asjcatalog.validation.user.dns.MxRecordLookup;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -39,8 +34,10 @@ import jakarta.validation.ConstraintValidatorContext;
  *
  * <p>
  * <b>Efeito externo:</b> cada validação de e-mail que passa pelo formato faz
- * uma consulta DNS <b>síncrona</b>, na thread da requisição. Não há injeção de
- * dependências, banco de dados nem acesso a HTTP/autenticação.
+ * uma consulta de MX <b>síncrona</b>, na thread da requisição, por meio de
+ * {@link MxRecordLookup}, recebido por injeção de dependência (em produção,
+ * {@code JndiMxRecordLookup}, que consulta o DNS real). Não há acesso a banco
+ * de dados nem a HTTP/autenticação.
  * </p>
  */
 public class ValidEmailValidator implements ConstraintValidator<ValidEmail, String> {
@@ -57,6 +54,20 @@ public class ValidEmailValidator implements ConstraintValidator<ValidEmail, Stri
    * </p>
    */
   private static final String EMAIL_PATTERN = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+
+  /**
+   * Consulta de registro MX do domínio.
+   */
+  private final MxRecordLookup mxRecordLookup;
+
+  /**
+   * Construtor.
+   *
+   * @param mxRecordLookup consulta de registro MX do domínio
+   */
+  public ValidEmailValidator(MxRecordLookup mxRecordLookup) {
+    this.mxRecordLookup = mxRecordLookup;
+  }
 
   /**
    * Valida o e-mail conforme descrito na documentação da classe.
@@ -93,7 +104,7 @@ public class ValidEmailValidator implements ConstraintValidator<ValidEmail, Stri
 
     String domain = extractDomain(email);
 
-    if (!hasMxRecord(domain)) {
+    if (!mxRecordLookup.hasMxRecord(domain)) {
 
       context.disableDefaultConstraintViolation();
 
@@ -125,68 +136,5 @@ public class ValidEmailValidator implements ConstraintValidator<ValidEmail, Stri
    */
   private String extractDomain(String email) {
     return email.substring(email.indexOf("@") + 1);
-  }
-
-  /**
-   * Consulta o DNS (via JNDI, provedor {@code com.sun.jndi.dns.DnsContextFactory},
-   * sem servidor, timeout ou tentativas configurados no código) e verifica se o
-   * domínio possui ao menos um registro do tipo MX.
-   *
-   * <p>
-   * Só o tipo MX é considerado: não há alternativa para domínios que aceitam
-   * e-mail apenas por registro A/AAAA. <b>Qualquer {@link Exception}</b> (domínio
-   * inexistente, DNS indisponível, tempo esgotado etc.) resulta em {@code false},
-   * o que faz uma falha de rede tornar inválido um e-mail que talvez fosse
-   * válido. O contexto JNDI é fechado no bloco {@code finally}.
-   * </p>
-   *
-   * @param domain domínio a consultar
-   * @return {@code true} se houver ao menos um registro MX; {@code false} se não
-   *         houver ou se ocorrer qualquer erro
-   */
-  private boolean hasMxRecord(String domain) {
-
-    Hashtable<String, String> env = new Hashtable<>();
-
-    env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
-
-    InitialDirContext context = null;
-
-    try {
-
-      context = new InitialDirContext(env);
-
-      Attributes attributes = context.getAttributes(domain, new String[] { "MX" });
-
-      Attribute attribute = attributes.get("MX");
-
-      return attribute != null && attribute.size() > 0;
-
-    } catch (Exception e) {
-
-      return false;
-
-    } finally {
-      closeContext(context);
-    }
-  }
-
-  /**
-   * Fecha o contexto JNDI de forma segura, capturando
-   * qualquer exceção que possa ocorrer durante o encerramento.
-   *
-   * @param context contexto JNDI a ser fechado
-   */
-  private void closeContext(InitialDirContext context) {
-
-    if (context == null) {
-      return;
-    }
-
-    try {
-      context.close();
-    } catch (Exception e) {
-      // ignora erro ao fechar
-    }
   }
 }

@@ -76,7 +76,7 @@ Ele é um **mapa**: traz só as regras e os fatos que valem para toda tarefa. Os
 - **Sempre** rode `./mvnw clean verify` em `backend/` depois de alterar código ou configuração.
 - O JaCoCo gera três relatórios em `backend/target/site/`: `jacoco/` (unidade), `jacoco-it/` (integração) e `jacoco-merged/` (consolidado, o principal).
 - **CI:** `.github/workflows/ci.yml` roda `./mvnw -B verify` (JDK 17 Temurin, `ubuntu-24.04`) em todo push e Pull Request para a `develop`.
-- Os testes, inclusive no CI, dependem de DNS por causa da consulta MX do `@ValidEmail` (#20).
+- Os testes não dependem de DNS: a consulta MX do `@ValidEmail` fica no `MxRecordLookup` (`validation.user.dns`) e é substituída nos testes pelo `MxRecordLookupTestConfig` (#20). O `JndiMxRecordLookupDnsTest`, que usa o DNS real, tem a tag `dns` e fica fora do build padrão (`-Dsurefire.excludedGroups=none` para rodá-lo).
 - Se o primeiro build falhar logo depois de mover muitos arquivos, pode ser a extensão Java do VS Code recompilando ao mesmo tempo, ou o Surefire com a pasta temporária em outro disco. Rode de novo antes de concluir que há erro.
 - Comandos, infraestrutura de teste (`AbstractIT`, `TokenUtil`, fábricas) e o que cada grupo cobre: [TESTING.md](docs/guides/TESTING.md).
 
@@ -102,7 +102,7 @@ Ele é um **mapa**: traz só as regras e os fatos que valem para toda tarefa. Os
 ## 8. Armadilhas conhecidas
 
 - **SMTP no `dev`:** sem credenciais de e-mail válidas, a aplicação não sobe (seção 4).
-- **DNS nos testes:** o `@ValidEmail` consulta o registro MX; sem rede, testes de usuário falham (#20).
+- **DNS no `@ValidEmail`:** em produção, ele consulta o registro MX, e uma falha de DNS recusa e-mails válidos. Um `@WebMvcTest` que valide `@ValidEmail` precisa importar o `MxRecordLookupTestConfig`, porque o `@WebMvcTest` não carrega o `JndiMxRecordLookup`.
 - **Tokens se perdem ao reiniciar**, inclusive nos reinícios do DevTools: é preciso fazer login de novo.
 - **`POST /oauth2/token`** responde no formato do OAuth2, com mensagens fixas em inglês, e não com `ProblemDetails` (#32). O 401 do Resource Server vem sem corpo (#22).
 - **`spring.messages.*` e `spring.web.locale*` não têm efeito:** a configuração de idioma está em `MessageSourceConfig`.
@@ -210,12 +210,13 @@ Ele é um **mapa**: traz só as regras e os fatos que valem para toda tarefa. Os
 
 Atualizado em 03/11/2026.
 
-- Branch de trabalho: `chapter-05-jacoco`, criada a partir da `develop`. Nesta data, ela está à frente da `develop` com os commits do CLAUDE.md (`a6597f3`), dos testes do `UserService` (`5711fd0`) e da Etapa 2.
+- Branch de trabalho: `chapter-05-jacoco`, criada a partir da `develop`. Nesta data, ela está à frente da `develop` com os commits do CLAUDE.md (`a6597f3`), dos testes do `UserService` (`5711fd0`), da Etapa 2 (`78db253` e `d4cfe94`) e da Etapa 3a.
 - **Regra do capítulo 05:** até o fim dos estudos de JaCoCo, nada de correções de bugs nem de melhorias (regra 3 da seção 10). Infraestrutura de testes, como a #20, continua no capítulo.
 - Plano do capítulo 05:
   - Etapa 1: JaCoCo 0.8.15 com relatórios de unidade, integração e consolidado, e exclusões. **Concluída** (`b1cb5cf`).
   - Etapa 2: limite mínimo de cobertura (`check`) com 0,85 de linhas e 0,68 de branches no BUNDLE, sobre o consolidado. **Concluída.** Execução `check-merged` na fase `verify`; os limites ficam nas propriedades `jacoco.minimum.line.coverage` e `jacoco.minimum.branch.coverage` do `pom.xml` e podem ser trocados por `-D` na linha de comando. Medição nesta data: 0,89 de linhas (1417/1592) e 0,72 de branches (327/454); 314 testes de unidade e 150 de integração.
-  - Etapa 3a: issue #20 (dependência de DNS nos testes), por ser infraestrutura de testes e pré-requisito do CI. **É a próxima.**
+  - Etapa 3a: issue #20 (dependência de DNS nos testes), por ser infraestrutura de testes e pré-requisito do CI. **Concluída.** A consulta MX saiu do `ValidEmailValidator` para o `MxRecordLookup`/`JndiMxRecordLookup` (`validation.user.dns`), sem mudar o comportamento em produção. Com o DNS simulado fora do ar (`-Djava.naming.provider.url=dns://127.0.0.1:9`), 19 testes falhavam antes e nenhum falha depois. Medição nesta data: 0,89 de linhas (1429/1600) e 0,73 de branches (331/454); 321 testes de unidade e 150 de integração. A #20 deve ser fechada manualmente depois do commit.
+  - **A próxima é a Etapa 3b.**
   - Etapa 3b: só testes novos para as lacunas de cobertura (handler de exceções, mappers, `Token.isValid`, provider de login, validador de e-mail da própria conta e contratos de `equals`/`hashCode`), seguidos de nova medição e reajuste dos limites com cerca de 3 pontos de folga.
   - Etapa 4: documentação e README do capítulo 05:
     - TESTING (cobertura, contagens e CI);
