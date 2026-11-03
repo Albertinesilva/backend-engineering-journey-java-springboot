@@ -320,6 +320,15 @@ assertThat(result.getExpireDate())
 class CreateOperations {
 ```
 
+**Dois casos diferentes.** Um teste pode se relacionar com uma issue aberta de duas formas, e cada uma tem um tratamento:
+
+| Caso | Exemplo | O que fazer |
+| --- | --- | --- |
+| O teste **apenas passa** por um caminho com issue aberta, sem afirmar o valor que a issue diz estar errado | o `delete` com violação de integridade, que força um `catch` que talvez nunca dispare (#25) | manter o teste, sem reforço, com um comentário acima do método |
+| Uma **asserção afirma um valor** que a issue diz estar errado | o link de recuperação com `/reset-password` (#46); `status = PENDING` no registro de e-mail (#26) | remover a asserção (o resto do teste continua) e registrar o cenário em "Cenários pendentes" |
+
+Manter uma asserção que afirma o valor errado congelaria o defeito: o teste passaria a defender o comportamento que a issue quer corrigir.
+
 **Teste ligado a uma issue.** Quando um teste existente passa por um comportamento com issue aberta e não é reforçado, um comentário curto acima do método cita a issue e o motivo.
 
 ```java
@@ -345,6 +354,7 @@ Use esta lista ao escrever ou revisar um teste (inclusive em Pull Requests):
 - [ ] A classe usa um único estilo de asserção (AssertJ nos testes novos e retrabalhados).
 - [ ] Nenhum teste congela comportamento ligado a uma issue aberta.
 - [ ] Cenários sem teste por issue aberta estão na seção "Cenários pendentes" do JavaDoc, e testes ligados a issue têm o comentário citando-a.
+- [ ] Nenhuma asserção afirma um valor que uma issue aberta diz estar errado.
 - [ ] Classe e métodos sem `public`.
 
 ## 8. Dependências externas

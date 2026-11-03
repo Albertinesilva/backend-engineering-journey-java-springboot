@@ -242,8 +242,8 @@ class ProductServiceTest {
     void findAllPagedShouldSplitCategoryIdsWhenCategoryIdsAreCommaSeparated() {
 
       // Arrange
-      List<Long> categoryIds = List.of(CategoryFactory.EXISTING_ID, CategoryFactory.NON_DEPENDENT_ID);
-      String categoryIdsParameter = CategoryFactory.EXISTING_ID + "," + CategoryFactory.NON_DEPENDENT_ID;
+      List<Long> categoryIds = List.of(CategoryFactory.EXISTING_ID, CategoryFactory.OTHER_ID);
+      String categoryIdsParameter = CategoryFactory.EXISTING_ID + "," + CategoryFactory.OTHER_ID;
 
       when(repository.searchProducts(categoryIds, "", pageable)).thenReturn(emptyProjections);
       when(repository.searchProductsWithCategories(List.of())).thenReturn(List.of());
@@ -318,7 +318,7 @@ class ProductServiceTest {
       // Arrange
       ProductUpdateRequest request = ProductFactory.createProductUpdateRequest();
       Product product = productWithId(EXISTING_ID);
-      Category previousCategory = categoryWithId(CategoryFactory.NON_DEPENDENT_ID);
+      Category previousCategory = categoryWithId(CategoryFactory.OTHER_ID);
       product.getCategories().add(previousCategory);
       Category newCategory = categoryWithId(CategoryFactory.EXISTING_ID);
       ProductResponse expectedResponse = ProductFactory.createUpdatedProductResponse();

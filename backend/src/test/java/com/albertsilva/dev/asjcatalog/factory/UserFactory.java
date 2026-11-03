@@ -3,7 +3,9 @@ package com.albertsilva.dev.asjcatalog.factory;
 import java.util.Set;
 
 import com.albertsilva.dev.asjcatalog.domain.user.User;
+import com.albertsilva.dev.asjcatalog.dto.user.request.AuthenticatedUserUpdateRequest;
 import com.albertsilva.dev.asjcatalog.dto.user.request.UserCreateRequest;
+import com.albertsilva.dev.asjcatalog.dto.user.request.UserRegisterRequest;
 import com.albertsilva.dev.asjcatalog.dto.user.request.UserUpdateRequest;
 import com.albertsilva.dev.asjcatalog.dto.user.response.UserDetailsResponse;
 import com.albertsilva.dev.asjcatalog.dto.user.response.UserResponse;
@@ -18,6 +20,9 @@ public class UserFactory {
   public static final Long OPERATOR_USER_ID = 1L;
   public static final String PASSWORD = "JAVA!@#ResTIc18";
   public static final String ENCODED_PASSWORD = "encoded_password";
+  public static final String NEW_PASSWORD = "NovaSenha#2026x";
+  public static final String ENCODED_NEW_PASSWORD = "encoded_new_password";
+  public static final String WRONG_PASSWORD = "SenhaErrada#2026";
   public static final String FIRST_NAME_FILTER = "João";
 
   public static User createUser() {
@@ -41,6 +46,14 @@ public class UserFactory {
   public static UserUpdateRequest createUserUpdateRequest() {
     return new UserUpdateRequest("Pedro", "Santos Updated", "pedro@gmail.com", PASSWORD,
         Set.of(RoleFactory.OPERATOR_ROLE_ID));
+  }
+
+  public static UserRegisterRequest createUserRegisterRequest() {
+    return new UserRegisterRequest("Pedro", "Santos", "pedro@gmail.com", PASSWORD);
+  }
+
+  public static AuthenticatedUserUpdateRequest createAuthenticatedUserUpdateRequest() {
+    return new AuthenticatedUserUpdateRequest("Maria", "Souza", "maria@gmail.com");
   }
 
   public static UserUpdateRequest createUserUpdateRequestWithoutRolesAndPassword() {

@@ -11,6 +11,7 @@ public class CategoryFactory {
   public static final Long EXISTING_ID = 1L;
   public static final Long NON_EXISTING_ID = 1000L;
   public static final Long NON_DEPENDENT_ID = 11L;
+  public static final Long OTHER_ID = 2L;
   public static final Long DEPENDENT_ID = 1L;
   public static final Long COUNT_TOTAL_CATEGORIES = 44L;
   public static final String NAME_FILTER = "Eletrônicos";

@@ -1,14 +1,20 @@
 package com.albertsilva.dev.asjcatalog.service;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static com.albertsilva.dev.asjcatalog.factory.TokenFactory.ACTIVATION_TOKEN;
+import static com.albertsilva.dev.asjcatalog.factory.TokenFactory.NON_EXISTING_TOKEN;
+import static com.albertsilva.dev.asjcatalog.factory.TokenFactory.PASSWORD_RECOVERY_TOKEN;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.ENCODED_NEW_PASSWORD;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.ENCODED_PASSWORD;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.NEW_PASSWORD;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.NON_EXISTING_EMAIL;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.PASSWORD;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.WRONG_PASSWORD;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +39,8 @@ import com.albertsilva.dev.asjcatalog.dto.user.request.AuthenticatedUserUpdateRe
 import com.albertsilva.dev.asjcatalog.dto.user.request.PasswordUpdateRequest;
 import com.albertsilva.dev.asjcatalog.dto.user.request.UserRegisterRequest;
 import com.albertsilva.dev.asjcatalog.dto.user.response.UserResponse;
+import com.albertsilva.dev.asjcatalog.factory.RoleFactory;
+import com.albertsilva.dev.asjcatalog.factory.TokenFactory;
 import com.albertsilva.dev.asjcatalog.factory.UserFactory;
 import com.albertsilva.dev.asjcatalog.mapper.user.UserMapper;
 import com.albertsilva.dev.asjcatalog.repository.RoleRepository;
@@ -44,6 +52,17 @@ import com.albertsilva.dev.asjcatalog.service.exception.ResourceNotFoundExceptio
 
 import jakarta.mail.MessagingException;
 
+/**
+ * Testes de {@code AccountService}.
+ *
+ * <p>
+ * <b>Cenários pendentes:</b>
+ * </p>
+ * <ul>
+ * <li>{@code deactivateAccount}: não implementado, sempre lança
+ * {@code UnsupportedOperationException} (#9).</li>
+ * </ul>
+ */
 @DisplayName("Tests for AccountService")
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
@@ -72,94 +91,139 @@ class AccountServiceTest {
   @Mock
   private AuthenticatedUserService authenticatedUserService;
 
+  private static User inactiveUser() {
+    User user = UserFactory.createUser();
+    user.deactivate();
+    return user;
+  }
+
+  private static User userWithEncodedPassword() {
+    User user = UserFactory.createUser();
+    user.setPassword(ENCODED_PASSWORD);
+    return user;
+  }
+
+  /**
+   * Testes de {@code AccountService.register}.
+   *
+   * <p>
+   * <b>Cenários pendentes:</b>
+   * </p>
+   * <ul>
+   * <li>Role {@code ROLE_OPERATOR} ausente no banco ({@code IllegalStateException})
+   * e a própria escolha dessa role para o cadastro público: a role da conta nova
+   * ainda não foi decidida (#13).</li>
+   * </ul>
+   */
   @Nested
-  @DisplayName("Registration Operations")
-  class RegistrationOperations {
+  @DisplayName("Register Operations")
+  class RegisterOperations {
 
     @Test
     @DisplayName("register should create inactive user and send activation email")
     void registerShouldCreateInactiveUserAndSendActivationEmail() throws MessagingException {
-      // Arrange
-      UserRegisterRequest request = new UserRegisterRequest("Pedro", "Santos", "pedro@gmail.com",
-          "Java!234567");
-      Role role = new Role(1L, "ROLE_OPERATOR");
-      User user = UserFactory.createUser();
-      user.setId(10L);
-      user.addRole(role);
-      user.deactivate();
-      Token activationToken = new Token("token-123", user, java.time.Instant.now().plusSeconds(3600),
-          TokenType.ACTIVATION);
-      UserResponse response = new UserResponse(10L, "Pedro", "Santos", "pedro@gmail.com", Set.of());
 
-      when(roleRepository.findByAuthority("ROLE_OPERATOR")).thenReturn(Optional.of(role));
+      // Arrange
+      UserRegisterRequest request = UserFactory.createUserRegisterRequest();
+      Role role = RoleFactory.createOperatorRole();
+      User user = UserFactory.createUser();
+      Token activationToken = TokenFactory.createActivationToken(user);
+      UserResponse expectedResponse = UserFactory.createUserResponse();
+
+      when(roleRepository.findByAuthority(RoleFactory.OPERATOR_AUTHORITY)).thenReturn(Optional.of(role));
       when(userMapper.toEntity(request, Set.of(role))).thenReturn(user);
-      when(passwordEncoder.encode(request.password())).thenReturn("encoded-password");
+      when(passwordEncoder.encode(PASSWORD)).thenReturn(ENCODED_PASSWORD);
       when(userRepository.save(user)).thenReturn(user);
       when(tokenService.createActivationToken(user)).thenReturn(activationToken);
-      when(userMapper.toResponse(user)).thenReturn(response);
+      when(userMapper.toResponse(user)).thenReturn(expectedResponse);
 
       // Act
       UserResponse result = service.register(request);
 
       // Assert
-      assertNotNull(result);
-      assertEquals(response, result);
-      verify(roleRepository, times(1)).findByAuthority("ROLE_OPERATOR");
-      verify(userRepository, times(1)).save(user);
-      verify(tokenService, times(1)).createActivationToken(user);
-      verify(emailService, times(1)).sendActivationEmailAsync(user.getFirstName(), user.getEmail(),
-          activationToken.getToken());
+      assertThat(result).isEqualTo(expectedResponse);
+      assertThat(user.isActive()).isFalse();
+      assertThat(user.getPassword()).isEqualTo(ENCODED_PASSWORD);
+      verify(userRepository).save(user);
+      verify(emailService).sendActivationEmailAsync(user.getFirstName(), user.getEmail(), ACTIVATION_TOKEN);
     }
   }
 
   @Nested
-  @DisplayName("Activation Operations")
-  class ActivationOperations {
+  @DisplayName("ConfirmEmail Operations")
+  class ConfirmEmailOperations {
 
     @Test
     @DisplayName("confirmEmail should activate user and disable token when token is valid")
     void confirmEmailShouldActivateUserAndDisableTokenWhenTokenIsValid() {
-      // Arrange
-      User user = UserFactory.createUser();
-      user.setId(5L);
-      Token token = new Token("token-activation", user, java.time.Instant.now().plusSeconds(3600),
-          TokenType.ACTIVATION);
 
-      when(tokenService.findAndValidateToken("token-activation", TokenType.ACTIVATION)).thenReturn(token);
+      // Arrange
+      User user = inactiveUser();
+      Token token = TokenFactory.createActivationToken(user);
+
+      when(tokenService.findAndValidateToken(ACTIVATION_TOKEN, TokenType.ACTIVATION)).thenReturn(token);
 
       // Act
-      service.confirmEmail("token-activation");
+      service.confirmEmail(ACTIVATION_TOKEN);
 
       // Assert
-      assertEquals(true, user.isActive());
-      assertEquals(true, token.getDisabled());
-      verify(tokenService, times(1)).findAndValidateToken("token-activation", TokenType.ACTIVATION);
+      assertThat(user.isActive()).isTrue();
+      assertThat(token.getDisabled()).isTrue();
     }
 
     @Test
     @DisplayName("confirmEmail should propagate InvalidTokenException when token is invalid")
     void confirmEmailShouldPropagateInvalidTokenExceptionWhenTokenIsInvalid() {
+
       // Arrange
-      when(tokenService.findAndValidateToken("bad-token", TokenType.ACTIVATION))
-          .thenThrow(new InvalidTokenException("error.token.invalid"));
+      when(tokenService.findAndValidateToken(ACTIVATION_TOKEN, TokenType.ACTIVATION))
+          .thenThrow(new InvalidTokenException("error.token.expired"));
 
       // Act & Assert
-      assertThrows(InvalidTokenException.class, () -> service.confirmEmail("bad-token"));
+      assertThatThrownBy(() -> service.confirmEmail(ACTIVATION_TOKEN))
+          .isInstanceOf(InvalidTokenException.class)
+          .hasMessage("error.token.expired");
+    }
+
+    @Test
+    @DisplayName("confirmEmail should propagate ResourceNotFoundException when token does not exist")
+    void confirmEmailShouldPropagateResourceNotFoundExceptionWhenTokenDoesNotExist() {
+
+      // Arrange
+      when(tokenService.findAndValidateToken(NON_EXISTING_TOKEN, TokenType.ACTIVATION))
+          .thenThrow(new ResourceNotFoundException("error.token.notFound"));
+
+      // Act & Assert
+      assertThatThrownBy(() -> service.confirmEmail(NON_EXISTING_TOKEN))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage("error.token.notFound");
     }
   }
 
+  /**
+   * Testes de {@code AccountService.resendActivationEmail}.
+   *
+   * <p>
+   * <b>Cenários pendentes:</b>
+   * </p>
+   * <ul>
+   * <li>E-mail com maiúsculas diferentes das gravadas: a busca diferencia
+   * maiúsculas e não encontra o usuário (#11).</li>
+   * </ul>
+   */
   @Nested
-  @DisplayName("Resend Activation Operations")
-  class ResendActivationOperations {
+  @DisplayName("ResendActivationEmail Operations")
+  class ResendActivationEmailOperations {
 
     @Test
-    @DisplayName("resendActivationEmail should do nothing when the email does not exist")
+    @DisplayName("resendActivationEmail should do nothing when email does not exist")
     void resendActivationEmailShouldDoNothingWhenEmailDoesNotExist() throws MessagingException {
+
       // Arrange
-      when(userRepository.findByEmail("ghost@gmail.com")).thenReturn(Optional.empty());
+      when(userRepository.findByEmail(NON_EXISTING_EMAIL)).thenReturn(Optional.empty());
 
       // Act
-      service.resendActivationEmail("ghost@gmail.com");
+      service.resendActivationEmail(NON_EXISTING_EMAIL);
 
       // Assert
       verify(tokenService, never()).disableAllActivationTokens(any(User.class));
@@ -168,11 +232,12 @@ class AccountServiceTest {
     }
 
     @Test
-    @DisplayName("resendActivationEmail should do nothing when the user is already active")
+    @DisplayName("resendActivationEmail should do nothing when user is already active")
     void resendActivationEmailShouldDoNothingWhenUserIsAlreadyActive() throws MessagingException {
+
       // Arrange
       User user = UserFactory.createUser();
-      user.activate();
+
       when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
       // Act
@@ -185,16 +250,16 @@ class AccountServiceTest {
     }
 
     @Test
-    @DisplayName("resendActivationEmail should disable previous tokens, create a new one and send it when the user is inactive")
+    @DisplayName("resendActivationEmail should disable previous tokens, create a new one and send it when user is inactive")
     void resendActivationEmailShouldDisablePreviousTokensThenCreateAndSendNewTokenWhenUserIsInactive()
         throws MessagingException {
+
       // Arrange
-      User user = UserFactory.createUser();
-      user.deactivate();
-      Token newToken = new Token("new-activation-token", user, java.time.Instant.now().plusSeconds(3600),
-          TokenType.ACTIVATION);
+      User user = inactiveUser();
+      Token token = TokenFactory.createActivationToken(user);
+
       when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-      when(tokenService.createActivationToken(user)).thenReturn(newToken);
+      when(tokenService.createActivationToken(user)).thenReturn(token);
 
       // Act
       service.resendActivationEmail(user.getEmail());
@@ -203,205 +268,239 @@ class AccountServiceTest {
       InOrder inOrder = inOrder(tokenService, emailService);
       inOrder.verify(tokenService).disableAllActivationTokens(user);
       inOrder.verify(tokenService).createActivationToken(user);
-      inOrder.verify(emailService).sendActivationEmailAsync(user.getFirstName(), user.getEmail(),
-          "new-activation-token");
+      inOrder.verify(emailService).sendActivationEmailAsync(user.getFirstName(), user.getEmail(), ACTIVATION_TOKEN);
     }
   }
 
+  /**
+   * Testes de {@code AccountService.requestPasswordRecovery}.
+   *
+   * <p>
+   * <b>Cenários pendentes:</b>
+   * </p>
+   * <ul>
+   * <li>E-mail com maiúsculas diferentes das gravadas: a busca diferencia
+   * maiúsculas e não encontra o usuário (#11).</li>
+   * </ul>
+   */
   @Nested
-  @DisplayName("Password Recovery Operations")
-  class PasswordRecoveryOperations {
+  @DisplayName("RequestPasswordRecovery Operations")
+  class RequestPasswordRecoveryOperations {
 
     @Test
-    @DisplayName("requestPasswordRecovery should disable previous recovery tokens, create a new one and send it by email")
+    @DisplayName("requestPasswordRecovery should disable previous tokens, create a new one and send it when user exists")
     void requestPasswordRecoveryShouldDisablePreviousTokensThenCreateAndSendNewTokenWhenUserExists() {
+
       // Arrange
       User user = UserFactory.createUser();
-      user.setEmail("joao@gmail.com");
-      Token token = new Token("recovery-token", user, java.time.Instant.now().plusSeconds(600),
-          TokenType.PASSWORD_RECOVERY);
+      Token token = TokenFactory.createPasswordRecoveryToken(user);
 
-      when(userRepository.findByEmail("joao@gmail.com")).thenReturn(Optional.of(user));
+      when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
       when(tokenService.createPasswordRecoveryToken(user)).thenReturn(token);
 
       // Act
-      service.requestPasswordRecovery("joao@gmail.com");
+      service.requestPasswordRecovery(user.getEmail());
 
       // Assert
       InOrder inOrder = inOrder(tokenService, emailService);
       inOrder.verify(tokenService).disableAllPasswordRecoveryTokens(user);
       inOrder.verify(tokenService).createPasswordRecoveryToken(user);
-      inOrder.verify(emailService).sendPasswordRecoveryEmailAsync(user, token.getToken());
+      inOrder.verify(emailService).sendPasswordRecoveryEmailAsync(user, PASSWORD_RECOVERY_TOKEN);
     }
 
     @Test
     @DisplayName("requestPasswordRecovery should do nothing when user does not exist")
     void requestPasswordRecoveryShouldDoNothingWhenUserDoesNotExist() {
+
       // Arrange
-      when(userRepository.findByEmail("ghost@gmail.com")).thenReturn(Optional.empty());
+      when(userRepository.findByEmail(NON_EXISTING_EMAIL)).thenReturn(Optional.empty());
 
       // Act
-      assertDoesNotThrow(() -> service.requestPasswordRecovery("ghost@gmail.com"));
+      service.requestPasswordRecovery(NON_EXISTING_EMAIL);
 
       // Assert
       verify(tokenService, never()).disableAllPasswordRecoveryTokens(any(User.class));
       verify(tokenService, never()).createPasswordRecoveryToken(any(User.class));
       verify(emailService, never()).sendPasswordRecoveryEmailAsync(any(User.class), anyString());
     }
+  }
+
+  @Nested
+  @DisplayName("ResetPassword Operations")
+  class ResetPasswordOperations {
 
     @Test
     @DisplayName("resetPassword should update password and disable token when token is valid")
     void resetPasswordShouldUpdatePasswordAndDisableTokenWhenTokenIsValid() {
-      // Arrange
-      User user = UserFactory.createUser();
-      user.setId(11L);
-      user.setPassword("old-password");
-      Token token = new Token("recovery-token", user, java.time.Instant.now().plusSeconds(600),
-          TokenType.PASSWORD_RECOVERY);
 
-      when(tokenService.findAndValidateToken("recovery-token", TokenType.PASSWORD_RECOVERY)).thenReturn(token);
-      when(passwordEncoder.encode("newStrongPassword1!")).thenReturn("encoded-new-password");
+      // Arrange
+      User user = userWithEncodedPassword();
+      Token token = TokenFactory.createPasswordRecoveryToken(user);
+
+      when(tokenService.findAndValidateToken(PASSWORD_RECOVERY_TOKEN, TokenType.PASSWORD_RECOVERY)).thenReturn(token);
+      when(passwordEncoder.encode(NEW_PASSWORD)).thenReturn(ENCODED_NEW_PASSWORD);
       when(userRepository.save(user)).thenReturn(user);
 
       // Act
-      service.resetPassword("recovery-token", "newStrongPassword1!");
+      service.resetPassword(PASSWORD_RECOVERY_TOKEN, NEW_PASSWORD);
 
       // Assert
-      assertEquals("encoded-new-password", user.getPassword());
-      assertEquals(true, token.getDisabled());
-      verify(userRepository, times(1)).save(user);
+      assertThat(user.getPassword()).isEqualTo(ENCODED_NEW_PASSWORD);
+      assertThat(token.getDisabled()).isTrue();
+      verify(userRepository).save(user);
     }
   }
 
   @Nested
-  @DisplayName("Authenticated User Operations")
-  class AuthenticatedUserOperations {
+  @DisplayName("UpdateAuthenticatedUser Operations")
+  class UpdateAuthenticatedUserOperations {
 
+    // #12: o e-mail novo é gravado sem reconfirmação. O teste confere a troca como
+    // ela é feita hoje e é mantido sem reforço até a decisão da issue.
     @Test
     @DisplayName("updateAuthenticatedUser should update profile and return response")
     void updateAuthenticatedUserShouldUpdateProfileAndReturnResponse() {
+
       // Arrange
+      AuthenticatedUserUpdateRequest request = UserFactory.createAuthenticatedUserUpdateRequest();
       User user = UserFactory.createUser();
-      user.setId(22L);
-      AuthenticatedUserUpdateRequest request = new AuthenticatedUserUpdateRequest("Maria", "Souza", "maria@gmail.com");
-      UserResponse response = new UserResponse(22L, "Maria", "Souza", "maria@gmail.com", Set.of());
+      UserResponse expectedResponse = UserFactory.createUserResponse();
 
       when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
       when(userRepository.save(user)).thenReturn(user);
-      when(userMapper.toResponse(user)).thenReturn(response);
+      when(userMapper.toResponse(user)).thenReturn(expectedResponse);
 
       // Act
       UserResponse result = service.updateAuthenticatedUser(request);
 
       // Assert
-      assertNotNull(result);
-      assertEquals("Maria", user.getFirstName());
-      assertEquals("Souza", user.getLastName());
-      assertEquals("maria@gmail.com", user.getEmail());
-      verify(userRepository, times(1)).save(user);
+      assertThat(result).isEqualTo(expectedResponse);
+      assertThat(user.getFirstName()).isEqualTo(request.firstName());
+      assertThat(user.getLastName()).isEqualTo(request.lastName());
+      assertThat(user.getEmail()).isEqualTo(request.email());
+      verify(userRepository).save(user);
     }
 
     @Test
-    @DisplayName("updatePassword should confirm password, validate current and new password and persist update")
-    void updatePasswordShouldValidateAndPersistUpdate() {
-      // Arrange
-      User user = UserFactory.createUser();
-      user.setId(23L);
-      user.setPassword("$2a$10$encodedCurrentPassword");
+    @DisplayName("updateAuthenticatedUser should trim first and last name when they have surrounding spaces")
+    void updateAuthenticatedUserShouldTrimFirstAndLastNameWhenTheyHaveSurroundingSpaces() {
 
-      PasswordUpdateRequest request = new PasswordUpdateRequest("oldPassword1!", "newPassword2@", "newPassword2@");
+      // Arrange
+      AuthenticatedUserUpdateRequest base = UserFactory.createAuthenticatedUserUpdateRequest();
+      User user = UserFactory.createUser();
+      AuthenticatedUserUpdateRequest request = new AuthenticatedUserUpdateRequest("  " + base.firstName() + "  ",
+          "  " + base.lastName() + "  ", user.getEmail());
 
       when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
-      when(passwordEncoder.matches("oldPassword1!", user.getPassword())).thenReturn(true);
-      when(passwordEncoder.matches("newPassword2@", user.getPassword())).thenReturn(false);
-      when(passwordEncoder.encode("newPassword2@")).thenReturn("encoded-new-password");
+      when(userRepository.save(user)).thenReturn(user);
+
+      // Act
+      service.updateAuthenticatedUser(request);
+
+      // Assert
+      assertThat(user.getFirstName()).isEqualTo(base.firstName());
+      assertThat(user.getLastName()).isEqualTo(base.lastName());
+    }
+  }
+
+  @Nested
+  @DisplayName("UpdatePassword Operations")
+  class UpdatePasswordOperations {
+
+    @Test
+    @DisplayName("updatePassword should encode new password when current password matches and new password differs")
+    void updatePasswordShouldEncodeNewPasswordWhenCurrentPasswordMatchesAndNewPasswordDiffers() {
+
+      // Arrange
+      User user = userWithEncodedPassword();
+      PasswordUpdateRequest request = new PasswordUpdateRequest(PASSWORD, NEW_PASSWORD, NEW_PASSWORD);
+
+      when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+      when(passwordEncoder.matches(PASSWORD, ENCODED_PASSWORD)).thenReturn(true);
+      when(passwordEncoder.matches(NEW_PASSWORD, ENCODED_PASSWORD)).thenReturn(false);
+      when(passwordEncoder.encode(NEW_PASSWORD)).thenReturn(ENCODED_NEW_PASSWORD);
 
       // Act
       service.updatePassword(request);
 
       // Assert
-      assertEquals("encoded-new-password", user.getPassword());
-      verify(passwordEncoder, times(1)).matches("oldPassword1!", "$2a$10$encodedCurrentPassword");
-      verify(passwordEncoder, times(1)).matches("newPassword2@", "$2a$10$encodedCurrentPassword");
-      verify(passwordEncoder, times(1)).encode("newPassword2@");
+      assertThat(user.getPassword()).isEqualTo(ENCODED_NEW_PASSWORD);
     }
 
     @Test
-    @DisplayName("updatePassword should throw PasswordUpdateException when confirmation mismatch")
-    void updatePasswordShouldThrowWhenConfirmationMismatch() {
+    @DisplayName("updatePassword should throw PasswordUpdateException when confirmation does not match")
+    void updatePasswordShouldThrowPasswordUpdateExceptionWhenConfirmationDoesNotMatch() {
+
       // Arrange
-      PasswordUpdateRequest request = new PasswordUpdateRequest("oldPassword1!", "newPassword2@", "otherPassword2@");
+      PasswordUpdateRequest request = new PasswordUpdateRequest(PASSWORD, NEW_PASSWORD, WRONG_PASSWORD);
 
       // Act & Assert
-      assertThrows(PasswordUpdateException.class, () -> service.updatePassword(request));
-      verify(passwordEncoder, never()).matches(anyString(), anyString());
+      assertThatThrownBy(() -> service.updatePassword(request))
+          .isInstanceOf(PasswordUpdateException.class)
+          .hasMessage("error.account.password.confirmationMismatch");
+
+      verify(authenticatedUserService, never()).getAuthenticatedUser();
     }
 
     @Test
-    @DisplayName("updatePassword should throw PasswordUpdateException when current password is invalid")
-    void updatePasswordShouldThrowWhenCurrentPasswordIsInvalid() {
+    @DisplayName("updatePassword should throw PasswordUpdateException when current password is wrong")
+    void updatePasswordShouldThrowPasswordUpdateExceptionWhenCurrentPasswordIsWrong() {
+
       // Arrange
-      User user = UserFactory.createUser();
-      user.setId(25L);
-      user.setPassword("$2a$10$encodedCurrentPassword");
-      PasswordUpdateRequest request = new PasswordUpdateRequest("wrongPassword1!", "newPassword2@", "newPassword2@");
+      User user = userWithEncodedPassword();
+      PasswordUpdateRequest request = new PasswordUpdateRequest(WRONG_PASSWORD, NEW_PASSWORD, NEW_PASSWORD);
 
       when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
-      when(passwordEncoder.matches("wrongPassword1!", user.getPassword())).thenReturn(false);
+      when(passwordEncoder.matches(WRONG_PASSWORD, ENCODED_PASSWORD)).thenReturn(false);
 
       // Act & Assert
-      assertThrows(PasswordUpdateException.class, () -> service.updatePassword(request));
+      assertThatThrownBy(() -> service.updatePassword(request))
+          .isInstanceOf(PasswordUpdateException.class)
+          .hasMessage("error.account.password.currentInvalid");
+
+      verify(passwordEncoder, never()).encode(anyString());
     }
 
     @Test
-    @DisplayName("updatePassword should throw PasswordUpdateException when new password is same as current")
-    void updatePasswordShouldThrowWhenNewPasswordIsSameAsCurrent() {
+    @DisplayName("updatePassword should throw PasswordUpdateException when new password equals current")
+    void updatePasswordShouldThrowPasswordUpdateExceptionWhenNewPasswordEqualsCurrent() {
+
       // Arrange
-      User user = UserFactory.createUser();
-      user.setId(26L);
-      user.setPassword("$2a$10$encodedCurrentPassword");
-      PasswordUpdateRequest request = new PasswordUpdateRequest("oldPassword1!", "oldPassword1!", "oldPassword1!");
+      User user = userWithEncodedPassword();
+      PasswordUpdateRequest request = new PasswordUpdateRequest(PASSWORD, PASSWORD, PASSWORD);
 
       when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
-      when(passwordEncoder.matches("oldPassword1!", user.getPassword())).thenReturn(true);
-      when(passwordEncoder.matches("oldPassword1!", user.getPassword())).thenReturn(true);
+      when(passwordEncoder.matches(PASSWORD, ENCODED_PASSWORD)).thenReturn(true);
 
       // Act & Assert
-      assertThrows(PasswordUpdateException.class, () -> service.updatePassword(request));
+      assertThatThrownBy(() -> service.updatePassword(request))
+          .isInstanceOf(PasswordUpdateException.class)
+          .hasMessage("error.account.password.sameAsCurrent");
+
+      verify(passwordEncoder, never()).encode(anyString());
     }
+  }
+
+  @Nested
+  @DisplayName("GetAuthenticatedUser Operations")
+  class GetAuthenticatedUserOperations {
 
     @Test
     @DisplayName("getAuthenticatedUser should return mapped user response")
     void getAuthenticatedUserShouldReturnMappedUserResponse() {
+
       // Arrange
       User user = UserFactory.createUser();
-      user.setId(27L);
-      UserResponse response = new UserResponse(27L, "João", "Silva", "joao@gmail.com", Set.of());
+      UserResponse expectedResponse = UserFactory.createUserResponse();
 
       when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
-      when(userMapper.toResponse(user)).thenReturn(response);
+      when(userMapper.toResponse(user)).thenReturn(expectedResponse);
 
       // Act
       UserResponse result = service.getAuthenticatedUser();
 
       // Assert
-      assertEquals(response, result);
-    }
-  }
-
-  @Nested
-  @DisplayName("Token Handling")
-  class TokenHandling {
-
-    @Test
-    @DisplayName("findAndValidateToken should throw ResourceNotFoundException when token is not found")
-    void findAndValidateTokenShouldThrowResourceNotFoundExceptionWhenTokenIsNotFound() {
-      // Arrange
-      when(tokenService.findAndValidateToken("missing-token", TokenType.ACTIVATION))
-          .thenThrow(new ResourceNotFoundException("error.token.notFound"));
-
-      // Act & Assert
-      assertThrows(ResourceNotFoundException.class, () -> service.confirmEmail("missing-token"));
+      assertThat(result).isEqualTo(expectedResponse);
     }
   }
 }
