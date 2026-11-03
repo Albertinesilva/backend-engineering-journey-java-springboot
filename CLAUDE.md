@@ -208,14 +208,14 @@ Ele é um **mapa**: traz só as regras e os fatos que valem para toda tarefa. Os
 
 ## 16. Estado atual (atualizar a cada etapa)
 
-Atualizado em 16/10/2026.
+Atualizado em 03/11/2026.
 
-- Branch de trabalho: `chapter-05-jacoco`, criada a partir da `develop`. Nesta data, as duas apontam para o mesmo commit.
+- Branch de trabalho: `chapter-05-jacoco`, criada a partir da `develop`. Nesta data, ela está à frente da `develop` com os commits do CLAUDE.md (`a6597f3`), dos testes do `UserService` (`5711fd0`) e da Etapa 2.
 - **Regra do capítulo 05:** até o fim dos estudos de JaCoCo, nada de correções de bugs nem de melhorias (regra 3 da seção 10). Infraestrutura de testes, como a #20, continua no capítulo.
 - Plano do capítulo 05:
   - Etapa 1: JaCoCo 0.8.15 com relatórios de unidade, integração e consolidado, e exclusões. **Concluída** (`b1cb5cf`).
-  - Etapa 2: limite mínimo de cobertura (`check`) com 0,85 de linhas e 0,68 de branches no BUNDLE, sobre o consolidado. **Não iniciada: é a próxima.**
-  - Etapa 3a: issue #20 (dependência de DNS nos testes), por ser infraestrutura de testes e pré-requisito do CI.
+  - Etapa 2: limite mínimo de cobertura (`check`) com 0,85 de linhas e 0,68 de branches no BUNDLE, sobre o consolidado. **Concluída.** Execução `check-merged` na fase `verify`; os limites ficam nas propriedades `jacoco.minimum.line.coverage` e `jacoco.minimum.branch.coverage` do `pom.xml` e podem ser trocados por `-D` na linha de comando. Medição nesta data: 0,89 de linhas (1417/1592) e 0,72 de branches (327/454); 314 testes de unidade e 150 de integração.
+  - Etapa 3a: issue #20 (dependência de DNS nos testes), por ser infraestrutura de testes e pré-requisito do CI. **É a próxima.**
   - Etapa 3b: só testes novos para as lacunas de cobertura (handler de exceções, mappers, `Token.isValid`, provider de login, validador de e-mail da própria conta e contratos de `equals`/`hashCode`), seguidos de nova medição e reajuste dos limites com cerca de 3 pontos de folga.
   - Etapa 4: documentação e README do capítulo 05:
     - TESTING (cobertura, contagens e CI);
@@ -229,7 +229,9 @@ Atualizado em 16/10/2026.
   - `ea58b16`: torna o `mvnw` executável;
   - `cedeba7` e `dd40232`: pipeline de CI;
   - `f35bfe5`: PR #42, contribuição externa;
-  - `d998792`: PR #43, que padronizou as mensagens (#31).
+  - `d998792`: PR #43, que padronizou as mensagens (#31);
+  - `dbc15f4`: PR #49, que corrigiu o parágrafo vazio no e-mail de recuperação de senha (#38);
+  - `5711fd0`: amplia a cobertura e corrige os testes do `UserService` (98,8% de linhas e 90,9% de branches na classe). O caso de `roleIds` nulo ou vazio ficou sem teste até a decisão da #14.
 - Issues abertas nesta etapa:
   - #44 (produto criado sem preço; label `frontend`);
   - #45 (coluna `price` NOT NULL, a ser feita junto com a #6).
