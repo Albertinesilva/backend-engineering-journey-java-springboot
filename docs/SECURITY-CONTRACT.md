@@ -710,6 +710,7 @@ As descrições dos erros de `/oauth2/token` são textos fixos em inglês no `Cu
 | Conta inativa (`isEnabled() == false`) | `invalid_grant` | `Your account has not been activated yet. Please check your email.` |
 | Conta bloqueada | `invalid_grant` | `Account is locked` |
 | Conta expirada | `invalid_grant` | `Account expired` |
+| Credenciais expiradas | `invalid_grant` | `Credentials expired` |
 
 Todas usam `error_uri` = `https://datatracker.ietf.org/doc/html/rfc6749#section-5.2`.
 
@@ -792,8 +793,8 @@ public OAuth2AuthorizationService authorizationService() {
 | [backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/security/CatalogWriteAuthorizationIT.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/security/CatalogWriteAuthorizationIT.java) | criar, atualizar, remover, ativar e desativar categorias e produtos: `401` sem token e `403` sem role de escrita | Regras de escrita do catálogo |
 | [backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/security/CorsIT.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/security/CorsIT.java) | pré-flight de origem permitida é aceito; de origem não permitida é recusado | CORS |
 | [backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/account/AccountFlowIT.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/account/AccountFlowIT.java) | cadastro, ativação e login; login recusado antes da ativação; tokens de conta inexistentes, desativados, expirados ou de outro tipo; `GET`/`PUT /accounts/me` e `PATCH /accounts/me/password` com token | Fluxos de conta e `AuthenticatedUserService` |
-| [backend/src/test/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationConverterTest.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationConverterTest.java) | criação do token do grant; scopes e parâmetros adicionais preservados; `null` para outro `grant_type`; `invalid_request` com `username` ou `password` ausentes e com `username`, `password` ou `scope` duplicados | `CustomPasswordAuthenticationConverter` (teste de unidade) |
-| [backend/src/test/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProviderTest.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProviderTest.java) | autenticação válida; recusa de usuário inexistente, senha errada, conta inativa e cliente não autenticado; tipos de autenticação suportados | `CustomPasswordAuthenticationProvider` (teste de unidade) |
+| [backend/src/test/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationConverterTest.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationConverterTest.java) | criação do token do grant, com o principal do cliente vindo do `SecurityContext`; scopes separados por espaço; primeiro valor dos parâmetros adicionais; parâmetro sem valor ignorado; `null` para outro `grant_type`; `invalid_request` com `username` ou `password` ausentes ou em branco e com `username`, `password` ou `scope` duplicados (teste parametrizado) | `CustomPasswordAuthenticationConverter` (teste de unidade) |
+| [backend/src/test/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProviderTest.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/security/oauth2/grant/password/CustomPasswordAuthenticationProviderTest.java) | autenticação válida: tokens devolvidos, `OAuth2Authorization` salva (cliente, `principalName`, grant, tokens e claims do access token), `AuthenticatedUser` gravado no `SecurityContext` e contextos de access e refresh token entregues ao gerador; recusa com `invalid_grant` (descrição e `error_uri` conferidos) de usuário inexistente, senha errada, conta inativa com senha errada (sem revelar o status), conta inativa, bloqueada, expirada e com credenciais expiradas; `server_error` quando o gerador não devolve o access ou o refresh token; `invalid_client` com cliente não autenticado e com principal de outro tipo; tipos de autenticação suportados | `CustomPasswordAuthenticationProvider` (teste de unidade) |
 | [backend/src/test/java/com/albertsilva/dev/asjcatalog/security/auth/AuthenticatedUserServiceTest.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/security/auth/AuthenticatedUserServiceTest.java) | usuário carregado pelo claim `userId`; exceções para autenticação nula, principal que não é `Jwt`, claim ausente ou inválido e usuário inexistente; `isCurrentUser` verdadeiro e falso | `AuthenticatedUserService` (teste de unidade) |
 
 ### 19.2. Gaps de cobertura
@@ -803,7 +804,7 @@ Não foram encontrados testes explícitos para:
 - validação completa do JSON final de `/oauth2/token` (`token_type`, `expires_in`, ausência de `scope`)
 - `unauthorized_client`
 - `unsupported_grant_type`
-- `server_error`
+- `server_error` no `/oauth2/token` (no nível de unidade, o `CustomPasswordAuthenticationProviderTest` cobre os dois casos de falha do gerador)
 - `PUT /api/v1/users/{id}` por um OPERATOR no próprio id (o problema descrito em 10.6 não é detectado pelos testes)
 - `GET /api/v1/accounts/me` e `POST /api/v1/accounts/deactivate` sem token (resposta `403`, descrita em 12.4)
 - comportamento após reinício (chave RSA e autorizações em memória)
