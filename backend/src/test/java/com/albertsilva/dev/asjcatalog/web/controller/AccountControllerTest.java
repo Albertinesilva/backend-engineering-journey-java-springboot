@@ -1,11 +1,18 @@
 package com.albertsilva.dev.asjcatalog.web.controller;
 
+import static com.albertsilva.dev.asjcatalog.factory.TokenFactory.ACTIVATION_TOKEN;
+import static com.albertsilva.dev.asjcatalog.factory.TokenFactory.PASSWORD_RECOVERY_TOKEN;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.EXISTING_EMAIL;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.NEW_PASSWORD;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.PASSWORD;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.WRONG_PASSWORD;
+import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectValidationError;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,6 +36,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import com.albertsilva.dev.asjcatalog.domain.user.User;
 import com.albertsilva.dev.asjcatalog.dto.user.request.AuthenticatedUserUpdateRequest;
 import com.albertsilva.dev.asjcatalog.dto.user.request.PasswordResetRequest;
 import com.albertsilva.dev.asjcatalog.dto.user.request.PasswordUpdateRequest;
@@ -36,14 +44,29 @@ import com.albertsilva.dev.asjcatalog.dto.user.request.UserEmailRequest;
 import com.albertsilva.dev.asjcatalog.dto.user.request.UserRegisterRequest;
 import com.albertsilva.dev.asjcatalog.dto.user.response.UserResponse;
 import com.albertsilva.dev.asjcatalog.factory.UserFactory;
+import com.albertsilva.dev.asjcatalog.repository.UserRepository;
+import com.albertsilva.dev.asjcatalog.security.auth.AuthenticatedUserService;
 import com.albertsilva.dev.asjcatalog.security.oauth2.resource.config.ResourceServerConfig;
 import com.albertsilva.dev.asjcatalog.service.AccountService;
 import com.albertsilva.dev.asjcatalog.service.exception.InvalidTokenException;
 import com.albertsilva.dev.asjcatalog.service.exception.PasswordUpdateException;
 import com.albertsilva.dev.asjcatalog.utils.MxRecordLookupTestConfig;
+import com.albertsilva.dev.asjcatalog.web.exception.enums.ApiErrorCode;
 import com.albertsilva.dev.asjcatalog.web.exception.handler.ControllerExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * Testes de {@code AccountController}.
+ *
+ * <p>
+ * <b>Cenários pendentes:</b>
+ * </p>
+ * <ul>
+ * <li>{@code POST /accounts/deactivate}: o service não está implementado e
+ * lança {@code UnsupportedOperationException}, que responde 500 (#9); sem
+ * token, o endpoint responde 403 em vez de 401 (#10).</li>
+ * </ul>
+ */
 @WebMvcTest(AccountController.class)
 @Import({ ControllerExceptionHandler.class, ResourceServerConfig.class, MxRecordLookupTestConfig.class })
 @ActiveProfiles("test")
@@ -66,10 +89,10 @@ class AccountControllerTest {
   private JwtDecoder jwtDecoder;
 
   @MockitoBean
-  private com.albertsilva.dev.asjcatalog.repository.UserRepository userRepository;
+  private UserRepository userRepository;
 
   @MockitoBean
-  private com.albertsilva.dev.asjcatalog.security.auth.AuthenticatedUserService authenticatedUserService;
+  private AuthenticatedUserService authenticatedUserService;
 
   private UserResponse userResponse;
 
@@ -78,273 +101,313 @@ class AccountControllerTest {
     userResponse = UserFactory.createUserResponse();
   }
 
+  private ResultActions postJson(String path, Object body) throws Exception {
+    return mockMvc.perform(post(BASE_URL + path)
+        .content(body instanceof String json ? json : objectMapper.writeValueAsString(body))
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON));
+  }
+
   @Nested
-  @DisplayName("Registration Operations")
-  class RegistrationOperations {
+  @DisplayName("POST /accounts/register")
+  class RegisterOperations {
 
     @Test
-    @DisplayName("POST /accounts/register should create account and return 201")
-    void registerShouldReturn201WhenRequestIsValid() throws Exception {
-      UserRegisterRequest request = new UserRegisterRequest("Pedro", "Santos", "pedro@gmail.com", "StrongPass@2026");
+    @DisplayName("POST /accounts/register should return 201 with created user when request is valid")
+    void registerShouldReturnCreatedWhenRequestIsValid() throws Exception {
 
-      when(userRepository.existsByEmailIgnoreCase("pedro@gmail.com")).thenReturn(false);
-      when(accountService.register(any(UserRegisterRequest.class))).thenReturn(userResponse);
+      // Arrange
+      UserRegisterRequest request = UserFactory.createUserRegisterRequest();
 
-      ResultActions resultActions = mockMvc.perform(post(BASE_URL + "/register")
-          .with(csrf())
-          .contentType(MediaType.APPLICATION_JSON)
-          .accept(MediaType.APPLICATION_JSON)
-          .content(objectMapper.writeValueAsString(request)));
+      when(userRepository.existsByEmailIgnoreCase(request.email())).thenReturn(false);
+      when(accountService.register(request)).thenReturn(userResponse);
 
-      resultActions
+      // Act
+      ResultActions result = postJson("/register", request);
+
+      // Assert
+      result
           .andExpect(status().isCreated())
           .andExpect(jsonPath("$.id").value(userResponse.id()))
           .andExpect(jsonPath("$.firstName").value(userResponse.firstName()))
           .andExpect(jsonPath("$.email").value(userResponse.email()));
-
-      verify(accountService).register(any(UserRegisterRequest.class));
+      verify(accountService).register(request);
     }
 
     @Test
     @DisplayName("POST /accounts/register should return 422 when request is invalid")
-    void registerShouldReturn422WhenRequestIsInvalid() throws Exception {
+    void registerShouldReturnUnprocessableEntityWhenRequestIsInvalid() throws Exception {
+
+      // Arrange
       String invalidJson = "{\"firstName\":\"A\",\"lastName\":\"B\",\"email\":\"invalid\",\"password\":\"123\"}";
 
-      ResultActions resultActions = mockMvc.perform(post(BASE_URL + "/register")
-          .with(csrf())
-          .contentType(MediaType.APPLICATION_JSON)
-          .accept(MediaType.APPLICATION_JSON)
-          .content(invalidJson));
+      // Act
+      ResultActions result = postJson("/register", invalidJson);
 
-      resultActions
-          .andExpect(status().isUnprocessableEntity())
-          .andExpect(jsonPath("$.fieldErrors").isArray())
-          .andExpect(jsonPath("$.status").value(422));
+      // Assert
+      expectValidationError(result, BASE_URL + "/register", "firstName", "lastName", "email", "password");
+      verify(accountService, never()).register(any(UserRegisterRequest.class));
     }
   }
 
+  /**
+   * Testes de {@code GET /accounts/activate}.
+   *
+   * <p>
+   * <b>Cenários pendentes:</b>
+   * </p>
+   * <ul>
+   * <li>Sem o parâmetro {@code token}: a exceção do Spring cai no handler
+   * genérico e responde 500 em vez de 400 (#36).</li>
+   * </ul>
+   */
   @Nested
-  @DisplayName("Activation Operations")
-  class ActivationOperations {
+  @DisplayName("GET /accounts/activate")
+  class ActivateAccountOperations {
 
     @Test
-    @DisplayName("GET /accounts/activate should return 204 and call service when token is valid")
-    void activateAccountShouldReturn204WhenTokenIsValid() throws Exception {
-      ResultActions resultActions = mockMvc.perform(get(BASE_URL + "/activate")
-          .param("token", "valid-token")
-          .accept(MediaType.APPLICATION_JSON));
+    @DisplayName("GET /accounts/activate should return 204 when token is valid")
+    void activateAccountShouldReturnNoContentWhenTokenIsValid() throws Exception {
 
-      resultActions.andExpect(status().isNoContent());
+      // Act
+      ResultActions result = mockMvc.perform(get(BASE_URL + "/activate").param("token", ACTIVATION_TOKEN));
 
-      verify(accountService).confirmEmail("valid-token");
+      // Assert
+      result.andExpect(status().isNoContent());
+      verify(accountService).confirmEmail(ACTIVATION_TOKEN);
     }
 
     @Test
     @DisplayName("GET /accounts/activate should return 400 when token is invalid")
-    void activateAccountShouldReturn400WhenTokenIsInvalid() throws Exception {
-      doThrow(new InvalidTokenException("error.token.invalid")).when(accountService).confirmEmail("bad-token");
+    void activateAccountShouldReturnBadRequestWhenTokenIsInvalid() throws Exception {
 
-      ResultActions resultActions = mockMvc.perform(get(BASE_URL + "/activate")
-          .param("token", "bad-token")
+      // Arrange
+      doThrow(new InvalidTokenException("error.token.expired")).when(accountService).confirmEmail(ACTIVATION_TOKEN);
+
+      // Act
+      ResultActions result = mockMvc.perform(get(BASE_URL + "/activate").param("token", ACTIVATION_TOKEN)
           .accept(MediaType.APPLICATION_JSON));
 
-      resultActions
+      // Assert
+      result
           .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.status").value(400));
+          .andExpect(jsonPath("$.status").value(400))
+          .andExpect(jsonPath("$.code").value(ApiErrorCode.INVALID_TOKEN.name()))
+          .andExpect(jsonPath("$.path").value(BASE_URL + "/activate"));
     }
   }
 
   @Nested
-  @DisplayName("Resend Activation Operations")
-  class ResendActivationOperations {
+  @DisplayName("POST /accounts/resend-activation")
+  class ResendActivationEmailOperations {
 
     @Test
-    @DisplayName("POST /accounts/resend-activation should return 204 and call service")
-    void resendActivationEmailShouldReturn204WhenRequestIsValid() throws Exception {
-      UserEmailRequest request = new UserEmailRequest("pedro@gmail.com");
+    @DisplayName("POST /accounts/resend-activation should return 204 when email is valid")
+    void resendActivationEmailShouldReturnNoContentWhenEmailIsValid() throws Exception {
 
-      doNothing().when(accountService).resendActivationEmail(request.email());
+      // Arrange
+      UserEmailRequest request = new UserEmailRequest(EXISTING_EMAIL);
 
-      ResultActions resultActions = mockMvc.perform(post(BASE_URL + "/resend-activation")
-          .with(csrf())
-          .contentType(MediaType.APPLICATION_JSON)
-          .accept(MediaType.APPLICATION_JSON)
-          .content(objectMapper.writeValueAsString(request)));
+      // Act
+      ResultActions result = postJson("/resend-activation", request);
 
-      resultActions.andExpect(status().isNoContent());
-
-      verify(accountService).resendActivationEmail("pedro@gmail.com");
+      // Assert
+      result.andExpect(status().isNoContent());
+      verify(accountService).resendActivationEmail(EXISTING_EMAIL);
     }
 
     @Test
     @DisplayName("POST /accounts/resend-activation should return 422 when email is invalid")
-    void resendActivationEmailShouldReturn422WhenEmailIsInvalid() throws Exception {
-      String invalidJson = "{\"email\":\"invalid-email\"}";
+    void resendActivationEmailShouldReturnUnprocessableEntityWhenEmailIsInvalid() throws Exception {
 
-      ResultActions resultActions = mockMvc.perform(post(BASE_URL + "/resend-activation")
-          .with(csrf())
-          .contentType(MediaType.APPLICATION_JSON)
-          .accept(MediaType.APPLICATION_JSON)
-          .content(invalidJson));
+      // Act
+      ResultActions result = postJson("/resend-activation", "{\"email\":\"invalid-email\"}");
 
-      resultActions
-          .andExpect(status().isUnprocessableEntity())
-          .andExpect(jsonPath("$.fieldErrors").isArray())
-          .andExpect(jsonPath("$.status").value(422));
+      // Assert
+      expectValidationError(result, BASE_URL + "/resend-activation", "email");
     }
   }
 
   @Nested
-  @DisplayName("Password Recovery Operations")
-  class PasswordRecoveryOperations {
+  @DisplayName("POST /accounts/password-recovery")
+  class RequestPasswordRecoveryOperations {
 
     @Test
-    @DisplayName("POST /accounts/password-recovery should return 204 and call service")
-    void requestPasswordRecoveryShouldReturn204WhenRequestIsValid() throws Exception {
-      UserEmailRequest request = new UserEmailRequest("pedro@gmail.com");
+    @DisplayName("POST /accounts/password-recovery should return 204 when email is valid")
+    void requestPasswordRecoveryShouldReturnNoContentWhenEmailIsValid() throws Exception {
 
-      doNothing().when(accountService).requestPasswordRecovery(request.email());
+      // Arrange
+      UserEmailRequest request = new UserEmailRequest(EXISTING_EMAIL);
 
-      ResultActions resultActions = mockMvc.perform(post(BASE_URL + "/password-recovery")
-          .with(csrf())
-          .contentType(MediaType.APPLICATION_JSON)
-          .accept(MediaType.APPLICATION_JSON)
-          .content(objectMapper.writeValueAsString(request)));
+      // Act
+      ResultActions result = postJson("/password-recovery", request);
 
-      resultActions.andExpect(status().isNoContent());
+      // Assert
+      result.andExpect(status().isNoContent());
+      verify(accountService).requestPasswordRecovery(EXISTING_EMAIL);
+    }
 
-      verify(accountService).requestPasswordRecovery("pedro@gmail.com");
+    @Test
+    @DisplayName("POST /accounts/password-recovery should return 422 when email is invalid")
+    void requestPasswordRecoveryShouldReturnUnprocessableEntityWhenEmailIsInvalid() throws Exception {
+
+      // Act
+      ResultActions result = postJson("/password-recovery", "{\"email\":\"invalid-email\"}");
+
+      // Assert
+      expectValidationError(result, BASE_URL + "/password-recovery", "email");
+      verify(accountService, never()).requestPasswordRecovery(any());
     }
   }
 
   @Nested
-  @DisplayName("Password Reset Operations")
-  class PasswordResetOperations {
+  @DisplayName("POST /accounts/reset-password")
+  class ResetPasswordOperations {
 
     @Test
-    @DisplayName("POST /accounts/reset-password should return 204 and call service")
-    void resetPasswordShouldReturn204WhenRequestIsValid() throws Exception {
-      PasswordResetRequest request = new PasswordResetRequest("valid-token", "StrongPass@2026");
+    @DisplayName("POST /accounts/reset-password should return 204 when request is valid")
+    void resetPasswordShouldReturnNoContentWhenRequestIsValid() throws Exception {
 
-      when(userRepository.existsByEmailIgnoreCase(any(String.class))).thenReturn(false);
-      doNothing().when(accountService).resetPassword(request.token(), request.password());
+      // Arrange
+      PasswordResetRequest request = new PasswordResetRequest(PASSWORD_RECOVERY_TOKEN, NEW_PASSWORD);
 
-      ResultActions resultActions = mockMvc.perform(post(BASE_URL + "/reset-password")
-          .with(csrf())
-          .contentType(MediaType.APPLICATION_JSON)
-          .accept(MediaType.APPLICATION_JSON)
-          .content(objectMapper.writeValueAsString(request)));
+      // Act
+      ResultActions result = postJson("/reset-password", request);
 
-      resultActions.andExpect(status().isNoContent());
-
-      verify(accountService).resetPassword("valid-token", "StrongPass@2026");
+      // Assert
+      result.andExpect(status().isNoContent());
+      verify(accountService).resetPassword(PASSWORD_RECOVERY_TOKEN, NEW_PASSWORD);
     }
 
     @Test
     @DisplayName("POST /accounts/reset-password should return 422 when request is invalid")
-    void resetPasswordShouldReturn422WhenRequestIsInvalid() throws Exception {
-      String invalidJson = "{\"token\":\"\",\"password\":\"short\"}";
+    void resetPasswordShouldReturnUnprocessableEntityWhenRequestIsInvalid() throws Exception {
 
-      ResultActions resultActions = mockMvc.perform(post(BASE_URL + "/reset-password")
-          .with(csrf())
-          .contentType(MediaType.APPLICATION_JSON)
-          .accept(MediaType.APPLICATION_JSON)
-          .content(invalidJson));
+      // Act
+      ResultActions result = postJson("/reset-password", "{\"token\":\"\",\"password\":\"short\"}");
 
-      resultActions
-          .andExpect(status().isUnprocessableEntity())
-          .andExpect(jsonPath("$.fieldErrors").isArray())
-          .andExpect(jsonPath("$.status").value(422));
+      // Assert
+      expectValidationError(result, BASE_URL + "/reset-password", "token", "password");
     }
   }
 
+  /**
+   * Testes de {@code GET /accounts/me}.
+   *
+   * <p>
+   * <b>Cenários pendentes:</b>
+   * </p>
+   * <ul>
+   * <li>Sem token: a rota é liberada pela regra de URL e negada só pelo
+   * {@code @PreAuthorize}, então responde 403 em vez de 401 (#10).</li>
+   * </ul>
+   */
   @Nested
-  @DisplayName("Authenticated User Operations")
-  class AuthenticatedUserOperations {
+  @DisplayName("GET /accounts/me")
+  class GetAuthenticatedUserOperations {
 
     @Test
-    @WithMockUser(username = "maria@gmail.com")
-    @DisplayName("GET /accounts/me should return the authenticated user with 200")
-    void getAuthenticatedUserShouldReturn200AndUserResponse() throws Exception {
+    @WithMockUser(username = EXISTING_EMAIL)
+    @DisplayName("GET /accounts/me should return authenticated user when user is authenticated")
+    void getAuthenticatedUserShouldReturnUserWhenUserIsAuthenticated() throws Exception {
+
+      // Arrange
       when(accountService.getAuthenticatedUser()).thenReturn(userResponse);
 
-      ResultActions resultActions = mockMvc.perform(get(BASE_URL + "/me")
-          .accept(MediaType.APPLICATION_JSON));
+      // Act
+      ResultActions result = mockMvc.perform(get(BASE_URL + "/me").accept(MediaType.APPLICATION_JSON));
 
-      resultActions
+      // Assert
+      result
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.id").value(userResponse.id()))
           .andExpect(jsonPath("$.firstName").value(userResponse.firstName()))
           .andExpect(jsonPath("$.email").value(userResponse.email()));
-
-      verify(accountService).getAuthenticatedUser();
     }
+  }
 
+  @Nested
+  @DisplayName("PUT /accounts/me")
+  class UpdateAuthenticatedUserOperations {
+
+    // #12: o e-mail novo é gravado sem reconfirmação. O teste confere a resposta como
+    // ela é hoje e é mantido sem reforço até a decisão da issue.
     @Test
-    @WithMockUser(username = "maria@gmail.com")
-    @DisplayName("PUT /accounts/me should update the authenticated user and return 200")
-    void updateAuthenticatedUserShouldReturn200WhenRequestIsValid() throws Exception {
-      AuthenticatedUserUpdateRequest request = new AuthenticatedUserUpdateRequest("Maria", "Silva", "maria@gmail.com");
-      com.albertsilva.dev.asjcatalog.domain.user.User authenticatedUser = com.albertsilva.dev.asjcatalog.factory.UserFactory
-          .createUser();
-      authenticatedUser.setId(1L);
-      authenticatedUser.setEmail("maria@gmail.com");
+    @WithMockUser(username = EXISTING_EMAIL)
+    @DisplayName("PUT /accounts/me should return updated user when request is valid")
+    void updateAuthenticatedUserShouldReturnUpdatedUserWhenRequestIsValid() throws Exception {
 
+      // Arrange
+      AuthenticatedUserUpdateRequest request = UserFactory.createAuthenticatedUserUpdateRequest();
+      User authenticatedUser = UserFactory.createUser();
+      authenticatedUser.setId(EXISTING_ID);
+
+      // O @UniqueEmailForAuthenticatedUser ignora o e-mail do próprio usuário autenticado.
       when(authenticatedUserService.getAuthenticatedUser()).thenReturn(authenticatedUser);
-      when(userRepository.existsByEmailIgnoreCaseAndIdNot("maria@gmail.com", 1L)).thenReturn(false);
-      when(accountService.updateAuthenticatedUser(any(AuthenticatedUserUpdateRequest.class))).thenReturn(userResponse);
+      when(userRepository.existsByEmailIgnoreCaseAndIdNot(request.email(), EXISTING_ID)).thenReturn(false);
+      when(accountService.updateAuthenticatedUser(request)).thenReturn(userResponse);
 
-      ResultActions resultActions = mockMvc.perform(put(BASE_URL + "/me")
-          .with(csrf())
+      // Act
+      ResultActions result = mockMvc.perform(put(BASE_URL + "/me")
+          .content(objectMapper.writeValueAsString(request))
           .contentType(MediaType.APPLICATION_JSON)
-          .accept(MediaType.APPLICATION_JSON)
-          .content(objectMapper.writeValueAsString(request)));
+          .accept(MediaType.APPLICATION_JSON));
 
-      resultActions
+      // Assert
+      result
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.id").value(userResponse.id()))
           .andExpect(jsonPath("$.firstName").value(userResponse.firstName()));
-
-      verify(accountService).updateAuthenticatedUser(any(AuthenticatedUserUpdateRequest.class));
+      verify(accountService).updateAuthenticatedUser(request);
     }
+  }
+
+  @Nested
+  @DisplayName("PATCH /accounts/me/password")
+  class UpdatePasswordOperations {
 
     @Test
-    @WithMockUser(username = "maria@gmail.com")
-    @DisplayName("PATCH /accounts/me/password should return 204 and call service")
-    void updatePasswordShouldReturn204WhenRequestIsValid() throws Exception {
-      PasswordUpdateRequest request = new PasswordUpdateRequest("OldPassword1!", "NewPassword2@", "NewPassword2@");
+    @WithMockUser(username = EXISTING_EMAIL)
+    @DisplayName("PATCH /accounts/me/password should return 204 when request is valid")
+    void updatePasswordShouldReturnNoContentWhenRequestIsValid() throws Exception {
 
-      doNothing().when(accountService).updatePassword(any(PasswordUpdateRequest.class));
+      // Arrange
+      PasswordUpdateRequest request = new PasswordUpdateRequest(PASSWORD, NEW_PASSWORD, NEW_PASSWORD);
 
-      ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/me/password")
-          .with(csrf())
+      // Act
+      ResultActions result = mockMvc.perform(patch(BASE_URL + "/me/password")
+          .content(objectMapper.writeValueAsString(request))
           .contentType(MediaType.APPLICATION_JSON)
-          .accept(MediaType.APPLICATION_JSON)
-          .content(objectMapper.writeValueAsString(request)));
+          .accept(MediaType.APPLICATION_JSON));
 
-      resultActions.andExpect(status().isNoContent());
-
-      verify(accountService).updatePassword(any(PasswordUpdateRequest.class));
+      // Assert
+      result.andExpect(status().isNoContent());
+      verify(accountService).updatePassword(request);
     }
 
     @Test
-    @WithMockUser(username = "maria@gmail.com")
-    @DisplayName("PATCH /accounts/me/password should return 422 when service reports password validation error")
-    void updatePasswordShouldReturn422WhenServiceReportsValidationError() throws Exception {
-      PasswordUpdateRequest request = new PasswordUpdateRequest("OldPassword1!", "NewPassword2@", "OtherPassword2@");
+    @WithMockUser(username = EXISTING_EMAIL)
+    @DisplayName("PATCH /accounts/me/password should return 422 when service reports password update error")
+    void updatePasswordShouldReturnUnprocessableEntityWhenServiceReportsPasswordUpdateError() throws Exception {
+
+      // Arrange
+      PasswordUpdateRequest request = new PasswordUpdateRequest(PASSWORD, NEW_PASSWORD, WRONG_PASSWORD);
 
       doThrow(new PasswordUpdateException("error.account.password.confirmationMismatch"))
-          .when(accountService).updatePassword(any(PasswordUpdateRequest.class));
+          .when(accountService).updatePassword(request);
 
-      ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/me/password")
-          .with(csrf())
+      // Act
+      ResultActions result = mockMvc.perform(patch(BASE_URL + "/me/password")
+          .content(objectMapper.writeValueAsString(request))
           .contentType(MediaType.APPLICATION_JSON)
-          .accept(MediaType.APPLICATION_JSON)
-          .content(objectMapper.writeValueAsString(request)));
+          .accept(MediaType.APPLICATION_JSON));
 
-      resultActions
+      // Assert
+      result
           .andExpect(status().isUnprocessableEntity())
-          .andExpect(jsonPath("$.status").value(422));
+          .andExpect(jsonPath("$.status").value(422))
+          .andExpect(jsonPath("$.code").value(ApiErrorCode.PASSWORD_UPDATE_ERROR.name()))
+          .andExpect(jsonPath("$.path").value(BASE_URL + "/me/password"));
     }
   }
 }
