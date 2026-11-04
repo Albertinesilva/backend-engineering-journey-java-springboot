@@ -231,6 +231,10 @@
 						<goals>
 							<goal>prepare-agent</goal>
 						</goals>
+						<!-- Nome fixo da sessão: o padrão usa o nome da máquina, que apareceria na página Sessions dos relatórios -->
+						<configuration>
+							<sessionId>asjcatalog-unit</sessionId>
+						</configuration>
 					</execution>
 					<!-- Relatório de unidade em target/site/jacoco -->
 					<execution>
@@ -246,6 +250,10 @@
 						<goals>
 							<goal>prepare-agent-integration</goal>
 						</goals>
+						<!-- Nome fixo da sessão, pelo mesmo motivo da execução prepare-agent -->
+						<configuration>
+							<sessionId>asjcatalog-it</sessionId>
+						</configuration>
 					</execution>
 					<!-- Relatório de integração em target/site/jacoco-it -->
 					<execution>
