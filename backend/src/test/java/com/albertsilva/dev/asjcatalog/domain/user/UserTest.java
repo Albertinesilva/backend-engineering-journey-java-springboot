@@ -1,176 +1,198 @@
 package com.albertsilva.dev.asjcatalog.domain.user;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static com.albertsilva.dev.asjcatalog.factory.RoleFactory.ADMIN_AUTHORITY;
+import static com.albertsilva.dev.asjcatalog.factory.RoleFactory.OPERATOR_AUTHORITY;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.ENCODED_PASSWORD;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.EXISTING_EMAIL;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.EXISTING_ID;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.springframework.security.core.GrantedAuthority;
+
+import com.albertsilva.dev.asjcatalog.factory.RoleFactory;
 import com.albertsilva.dev.asjcatalog.factory.UserFactory;
 
-@DisplayName("Tests for User Entity")
-public class UserTest {
+/**
+ * Testes de {@code User}. O {@code equals} e o {@code hashCode} ficam no
+ * {@code EntityIdentityContractTest}.
+ */
+@DisplayName("Tests for User")
+class UserTest {
 
-  @Test
-  @DisplayName("User should instantiate correctly")
-  void userShouldInstantiateCorrectly() {
+  private static final String FIRST_NAME = "Maria";
+  private static final String LAST_NAME = "Silva";
 
-    // Arrange
+  private static User userWithOperatorRole() {
     User user = UserFactory.createUser();
-
-    // Act
-    // Apenas instanciação
-
-    // Assert
-    Assertions.assertNotNull(user);
-    Assertions.assertNotNull(user.getFirstName());
-    Assertions.assertNotNull(user.getLastName());
-    Assertions.assertNotNull(user.getEmail());
-    Assertions.assertNotNull(user.getPassword());
+    user.addRole(RoleFactory.createOperatorRole());
+    return user;
   }
 
-  @Test
-  @DisplayName("User should add roles correctly")
-  void userShouldAddRolesCorrectly() {
+  @Nested
+  @DisplayName("Constructor Operations")
+  class ConstructorOperations {
 
-    // Arrange
-    User user = UserFactory.createUser();
-    Role role = new Role(1L, "ROLE_OPERATOR");
+    @Test
+    @DisplayName("constructor should set all fields when values are given")
+    void constructorShouldSetAllFieldsWhenValuesAreGiven() {
 
-    // Act
-    user.addRole(role);
+      // Act
+      User user = new User(EXISTING_ID, FIRST_NAME, LAST_NAME, EXISTING_EMAIL, ENCODED_PASSWORD, false);
 
-    // Assert
-    Assertions.assertFalse(user.getRoles().isEmpty());
-    Assertions.assertTrue(user.getRoles().contains(role));
+      // Assert
+      assertThat(user.getId()).isEqualTo(EXISTING_ID);
+      assertThat(user.getFirstName()).isEqualTo(FIRST_NAME);
+      assertThat(user.getLastName()).isEqualTo(LAST_NAME);
+      assertThat(user.getEmail()).isEqualTo(EXISTING_EMAIL);
+      assertThat(user.getPassword()).isEqualTo(ENCODED_PASSWORD);
+      assertThat(user.isActive()).isFalse();
+      assertThat(user.getRoles()).isEmpty();
+    }
   }
 
-  @Test
-  @DisplayName("User equals should return true for same id")
-  void userEqualsShouldReturnTrueWhenIdsAreEqual() {
+  @Nested
+  @DisplayName("GetUsername Operations")
+  class GetUsernameOperations {
 
-    // Arrange
-    User user1 = new User();
-    user1.setId(1L);
+    @Test
+    @DisplayName("getUsername should return email")
+    void getUsernameShouldReturnEmail() {
 
-    User user2 = new User();
-    user2.setId(1L);
+      // Arrange
+      User user = UserFactory.createUser();
 
-    // Act
-    boolean result = user1.equals(user2);
+      // Act
+      String result = user.getUsername();
 
-    // Assert
-    Assertions.assertTrue(result);
+      // Assert
+      assertThat(result).isEqualTo(user.getEmail());
+    }
   }
 
-  @Test
-  @DisplayName("User equals should return false for different ids")
-  void userEqualsShouldReturnFalseWhenIdsAreDifferent() {
+  @Nested
+  @DisplayName("GetAuthorities Operations")
+  class GetAuthoritiesOperations {
 
-    // Arrange
-    User user1 = new User();
-    user1.setId(1L);
+    @Test
+    @DisplayName("getAuthorities should return exactly the user roles")
+    void getAuthoritiesShouldReturnExactlyTheUserRoles() {
 
-    User user2 = new User();
-    user2.setId(2L);
+      // Arrange
+      User user = userWithOperatorRole();
+      user.addRole(RoleFactory.createAdminRole());
 
-    // Act
-    boolean result = user1.equals(user2);
+      // Act
+      var result = user.getAuthorities();
 
-    // Assert
-    Assertions.assertFalse(result);
+      // Assert
+      assertThat(result).extracting(GrantedAuthority::getAuthority)
+          .containsExactlyInAnyOrder(OPERATOR_AUTHORITY, ADMIN_AUTHORITY);
+    }
   }
 
-  @Test
-  @DisplayName("User hashCode should be based on id")
-  void userHashCodeShouldBeBasedOnId() {
+  @Nested
+  @DisplayName("HasRole Operations")
+  class HasRoleOperations {
 
-    // Arrange
-    User user = new User();
-    user.setId(1L);
+    @Test
+    @DisplayName("hasRole should return true when user has the role")
+    void hasRoleShouldReturnTrueWhenUserHasTheRole() {
 
-    int expected = 31 * 1 + Long.valueOf(1L).hashCode();
+      // Arrange
+      User user = userWithOperatorRole();
 
-    // Act
-    int hashCode = user.hashCode();
+      // Act
+      boolean result = user.hasRole(OPERATOR_AUTHORITY);
 
-    // Assert
-    Assertions.assertEquals(expected, hashCode);
+      // Assert
+      assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("hasRole should return false when user does not have the role")
+    void hasRoleShouldReturnFalseWhenUserDoesNotHaveTheRole() {
+
+      // Arrange
+      User user = userWithOperatorRole();
+
+      // Act
+      boolean result = user.hasRole(ADMIN_AUTHORITY);
+
+      // Assert
+      assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("hasRole should return false when role name is null")
+    void hasRoleShouldReturnFalseWhenRoleNameIsNull() {
+
+      // Arrange
+      User user = userWithOperatorRole();
+
+      // Act
+      boolean result = user.hasRole(null);
+
+      // Assert
+      assertThat(result).isFalse();
+    }
   }
 
-  @Test
-  @DisplayName("User getUsername should return email")
-  void userGetUsernameShouldReturnEmail() {
+  @Nested
+  @DisplayName("Activate and Deactivate Operations")
+  class ActivateAndDeactivateOperations {
 
-    // Arrange
-    User user = UserFactory.createUser();
-    String expectedEmail = user.getEmail();
+    @Test
+    @DisplayName("activate should make user enabled")
+    void activateShouldMakeUserEnabled() {
 
-    // Act
-    String username = user.getUsername();
+      // Arrange
+      User user = UserFactory.createUser();
+      user.deactivate();
 
-    // Assert
-    Assertions.assertEquals(expectedEmail, username);
+      // Act
+      user.activate();
+
+      // Assert
+      assertThat(user.isActive()).isTrue();
+      assertThat(user.isEnabled()).isTrue();
+    }
+
+    @Test
+    @DisplayName("deactivate should make user disabled")
+    void deactivateShouldMakeUserDisabled() {
+
+      // Arrange
+      User user = UserFactory.createUser();
+
+      // Act
+      user.deactivate();
+
+      // Assert
+      assertThat(user.isActive()).isFalse();
+      assertThat(user.isEnabled()).isFalse();
+    }
   }
 
-  @Test
-  @DisplayName("User getAuthorities should return roles")
-  void userGetAuthoritiesShouldReturnRoles() {
+  @Nested
+  @DisplayName("Account Status Operations")
+  class AccountStatusOperations {
 
-    // Arrange
-    User user = UserFactory.createUser();
-    Role role = new Role(1L, "ROLE_OPERATOR");
-    user.addRole(role);
+    // Contrato do UserDetails registrado no SECURITY-CONTRACT (seção 7.1): o modelo
+    // não tem bloqueio nem expiração de conta ou de senha.
+    @Test
+    @DisplayName("account status flags should always be true")
+    void accountStatusFlagsShouldAlwaysBeTrue() {
 
-    // Act
-    var authorities = user.getAuthorities();
+      // Arrange
+      User user = UserFactory.createUser();
 
-    // Assert
-    Assertions.assertNotNull(authorities);
-    Assertions.assertFalse(authorities.isEmpty());
-    Assertions.assertTrue(authorities.contains(role));
+      // Act & Assert
+      assertThat(user.isAccountNonExpired()).isTrue();
+      assertThat(user.isAccountNonLocked()).isTrue();
+      assertThat(user.isCredentialsNonExpired()).isTrue();
+    }
   }
-
-  @Test
-  @DisplayName("User hasRole should return true when role exists")
-  void userHasRoleShouldReturnTrueWhenRoleExists() {
-
-    // Arrange
-    User user = UserFactory.createUser();
-    Role role = new Role(1L, "ROLE_OPERATOR");
-    user.addRole(role);
-
-    // Act
-    boolean hasRole = user.hasRole("ROLE_OPERATOR");
-
-    // Assert
-    Assertions.assertTrue(hasRole);
-  }
-
-  @Test
-  @DisplayName("User hasRole should return false when role does not exist")
-  void userHasRoleShouldReturnFalseWhenRoleDoesNotExist() {
-
-    // Arrange
-    User user = UserFactory.createUser();
-
-    // Act
-    boolean hasRole = user.hasRole("ROLE_ADMIN");
-
-    // Assert
-    Assertions.assertFalse(hasRole);
-  }
-
-  @Test
-  @DisplayName("User isActive should return true when active is true")
-  void userIsActiveShouldReturnTrueWhenActiveIsTrue() {
-
-    // Arrange
-    User user = UserFactory.createUser();
-
-    // Act
-    boolean isActive = user.isActive();
-
-    // Assert
-    Assertions.assertTrue(isActive);
-  }
-
 }

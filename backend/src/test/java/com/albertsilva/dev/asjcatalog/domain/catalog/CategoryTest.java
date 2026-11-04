@@ -1,109 +1,94 @@
 package com.albertsilva.dev.asjcatalog.domain.catalog;
 
-import org.junit.jupiter.api.Assertions;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.NAME_FILTER;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.Instant;
+
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.albertsilva.dev.asjcatalog.domain.catalog.Category;
 import com.albertsilva.dev.asjcatalog.factory.CategoryFactory;
 
-@DisplayName("Tests for Category Entity")
-public class CategoryTest {
+/**
+ * Testes de {@code Category}. O {@code equals} e o {@code hashCode} ficam no
+ * {@code EntityIdentityContractTest}.
+ */
+@DisplayName("Tests for Category")
+class CategoryTest {
 
-  @Test
-  @DisplayName("Category should instantiate correctly")
-  void categoryShouldInstantiateCorrectly() {
+  private static final String DESCRIPTION = "Produtos eletrônicos, como TVs, smartphones e laptops.";
 
-    // Arrange
-    Category category = CategoryFactory.createCategory();
+  @Nested
+  @DisplayName("Constructor Operations")
+  class ConstructorOperations {
 
-    // Act
-    // Apenas instanciação
+    @Test
+    @DisplayName("constructor should set name, description and status when values are given")
+    void constructorShouldSetNameDescriptionAndStatusWhenValuesAreGiven() {
 
-    // Assert
-    Assertions.assertNotNull(category);
-    Assertions.assertNotNull(category.getName());
-    Assertions.assertNotNull(category.getDescription());
+      // Act
+      Category category = new Category(NAME_FILTER, DESCRIPTION, false);
+
+      // Assert
+      assertThat(category.getId()).isNull();
+      assertThat(category.getName()).isEqualTo(NAME_FILTER);
+      assertThat(category.getDescription()).isEqualTo(DESCRIPTION);
+      assertThat(category.isActive()).isFalse();
+    }
   }
 
-  @Test
-  @DisplayName("Category prePersist should set createdAt")
-  void categoryPrePersistShouldSetCreatedAt() {
+  /**
+   * Testes de {@code Category.prePersist}.
+   *
+   * <p>
+   * <b>Cenários pendentes:</b>
+   * </p>
+   * <ul>
+   * <li>{@code updatedAt} na criação: o {@code prePersist} preenche só o
+   * {@code createdAt}, e a categoria nasce sem {@code updatedAt} (#7).</li>
+   * </ul>
+   */
+  @Nested
+  @DisplayName("PrePersist Operations")
+  class PrePersistOperations {
 
-    // Arrange
-    Category category = CategoryFactory.createCategory();
+    @Test
+    @DisplayName("prePersist should set createdAt with the current instant")
+    void prePersistShouldSetCreatedAtWithTheCurrentInstant() {
 
-    // Act
-    category.prePersist();
+      // Arrange
+      Category category = CategoryFactory.createCategory();
+      Instant before = Instant.now();
 
-    // Assert
-    Assertions.assertNotNull(category.getCreatedAt());
+      // Act
+      category.prePersist();
+      Instant after = Instant.now();
+
+      // Assert
+      assertThat(category.getCreatedAt()).isBetween(before, after);
+    }
   }
 
-  @Test
-  @DisplayName("Category preUpdate should set updatedAt")
-  void categoryPreUpdateShouldSetUpdatedAt() {
+  @Nested
+  @DisplayName("PreUpdate Operations")
+  class PreUpdateOperations {
 
-    // Arrange
-    Category category = CategoryFactory.createCategory();
+    @Test
+    @DisplayName("preUpdate should set updatedAt with the current instant")
+    void preUpdateShouldSetUpdatedAtWithTheCurrentInstant() {
 
-    // Act
-    category.preUpdate();
+      // Arrange
+      Category category = CategoryFactory.createCategory();
+      Instant before = Instant.now();
 
-    // Assert
-    Assertions.assertNotNull(category.getUpdatedAt());
-  }
+      // Act
+      category.preUpdate();
+      Instant after = Instant.now();
 
-  @Test
-  @DisplayName("Category equals should return true for same id")
-  void categoryEqualsShouldReturnTrueWhenIdsAreEqual() {
-
-    // Arrange
-    Category category1 = new Category();
-    category1.setId(1L);
-
-    Category category2 = new Category();
-    category2.setId(1L);
-
-    // Act
-    boolean result = category1.equals(category2);
-
-    // Assert
-    Assertions.assertTrue(result);
-  }
-
-  @Test
-  @DisplayName("Category equals should return false for different ids")
-  void categoryEqualsShouldReturnFalseWhenIdsAreDifferent() {
-
-    // Arrange
-    Category category1 = new Category();
-    category1.setId(1L);
-
-    Category category2 = new Category();
-    category2.setId(2L);
-
-    // Act
-    boolean result = category1.equals(category2);
-
-    // Assert
-    Assertions.assertFalse(result);
-  }
-
-  @Test
-  @DisplayName("Category hashCode should be consistent with id")
-  void categoryHashCodeShouldBeConsistentWithId() {
-
-    // Arrange
-    Category category = new Category();
-    category.setId(1L);
-
-    int expected = 31 * 1 + Long.valueOf(1L).hashCode();
-
-    // Act
-    int hashCode = category.hashCode();
-
-    // Assert
-    Assertions.assertEquals(expected, hashCode);
+      // Assert
+      assertThat(category.getUpdatedAt()).isBetween(before, after);
+    }
   }
 }

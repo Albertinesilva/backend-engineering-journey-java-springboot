@@ -223,7 +223,7 @@ O construtor recebe um `EmailRegisterRequest` e define `status = PENDING` e `cre
 - **Só envios bem-sucedidos são registrados.** O `EmailService` grava o registro depois de enviar; quando o envio falha, nada é gravado em `tb_email`.
 - **O registro de e-mail guarda pouco.** `content` recebe só o assunto, e `sender` é gravado como `asjcatalog@gmail.com`, enquanto o cabeçalho do e-mail usa `nao-responder@asjcatalog.com.br`.
 - **Datas diferentes na criação.** `Product` preenche `createdAt` e `updatedAt` ao ser criado; `Category` preenche só `createdAt`, e seu `updatedAt` fica nulo até a primeira atualização.
-- **Igualdade por id.** `equals` e `hashCode` das entidades comparam só o `id`. Duas instâncias ainda não salvas (com `id` nulo) são consideradas iguais.
+- **Igualdade por id.** `equals` e `hashCode` das entidades comparam só o `id`. Duas instâncias ainda não salvas (com `id` nulo) são consideradas iguais, e o `hashCode` muda quando o banco atribui o `id`. Registrada na [#51](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/issues/51).
 - **Preço em ponto flutuante.** `price` é `Double`, um tipo que não representa todos os valores decimais de forma exata.
 
 ---
