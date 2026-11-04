@@ -1,15 +1,14 @@
 package com.albertsilva.dev.asjcatalog.validation.category.validator;
 
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.EXISTING_ID;
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.NAME_FILTER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -32,6 +31,7 @@ import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder.
 class CategoryUpdateValidatorTest {
 
   private static final String UNIQUE_MESSAGE = "{category.name.unique}";
+  private static final String NORMALIZED_NAME = NAME_FILTER.trim().toLowerCase();
 
   @InjectMocks
   private CategoryUpdateValidator validator;
@@ -51,67 +51,118 @@ class CategoryUpdateValidatorTest {
   @Mock
   private NodeBuilderCustomizableContext nodeBuilder;
 
-  @BeforeEach
-  void setUp() {
-    lenient().when(context.buildConstraintViolationWithTemplate(anyString())).thenReturn(violationBuilder);
-    lenient().when(violationBuilder.addPropertyNode("name")).thenReturn(nodeBuilder);
-    lenient().when(nodeBuilder.addConstraintViolation()).thenReturn(context);
+  private void givenUriVariables(Map<String, String> variables) {
+    when(request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE)).thenReturn(variables);
   }
 
+  /** Prepara o contexto para registrar uma violação no campo {@code name}. */
+  private void givenNameViolation() {
+    when(context.buildConstraintViolationWithTemplate(UNIQUE_MESSAGE)).thenReturn(violationBuilder);
+    when(violationBuilder.addPropertyNode("name")).thenReturn(nodeBuilder);
+  }
+
+  /**
+   * Testes de {@code CategoryUpdateValidator.isValid}.
+   *
+   * <p>
+   * <b>Cenários pendentes:</b>
+   * </p>
+   * <ul>
+   * <li>Id não numérico na URI: na requisição real, o {@code @PathVariable Long id}
+   * falha antes do validador e responde 500 em vez de 400 (#36).</li>
+   * </ul>
+   */
   @Nested
-  @DisplayName("valid values")
-  class ValidValuesTests {
+  @DisplayName("IsValid Operations")
+  class IsValidOperations {
 
     @Test
-    @DisplayName("isValid should accept the current name when repository excludes the current ID")
-    void isValidShouldAcceptCurrentName() {
-      givenId("7");
-      when(repository.existsByNameIgnoreCaseAndIdNot("electronics", 7L)).thenReturn(false);
+    @DisplayName("isValid should accept name when it belongs only to the current category")
+    void isValidShouldAcceptNameWhenItBelongsOnlyToTheCurrentCategory() {
 
-      boolean result = validator.isValid(new CategoryUpdateRequest(" Electronics ", null), context);
+      // Arrange
+      givenUriVariables(Map.of("id", EXISTING_ID.toString()));
+      when(repository.existsByNameIgnoreCaseAndIdNot(NORMALIZED_NAME, EXISTING_ID)).thenReturn(false);
 
+      // Act
+      boolean result = validator.isValid(new CategoryUpdateRequest(" " + NAME_FILTER + " ", null), context);
+
+      // Assert
       assertThat(result).isTrue();
-      verify(repository).existsByNameIgnoreCaseAndIdNot("electronics", 7L);
+      verify(repository).existsByNameIgnoreCaseAndIdNot(NORMALIZED_NAME, EXISTING_ID);
       verifyNoInteractions(context);
     }
 
     @Test
-    @DisplayName("isValid should skip the repository when URI id is missing")
-    void isValidShouldSkipWhenUriIdIsMissing() {
-      when(request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE)).thenReturn(null);
+    @DisplayName("isValid should skip repository when URI variables are missing")
+    void isValidShouldSkipRepositoryWhenUriVariablesAreMissing() {
 
-      boolean result = validator.isValid(new CategoryUpdateRequest("Electronics", null), context);
+      // Arrange
+      givenUriVariables(null);
 
+      // Act
+      boolean result = validator.isValid(new CategoryUpdateRequest(NAME_FILTER, null), context);
+
+      // Assert
       assertThat(result).isTrue();
       verifyNoInteractions(repository, context);
     }
 
     @Test
-    @DisplayName("isValid should skip blank names")
-    void isValidShouldSkipBlankNames() {
+    @DisplayName("isValid should skip repository when URI variables have no id")
+    void isValidShouldSkipRepositoryWhenUriVariablesHaveNoId() {
+
+      // Arrange
+      givenUriVariables(Map.of("other", EXISTING_ID.toString()));
+
+      // Act
+      boolean result = validator.isValid(new CategoryUpdateRequest(NAME_FILTER, null), context);
+
+      // Assert
+      assertThat(result).isTrue();
+      verifyNoInteractions(repository, context);
+    }
+
+    @Test
+    @DisplayName("isValid should skip repository when name is blank")
+    void isValidShouldSkipRepositoryWhenNameIsBlank() {
+
+      // Act
       boolean result = validator.isValid(new CategoryUpdateRequest("   ", null), context);
 
+      // Assert
       assertThat(result).isTrue();
       verifyNoInteractions(repository, request, context);
     }
-  }
 
-  @Test
-  @DisplayName("isValid should reject a name used by another category")
-  void isValidShouldRejectNameUsedByAnotherCategory() {
-    givenId("7");
-    when(repository.existsByNameIgnoreCaseAndIdNot("electronics", 7L)).thenReturn(true);
+    @Test
+    @DisplayName("isValid should skip repository when name is null")
+    void isValidShouldSkipRepositoryWhenNameIsNull() {
 
-    boolean result = validator.isValid(new CategoryUpdateRequest("Electronics", null), context);
+      // Act
+      boolean result = validator.isValid(new CategoryUpdateRequest(null, null), context);
 
-    assertThat(result).isFalse();
-    verify(context).disableDefaultConstraintViolation();
-    verify(context).buildConstraintViolationWithTemplate(UNIQUE_MESSAGE);
-    verify(violationBuilder).addPropertyNode("name");
-    verify(nodeBuilder).addConstraintViolation();
-  }
+      // Assert
+      assertThat(result).isTrue();
+      verifyNoInteractions(repository, request, context);
+    }
 
-  private void givenId(String id) {
-    when(request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE)).thenReturn(Map.of("id", id));
+    @Test
+    @DisplayName("isValid should reject name and attach error to name when name is used by another category")
+    void isValidShouldRejectNameAndAttachErrorToNameWhenNameIsUsedByAnotherCategory() {
+
+      // Arrange
+      givenUriVariables(Map.of("id", EXISTING_ID.toString()));
+      givenNameViolation();
+      when(repository.existsByNameIgnoreCaseAndIdNot(NORMALIZED_NAME, EXISTING_ID)).thenReturn(true);
+
+      // Act
+      boolean result = validator.isValid(new CategoryUpdateRequest(NAME_FILTER, null), context);
+
+      // Assert
+      assertThat(result).isFalse();
+      verify(context).disableDefaultConstraintViolation();
+      verify(nodeBuilder).addConstraintViolation();
+    }
   }
 }

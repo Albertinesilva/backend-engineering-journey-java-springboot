@@ -7,6 +7,7 @@ public final class RoleFactory {
 
   public static final Long OPERATOR_ROLE_ID = 1L;
   public static final Long ADMIN_ROLE_ID = 2L;
+  public static final Long NON_EXISTING_ROLE_ID = 1000L;
   public static final String OPERATOR_AUTHORITY = "ROLE_OPERATOR";
   public static final String ADMIN_AUTHORITY = "ROLE_ADMIN";
 

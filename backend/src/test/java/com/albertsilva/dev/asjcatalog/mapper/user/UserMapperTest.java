@@ -87,8 +87,8 @@ class UserMapperTest {
     // A regra sobre usuário sem roles é da #14 e fica no service; o teste só confere
     // que o mapper não falha com roles nulas.
     @Test
-    @DisplayName("toEntity should create user with empty roles when roles are null")
-    void toEntityShouldCreateUserWithEmptyRolesWhenRolesAreNull() {
+    @DisplayName("toEntity should create user with empty roles when roles are null for create request")
+    void toEntityShouldCreateUserWithEmptyRolesWhenRolesAreNullForCreateRequest() {
 
       // Arrange
       UserCreateRequest request = UserFactory.createUserCreateRequest();
@@ -149,8 +149,8 @@ class UserMapperTest {
     // A regra sobre usuário sem roles é da #14 e fica no service; o teste só confere
     // que o mapper não falha com roles nulas.
     @Test
-    @DisplayName("toEntity should create user with empty roles when roles are null")
-    void toEntityShouldCreateUserWithEmptyRolesWhenRolesAreNull() {
+    @DisplayName("toEntity should create user with empty roles when roles are null for register request")
+    void toEntityShouldCreateUserWithEmptyRolesWhenRolesAreNullForRegisterRequest() {
 
       // Arrange
       UserRegisterRequest request = UserFactory.createUserRegisterRequest();

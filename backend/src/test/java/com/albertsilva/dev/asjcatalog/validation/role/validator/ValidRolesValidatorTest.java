@@ -1,14 +1,15 @@
 package com.albertsilva.dev.asjcatalog.validation.role.validator;
 
+import static com.albertsilva.dev.asjcatalog.factory.RoleFactory.ADMIN_ROLE_ID;
+import static com.albertsilva.dev.asjcatalog.factory.RoleFactory.NON_EXISTING_ROLE_ID;
+import static com.albertsilva.dev.asjcatalog.factory.RoleFactory.OPERATOR_ROLE_ID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Set;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,76 +41,85 @@ class ValidRolesValidatorTest {
   @Mock
   private ConstraintViolationBuilder violationBuilder;
 
-  @BeforeEach
-  void setUp() {
-    lenient().when(context.buildConstraintViolationWithTemplate(INVALID_ROLE_MESSAGE)).thenReturn(violationBuilder);
-    lenient().when(violationBuilder.addConstraintViolation()).thenReturn(context);
-  }
-
   @Nested
-  @DisplayName("valid values")
-  class ValidValuesTests {
+  @DisplayName("IsValid Operations")
+  class IsValidOperations {
 
     @Test
-    @DisplayName("isValid should return true when all role IDs exist")
+    @DisplayName("isValid should return true when all role ids exist")
     void isValidShouldReturnTrueWhenAllRoleIdsExist() {
-      when(repository.existsById(1L)).thenReturn(true);
-      when(repository.existsById(2L)).thenReturn(true);
 
-      boolean result = validator.isValid(Set.of(1L, 2L), context);
+      // Arrange
+      when(repository.existsById(OPERATOR_ROLE_ID)).thenReturn(true);
+      when(repository.existsById(ADMIN_ROLE_ID)).thenReturn(true);
 
+      // Act
+      boolean result = validator.isValid(Set.of(OPERATOR_ROLE_ID, ADMIN_ROLE_ID), context);
+
+      // Assert
       assertThat(result).isTrue();
-      verify(repository).existsById(1L);
-      verify(repository).existsById(2L);
+      verify(repository).existsById(OPERATOR_ROLE_ID);
+      verify(repository).existsById(ADMIN_ROLE_ID);
       verifyNoInteractions(context);
     }
 
     @Test
-    @DisplayName("isValid should return true for null")
-    void isValidShouldReturnTrueForNull() {
+    @DisplayName("isValid should return true when single role id exists")
+    void isValidShouldReturnTrueWhenSingleRoleIdExists() {
+
+      // Arrange
+      when(repository.existsById(OPERATOR_ROLE_ID)).thenReturn(true);
+
+      // Act
+      boolean result = validator.isValid(Set.of(OPERATOR_ROLE_ID), context);
+
+      // Assert
+      assertThat(result).isTrue();
+      verifyNoInteractions(context);
+    }
+
+    // #14: aceitar roleIds nulo segue a regra de que validadores tratam null como válido;
+    // se usuário sem roles é permitido ainda está em aberto na issue. Mantido sem reforço.
+    @Test
+    @DisplayName("isValid should return true when role ids are null")
+    void isValidShouldReturnTrueWhenRoleIdsAreNull() {
+
+      // Act
       boolean result = validator.isValid(null, context);
 
+      // Assert
       assertThat(result).isTrue();
       verifyNoInteractions(repository, context);
     }
 
+    // #14: com o conjunto vazio, a obrigatoriedade ficaria com um @NotEmpty no DTO; se
+    // usuário sem roles é permitido ainda está em aberto na issue. Mantido sem reforço.
     @Test
-    @DisplayName("isValid should return true for an empty set")
-    void isValidShouldReturnTrueForEmptySet() {
+    @DisplayName("isValid should return true when role ids are empty")
+    void isValidShouldReturnTrueWhenRoleIdsAreEmpty() {
+
+      // Act
       boolean result = validator.isValid(Set.of(), context);
 
+      // Assert
       assertThat(result).isTrue();
       verifyNoInteractions(repository, context);
     }
 
     @Test
-    @DisplayName("isValid should validate a single existing role ID")
-    void isValidShouldValidateSingleExistingRoleId() {
-      when(repository.existsById(1L)).thenReturn(true);
+    @DisplayName("isValid should return false when any role id does not exist")
+    void isValidShouldReturnFalseWhenAnyRoleIdDoesNotExist() {
 
-      boolean result = validator.isValid(Set.of(1L), context);
+      // Arrange
+      when(context.buildConstraintViolationWithTemplate(INVALID_ROLE_MESSAGE)).thenReturn(violationBuilder);
+      when(repository.existsById(NON_EXISTING_ROLE_ID)).thenReturn(false);
 
-      assertThat(result).isTrue();
-      verify(repository).existsById(1L);
-      verifyNoInteractions(context);
-    }
-  }
+      // Act
+      boolean result = validator.isValid(Set.of(NON_EXISTING_ROLE_ID), context);
 
-  @Nested
-  @DisplayName("invalid values")
-  class InvalidValuesTests {
-
-    @Test
-    @DisplayName("isValid should return false when a role ID does not exist")
-    void isValidShouldReturnFalseWhenRoleIdDoesNotExist() {
-      when(repository.existsById(999L)).thenReturn(false);
-
-      boolean result = validator.isValid(Set.of(999L), context);
-
+      // Assert
       assertThat(result).isFalse();
-      verify(repository).existsById(999L);
       verify(context).disableDefaultConstraintViolation();
-      verify(context).buildConstraintViolationWithTemplate(INVALID_ROLE_MESSAGE);
       verify(violationBuilder).addConstraintViolation();
     }
   }

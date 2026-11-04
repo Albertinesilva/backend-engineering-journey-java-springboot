@@ -2,18 +2,22 @@ package com.albertsilva.dev.asjcatalog.validation.user.validator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,6 +28,14 @@ import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
 @DisplayName("Tests for StrongPasswordValidator")
 @ExtendWith(MockitoExtension.class)
 class StrongPasswordValidatorTest {
+
+  private static final String WHITESPACE = "{user.password.whitespace}";
+  private static final String UPPERCASE = "{user.password.uppercase}";
+  private static final String LOWERCASE = "{user.password.lowercase}";
+  private static final String NUMBER = "{user.password.number}";
+  private static final String SPECIAL_CHARACTER = "{user.password.specialCharacter}";
+  private static final String COMMON = "{user.password.common}";
+  private static final String SEQUENCE = "{user.password.sequence}";
 
   private StrongPasswordValidator validator;
 
@@ -36,125 +48,84 @@ class StrongPasswordValidatorTest {
   @BeforeEach
   void setUp() {
     validator = new StrongPasswordValidator();
-    lenient().when(context.buildConstraintViolationWithTemplate(anyString())).thenReturn(violationBuilder);
   }
 
-  @Test
-  @DisplayName("isValid should return true for a strong password without prohibited sequence")
-  void isValidShouldReturnTrueForStrongPasswordWithoutProhibitedSequence() {
-    boolean result = validator.isValid("ValidPass@135790", context);
-
-    assertThat(result).isTrue();
-    verifyNoInteractions(context);
-  }
-
-  @Test
-  @DisplayName("isValid should return true for null because nullability is delegated to other constraints")
-  void isValidShouldReturnTrueForNull() {
-    boolean result = validator.isValid(null, context);
-
-    assertThat(result).isTrue();
-    verifyNoInteractions(context);
-  }
-
-  @Test
-  @DisplayName("isValid should reject an empty password and report missing composition rules")
-  void isValidShouldRejectEmptyPassword() {
-    boolean result = validator.isValid("", context);
-
-    assertThat(result).isFalse();
-    assertThat(validationMessages()).containsExactlyInAnyOrder(
-        "{user.password.uppercase}",
-        "{user.password.lowercase}",
-        "{user.password.number}",
-        "{user.password.specialCharacter}");
-  }
-
-  @Test
-  @DisplayName("isValid should reject whitespace")
-  void isValidShouldRejectWhitespace() {
-    boolean result = validator.isValid("Valid Pass@2026", context);
-
-    assertThat(result).isFalse();
-    assertThat(validationMessages()).contains("{user.password.whitespace}");
-  }
-
-  @Test
-  @DisplayName("isValid should reject a password without uppercase letter")
-  void isValidShouldRejectMissingUppercase() {
-    boolean result = validator.isValid("validpass@2026", context);
-
-    assertThat(result).isFalse();
-    assertThat(validationMessages()).contains("{user.password.uppercase}");
-  }
-
-  @Test
-  @DisplayName("isValid should reject a password without lowercase letter")
-  void isValidShouldRejectMissingLowercase() {
-    boolean result = validator.isValid("VALIDPASS@2026", context);
-
-    assertThat(result).isFalse();
-    assertThat(validationMessages()).contains("{user.password.lowercase}");
-  }
-
-  @Test
-  @DisplayName("isValid should reject a password without number")
-  void isValidShouldRejectMissingNumber() {
-    boolean result = validator.isValid("ValidPass@abcdef", context);
-
-    assertThat(result).isFalse();
-    assertThat(validationMessages()).contains("{user.password.number}");
-  }
-
-  @Test
-  @DisplayName("isValid should reject a password without special character")
-  void isValidShouldRejectMissingSpecialCharacter() {
-    boolean result = validator.isValid("ValidPass2026", context);
-
-    assertThat(result).isFalse();
-    assertThat(validationMessages()).contains("{user.password.specialCharacter}");
-  }
-
-  @Test
-  @DisplayName("isValid should reject common passwords case-insensitively")
-  void isValidShouldRejectCommonPasswordCaseInsensitively() {
-    boolean result = validator.isValid("PASSWORD", context);
-
-    assertThat(result).isFalse();
-    assertThat(validationMessages()).contains("{user.password.common}");
-  }
-
-  @Test
-  @DisplayName("isValid should reject ascending numeric sequences of six digits")
-  void isValidShouldRejectAscendingNumericSequence() {
-    boolean result = validator.isValid("ValidPass@123456", context);
-
-    assertThat(result).isFalse();
-    assertThat(validationMessages()).contains("{user.password.sequence}");
-  }
-
-  @Test
-  @DisplayName("isValid should reject descending numeric sequences of six digits")
-  void isValidShouldRejectDescendingNumericSequence() {
-    boolean result = validator.isValid("ValidPass@654321", context);
-
-    assertThat(result).isFalse();
-    assertThat(validationMessages()).contains("{user.password.sequence}");
-  }
-
-  @Test
-  @DisplayName("isValid should accept six digits when they are not a consecutive sequence")
-  void isValidShouldAcceptNonSequentialDigits() {
-    boolean result = validator.isValid("ValidPass@135790", context);
-
-    assertThat(result).isTrue();
-    verifyNoInteractions(context);
-  }
-
+  /** Mensagens registradas no contexto, na ordem em que foram registradas. */
   private List<String> validationMessages() {
     ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
     verify(context).disableDefaultConstraintViolation();
-    verify(context, org.mockito.Mockito.atLeastOnce()).buildConstraintViolationWithTemplate(messageCaptor.capture());
+    verify(context, atLeastOnce()).buildConstraintViolationWithTemplate(messageCaptor.capture());
     return messageCaptor.getAllValues();
+  }
+
+  static Stream<Arguments> weakPasswords() {
+    return Stream.of(
+        Arguments.of("senha vazia", "", List.of(UPPERCASE, LOWERCASE, NUMBER, SPECIAL_CHARACTER)),
+        Arguments.of("espaço em branco", "Valid Pass@2026", List.of(WHITESPACE)),
+        Arguments.of("sem letra maiúscula", "validpass@2026", List.of(UPPERCASE)),
+        Arguments.of("sem letra minúscula", "VALIDPASS@2026", List.of(LOWERCASE)),
+        Arguments.of("sem número", "ValidPass@abcdef", List.of(NUMBER)),
+        Arguments.of("sem caractere especial", "ValidPass2026", List.of(SPECIAL_CHARACTER)),
+        Arguments.of("senha comum em maiúsculas", "PASSWORD", List.of(LOWERCASE, NUMBER, SPECIAL_CHARACTER, COMMON)),
+        Arguments.of("sequência crescente de seis dígitos", "ValidPass@123456", List.of(SEQUENCE)),
+        Arguments.of("sequência decrescente de seis dígitos", "ValidPass@654321", List.of(SEQUENCE)));
+  }
+
+  @Nested
+  @DisplayName("IsValid Operations")
+  class IsValidOperations {
+
+    @Test
+    @DisplayName("isValid should return true when password meets all rules")
+    void isValidShouldReturnTrueWhenPasswordMeetsAllRules() {
+
+      // Act
+      boolean result = validator.isValid("Catalogo#2026", context);
+
+      // Assert
+      assertThat(result).isTrue();
+      verifyNoInteractions(context);
+    }
+
+    @Test
+    @DisplayName("isValid should return true when password is null")
+    void isValidShouldReturnTrueWhenPasswordIsNull() {
+
+      // Act
+      boolean result = validator.isValid(null, context);
+
+      // Assert
+      assertThat(result).isTrue();
+      verifyNoInteractions(context);
+    }
+
+    @Test
+    @DisplayName("isValid should return true when six digits are not a consecutive sequence")
+    void isValidShouldReturnTrueWhenSixDigitsAreNotAConsecutiveSequence() {
+
+      // Act
+      boolean result = validator.isValid("ValidPass@135790", context);
+
+      // Assert
+      assertThat(result).isTrue();
+      verifyNoInteractions(context);
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("com.albertsilva.dev.asjcatalog.validation.user.validator.StrongPasswordValidatorTest#weakPasswords")
+    @DisplayName("isValid should reject password with the broken rules when password is weak")
+    void isValidShouldRejectPasswordWithTheBrokenRulesWhenPasswordIsWeak(String scenario, String password,
+        List<String> expectedMessages) {
+
+      // Arrange
+      when(context.buildConstraintViolationWithTemplate(anyString())).thenReturn(violationBuilder);
+
+      // Act
+      boolean result = validator.isValid(password, context);
+
+      // Assert
+      assertThat(result).isFalse();
+      assertThat(validationMessages()).containsExactlyInAnyOrderElementsOf(expectedMessages);
+    }
   }
 }

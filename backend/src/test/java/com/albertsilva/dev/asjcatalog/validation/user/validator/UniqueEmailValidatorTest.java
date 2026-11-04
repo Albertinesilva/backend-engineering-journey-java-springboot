@@ -1,13 +1,12 @@
 package com.albertsilva.dev.asjcatalog.validation.user.validator;
 
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.EXISTING_EMAIL;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.NON_EXISTING_EMAIL;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,74 +38,79 @@ class UniqueEmailValidatorTest {
   @Mock
   private ConstraintViolationBuilder violationBuilder;
 
-  @BeforeEach
-  void setUp() {
-    lenient().when(context.buildConstraintViolationWithTemplate(anyString())).thenReturn(violationBuilder);
-    lenient().when(violationBuilder.addConstraintViolation()).thenReturn(context);
-  }
-
   @Nested
-  @DisplayName("valid values")
-  class ValidValuesTests {
+  @DisplayName("IsValid Operations")
+  class IsValidOperations {
 
     @Test
-    @DisplayName("isValid should return true when the email is available")
+    @DisplayName("isValid should return true when email is available")
     void isValidShouldReturnTrueWhenEmailIsAvailable() {
-      when(repository.existsByEmailIgnoreCase("new@example.com")).thenReturn(false);
 
-      boolean result = validator.isValid("new@example.com", context);
+      // Arrange
+      when(repository.existsByEmailIgnoreCase(NON_EXISTING_EMAIL)).thenReturn(false);
 
+      // Act
+      boolean result = validator.isValid(NON_EXISTING_EMAIL, context);
+
+      // Assert
       assertThat(result).isTrue();
-      verify(repository).existsByEmailIgnoreCase("new@example.com");
+      verify(repository).existsByEmailIgnoreCase(NON_EXISTING_EMAIL);
       verifyNoInteractions(context);
     }
 
     @Test
-    @DisplayName("isValid should return true for null without consulting the repository")
-    void isValidShouldReturnTrueForNull() {
+    @DisplayName("isValid should return true when email is null")
+    void isValidShouldReturnTrueWhenEmailIsNull() {
+
+      // Act
       boolean result = validator.isValid(null, context);
 
+      // Assert
       assertThat(result).isTrue();
       verifyNoInteractions(repository, context);
     }
 
     @Test
-    @DisplayName("isValid should return true for blank email without consulting the repository")
-    void isValidShouldReturnTrueForBlankEmail() {
+    @DisplayName("isValid should return true when email is blank")
+    void isValidShouldReturnTrueWhenEmailIsBlank() {
+
+      // Act
       boolean result = validator.isValid("   ", context);
 
+      // Assert
       assertThat(result).isTrue();
       verifyNoInteractions(repository, context);
     }
 
     @Test
-    @DisplayName("isValid should trim and normalize the email before checking availability")
-    void isValidShouldTrimAndNormalizeEmail() {
-      when(repository.existsByEmailIgnoreCase("user@example.com")).thenReturn(false);
+    @DisplayName("isValid should check normalized email when email has spaces and uppercase letters")
+    void isValidShouldCheckNormalizedEmailWhenEmailHasSpacesAndUppercaseLetters() {
 
-      boolean result = validator.isValid("  USER@EXAMPLE.COM  ", context);
+      // Arrange
+      when(repository.existsByEmailIgnoreCase(NON_EXISTING_EMAIL)).thenReturn(false);
 
+      // Act
+      boolean result = validator.isValid("  " + NON_EXISTING_EMAIL.toUpperCase() + "  ", context);
+
+      // Assert
       assertThat(result).isTrue();
-      verify(repository).existsByEmailIgnoreCase("user@example.com");
-      verifyNoInteractions(context);
+      verify(repository).existsByEmailIgnoreCase(NON_EXISTING_EMAIL);
     }
-  }
-
-  @Nested
-  @DisplayName("invalid values")
-  class InvalidValuesTests {
 
     @Test
-    @DisplayName("isValid should return false when the email is already used")
-    void isValidShouldReturnFalseWhenEmailAlreadyExists() {
-      when(repository.existsByEmailIgnoreCase("user@example.com")).thenReturn(true);
+    @DisplayName("isValid should return false when email is already used")
+    void isValidShouldReturnFalseWhenEmailIsAlreadyUsed() {
 
-      boolean result = validator.isValid("user@example.com", context);
+      // Arrange
+      when(context.buildConstraintViolationWithTemplate(UNIQUE_EMAIL_MESSAGE)).thenReturn(violationBuilder);
+      when(repository.existsByEmailIgnoreCase(EXISTING_EMAIL)).thenReturn(true);
 
+      // Act
+      boolean result = validator.isValid(EXISTING_EMAIL, context);
+
+      // Assert
       assertThat(result).isFalse();
-      verify(repository).existsByEmailIgnoreCase("user@example.com");
       verify(context).disableDefaultConstraintViolation();
-      verify(context).buildConstraintViolationWithTemplate(UNIQUE_EMAIL_MESSAGE);
       verify(violationBuilder).addConstraintViolation();
     }
   }
