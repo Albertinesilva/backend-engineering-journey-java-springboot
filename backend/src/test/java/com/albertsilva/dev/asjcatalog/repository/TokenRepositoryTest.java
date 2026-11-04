@@ -21,7 +21,7 @@ import com.albertsilva.dev.asjcatalog.factory.UserFactory;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@DisplayName("TokenRepository Tests")
+@DisplayName("Tests for TokenRepository")
 class TokenRepositoryTest {
 
   @Autowired
@@ -35,8 +35,8 @@ class TokenRepositoryTest {
   class FindByTokenOperations {
 
     @Test
-    @DisplayName("should return token when value exists")
-    void shouldReturnTokenWhenValueExists() {
+    @DisplayName("findByToken should return token when value exists")
+    void findByTokenShouldReturnTokenWhenValueExists() {
       // Arrange
       User user = saveUser();
       Token token = new Token("token-exists-1", user, Instant.now().plusSeconds(3600), TokenType.ACTIVATION);
@@ -52,8 +52,8 @@ class TokenRepositoryTest {
     }
 
     @Test
-    @DisplayName("should return empty when token value does not exist")
-    void shouldReturnEmptyWhenTokenValueDoesNotExist() {
+    @DisplayName("findByToken should return empty when value does not exist")
+    void findByTokenShouldReturnEmptyWhenValueDoesNotExist() {
       // Act
       Optional<Token> result = tokenRepository.findByToken("definitely-missing-token");
 
@@ -67,8 +67,8 @@ class TokenRepositoryTest {
   class FindByUserAndTypeAndDisabledFalseOperations {
 
     @Test
-    @DisplayName("should return only active tokens for the user and type")
-    void shouldReturnOnlyActiveTokensForUserAndType() {
+    @DisplayName("findByUserAndTypeAndDisabledFalse should return only enabled tokens of the user and type")
+    void findByUserAndTypeAndDisabledFalseShouldReturnOnlyEnabledTokensOfTheUserAndType() {
       // Arrange
       User user = saveUser();
 
@@ -91,8 +91,8 @@ class TokenRepositoryTest {
     }
 
     @Test
-    @DisplayName("should return empty when no active tokens match user and type")
-    void shouldReturnEmptyWhenNoActiveTokensMatchUserAndType() {
+    @DisplayName("findByUserAndTypeAndDisabledFalse should return empty when no enabled token matches")
+    void findByUserAndTypeAndDisabledFalseShouldReturnEmptyWhenNoEnabledTokenMatches() {
       // Arrange
       User user = saveUser();
       Token disabled = new Token("disabled-token-2", user, Instant.now().plusSeconds(3600), TokenType.ACTIVATION);
