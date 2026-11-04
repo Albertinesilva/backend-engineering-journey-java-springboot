@@ -27,10 +27,7 @@ import com.albertsilva.dev.asjcatalog.factory.UserFactory;
 /**
  * Contrato de identidade das seis entidades: {@code equals} e {@code hashCode}
  * comparam só o {@code id}. Cada caso parametrizado recebe uma função que cria
- * a entidade com o id informado, e o nome do caso mostra a entidade testada
- * (na IDE e no JUnit). No relatório do Surefire, os casos aparecem pelo índice,
- * na ordem de {@link #entities()}: [1] Category, [2] Product, [3] User, [4] Role,
- * [5] Token e [6] Email.
+ * a entidade com o id informado, e o nome do caso mostra a entidade testada.
  *
  * <p>
  * <b>Cenários pendentes:</b>
@@ -81,11 +78,16 @@ class EntityIdentityContractTest {
     return Arguments.of(named(name, withId));
   }
 
+  /** Descrição das asserções: o nome da entidade aparece na mensagem de falha do console. */
+  private static String nameOf(Object entity) {
+    return entity.getClass().getSimpleName();
+  }
+
   @Nested
   @DisplayName("Equals and HashCode Operations")
   class EqualsAndHashCodeOperations {
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}]")
     @MethodSource("com.albertsilva.dev.asjcatalog.domain.EntityIdentityContractTest#entities")
     @DisplayName("equals should return true when compared with itself")
     void equalsShouldReturnTrueWhenComparedWithItself(Function<Long, Object> withId) {
@@ -97,10 +99,10 @@ class EntityIdentityContractTest {
       boolean result = entity.equals(entity);
 
       // Assert
-      assertThat(result).isTrue();
+      assertThat(result).as(nameOf(entity)).isTrue();
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}]")
     @MethodSource("com.albertsilva.dev.asjcatalog.domain.EntityIdentityContractTest#entities")
     @DisplayName("equals should return true and hash codes should match when ids are equal")
     void equalsShouldReturnTrueAndHashCodesShouldMatchWhenIdsAreEqual(Function<Long, Object> withId) {
@@ -113,11 +115,11 @@ class EntityIdentityContractTest {
       boolean result = first.equals(second);
 
       // Assert
-      assertThat(result).isTrue();
-      assertThat(first.hashCode()).isEqualTo(second.hashCode());
+      assertThat(result).as(nameOf(first)).isTrue();
+      assertThat(first.hashCode()).as(nameOf(first)).isEqualTo(second.hashCode());
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}]")
     @MethodSource("com.albertsilva.dev.asjcatalog.domain.EntityIdentityContractTest#entities")
     @DisplayName("equals should return false when ids are different")
     void equalsShouldReturnFalseWhenIdsAreDifferent(Function<Long, Object> withId) {
@@ -130,10 +132,10 @@ class EntityIdentityContractTest {
       boolean result = first.equals(second);
 
       // Assert
-      assertThat(result).isFalse();
+      assertThat(result).as(nameOf(first)).isFalse();
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}]")
     @MethodSource("com.albertsilva.dev.asjcatalog.domain.EntityIdentityContractTest#entities")
     @DisplayName("equals should return false when other is null")
     void equalsShouldReturnFalseWhenOtherIsNull(Function<Long, Object> withId) {
@@ -145,10 +147,10 @@ class EntityIdentityContractTest {
       boolean result = entity.equals(null);
 
       // Assert
-      assertThat(result).isFalse();
+      assertThat(result).as(nameOf(entity)).isFalse();
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}]")
     @MethodSource("com.albertsilva.dev.asjcatalog.domain.EntityIdentityContractTest#entities")
     @DisplayName("equals should return false when other is another type")
     void equalsShouldReturnFalseWhenOtherIsAnotherType(Function<Long, Object> withId) {
@@ -160,10 +162,10 @@ class EntityIdentityContractTest {
       boolean result = entity.equals(new Object());
 
       // Assert
-      assertThat(result).isFalse();
+      assertThat(result).as(nameOf(entity)).isFalse();
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}]")
     @MethodSource("com.albertsilva.dev.asjcatalog.domain.EntityIdentityContractTest#entities")
     @DisplayName("equals should return false when only this id is null")
     void equalsShouldReturnFalseWhenOnlyThisIdIsNull(Function<Long, Object> withId) {
@@ -176,10 +178,10 @@ class EntityIdentityContractTest {
       boolean result = unsaved.equals(saved);
 
       // Assert
-      assertThat(result).isFalse();
+      assertThat(result).as(nameOf(unsaved)).isFalse();
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}]")
     @MethodSource("com.albertsilva.dev.asjcatalog.domain.EntityIdentityContractTest#entities")
     @DisplayName("equals should return false when only other id is null")
     void equalsShouldReturnFalseWhenOnlyOtherIdIsNull(Function<Long, Object> withId) {
@@ -192,7 +194,7 @@ class EntityIdentityContractTest {
       boolean result = saved.equals(unsaved);
 
       // Assert
-      assertThat(result).isFalse();
+      assertThat(result).as(nameOf(saved)).isFalse();
     }
   }
 }

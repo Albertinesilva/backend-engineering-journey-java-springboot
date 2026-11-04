@@ -254,7 +254,7 @@ when(roleRepository.existsById(RoleFactory.OPERATOR_ROLE_ID)).thenReturn(true);
 - **Mock** (objeto falso criado pelo Mockito) só para **colaboradores**: repositórios, outros services, o encoder de senha. DTOs são `record`s simples e vêm das fábricas, não de mocks.
 - **Stub** é o comportamento programado num mock (`when(...).thenReturn(...)`). Com o `MockitoExtension`, um stub que o teste não usa faz o teste falhar (`UnnecessaryStubbingException`), o que ajuda a manter o teste enxuto. Use `lenient()` só quando o stub do `@BeforeEach` serve a todos os testes da classe.
 - **Spy** é um objeto real "espionado": os métodos funcionam de verdade, mas podem ser conferidos com `verify`. Use só quando o resultado final é o mesmo em dois caminhos e é preciso provar qual deles foi seguido, com um comentário explicando o motivo (exemplo: `activateShouldNotChangeUserWhenUserIsAlreadyActive`, no `UserServiceTest`).
-- **`@ParameterizedTest`** roda o mesmo teste com vários valores de entrada. Use quando o comportamento é o mesmo para todos eles (por exemplo, senhas fracas recusadas pelo mesmo motivo), com `name = "{0}"` para que o relatório mostre cada valor. Valores que levam a comportamentos diferentes continuam em testes separados.
+- **`@ParameterizedTest`** roda o mesmo teste com vários valores de entrada. Use quando o comportamento é o mesmo para todos eles (por exemplo, senhas fracas recusadas pelo mesmo motivo), com `name = "[{0}]"`. O Surefire está configurado (`usePhrasedTestCaseMethodName`, no `pom.xml`) para gravar no relatório XML o `@DisplayName` de cada teste seguido do nome do caso, por exemplo `equals should return false when other is null[Token]`. No console, um caso que falha aparece pelo índice (`[5]`); para o nome aparecer também ali, use uma descrição na asserção (`.as(...)`), como no `EntityIdentityContractTest`. Valores que levam a comportamentos diferentes continuam em testes separados.
 
 ```java
 // Evitar
@@ -266,7 +266,7 @@ CategoryUpdateRequest request = CategoryFactory.createCategoryUpdateRequest();
 
 ```java
 // Preferir (um teste por valor no relatório)
-@ParameterizedTest(name = "{0}")
+@ParameterizedTest(name = "[{0}]")
 @ValueSource(strings = { "user.example.com", "user@@example.com", "user@" })
 @DisplayName("isValid should reject email when format is invalid")
 void isValidShouldRejectEmailWhenFormatIsInvalid(String email) {

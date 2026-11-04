@@ -61,7 +61,7 @@ class UniqueEmailForAuthenticatedUserValidatorTest {
   @DisplayName("IsValid Operations")
   class IsValidOperations {
 
-    @ParameterizedTest(name = "e-mail = [{0}]")
+    @ParameterizedTest(name = "[e-mail = {0}]")
     @NullSource
     @ValueSource(strings = "   ")
     @DisplayName("isValid should return true without lookup when email is null or blank")

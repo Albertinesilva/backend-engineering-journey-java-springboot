@@ -111,7 +111,7 @@ class StrongPasswordValidatorTest {
       verifyNoInteractions(context);
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}]")
     @MethodSource("com.albertsilva.dev.asjcatalog.validation.user.validator.StrongPasswordValidatorTest#weakPasswords")
     @DisplayName("isValid should reject password with the broken rules when password is weak")
     void isValidShouldRejectPasswordWithTheBrokenRulesWhenPasswordIsWeak(String scenario, String password,

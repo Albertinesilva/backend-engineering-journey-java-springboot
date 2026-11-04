@@ -181,6 +181,10 @@
 				<configuration>
 					<!-- Tags excluídas do build padrão (dns: testes que consultam o DNS real) -->
 					<excludedGroups>${surefire.excludedGroups}</excludedGroups>
+					<!-- Relatório XML com o @DisplayName de cada teste, inclusive o nome de cada caso parametrizado -->
+					<statelessTestsetReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5Xml30StatelessReporter">
+						<usePhrasedTestCaseMethodName>true</usePhrasedTestCaseMethodName>
+					</statelessTestsetReporter>
 				</configuration>
 			</plugin>
 			<!-- Plugin de testes de integração (classes *IT, executadas no ./mvnw verify) -->

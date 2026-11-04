@@ -113,7 +113,7 @@ class ProductUpdateValidatorTest {
       verifyNoInteractions(context);
     }
 
-    @ParameterizedTest(name = "nome = [{0}]")
+    @ParameterizedTest(name = "[nome = {0}]")
     @NullSource
     @ValueSource(strings = "   ")
     @DisplayName("isValid should skip name uniqueness when name is null or blank")
@@ -162,7 +162,7 @@ class ProductUpdateValidatorTest {
       verifyNoInteractions(productRepository, context);
     }
 
-    @ParameterizedTest(name = "categoryIds = {0}")
+    @ParameterizedTest(name = "[categoryIds = {0}]")
     @NullAndEmptySource
     @DisplayName("isValid should skip category lookup when categoryIds are null or empty")
     void isValidShouldSkipCategoryLookupWhenCategoryIdsAreNullOrEmpty(List<Long> categoryIds) {

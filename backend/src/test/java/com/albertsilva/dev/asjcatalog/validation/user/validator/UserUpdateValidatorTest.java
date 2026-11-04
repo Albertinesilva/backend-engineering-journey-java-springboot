@@ -193,7 +193,7 @@ class UserUpdateValidatorTest {
       verifyNoInteractions(repository, context);
     }
 
-    @ParameterizedTest(name = "e-mail = [{0}]")
+    @ParameterizedTest(name = "[e-mail = {0}]")
     @NullSource
     @ValueSource(strings = "loja.central.example.com")
     @DisplayName("isValid should ignore email in password check when email is null or has no at sign")
@@ -245,7 +245,7 @@ class UserUpdateValidatorTest {
       verify(violationBuilder).addPropertyNode("email");
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}]")
     @MethodSource("com.albertsilva.dev.asjcatalog.validation.user.validator.UserUpdateValidatorTest#passwordsWithPersonalData")
     @DisplayName("isValid should reject password and attach error to password when password has personal data")
     void isValidShouldRejectPasswordAndAttachErrorToPasswordWhenPasswordHasPersonalData(String scenario,

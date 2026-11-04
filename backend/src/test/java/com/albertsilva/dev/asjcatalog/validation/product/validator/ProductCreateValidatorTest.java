@@ -89,7 +89,7 @@ class ProductCreateValidatorTest {
       verifyNoInteractions(context);
     }
 
-    @ParameterizedTest(name = "nome = [{0}]")
+    @ParameterizedTest(name = "[nome = {0}]")
     @NullSource
     @ValueSource(strings = "   ")
     @DisplayName("isValid should skip name uniqueness when name is null or blank")

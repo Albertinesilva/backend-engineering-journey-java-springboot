@@ -126,7 +126,7 @@ class ValidEmailValidatorTest {
       verifyInvalidEmailViolation();
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}]")
     @ValueSource(strings = {
         "user.example.com",
         "user@@example.com",

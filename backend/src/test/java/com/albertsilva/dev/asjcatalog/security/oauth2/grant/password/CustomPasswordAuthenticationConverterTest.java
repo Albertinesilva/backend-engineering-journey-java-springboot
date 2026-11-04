@@ -179,7 +179,7 @@ class CustomPasswordAuthenticationConverterTest {
       assertThat(result).isNull();
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}]")
     @MethodSource("com.albertsilva.dev.asjcatalog.security.oauth2.grant.password.CustomPasswordAuthenticationConverterTest#invalidRequests")
     @DisplayName("convert should throw invalid request when parameters are invalid")
     void convertShouldThrowInvalidRequestWhenParametersAreInvalid(String scenario, MockHttpServletRequest request) {

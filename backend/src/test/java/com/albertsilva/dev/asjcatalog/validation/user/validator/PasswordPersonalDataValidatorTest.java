@@ -178,7 +178,7 @@ class PasswordPersonalDataValidatorTest {
       verifyNoInteractions(context);
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}]")
     @MethodSource("com.albertsilva.dev.asjcatalog.validation.user.validator.PasswordPersonalDataValidatorTest#passwordsWithPersonalData")
     @DisplayName("isValid should reject password and attach error to password when password has personal data")
     void isValidShouldRejectPasswordAndAttachErrorToPasswordWhenPasswordHasPersonalData(String scenario,
