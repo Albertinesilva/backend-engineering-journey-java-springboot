@@ -36,7 +36,7 @@ Clone o repositório e entre na branch do capítulo (os comandos são iguais no 
 ```powershell
 git clone https://github.com/Albertinesilva/backend-engineering-journey-java-springboot.git
 cd backend-engineering-journey-java-springboot
-git checkout chapter-04-domain-orm
+git checkout chapter-05-jacoco
 ```
 
 **Os comandos deste guia partem da raiz do repositório**, a pasta `backend-engineering-journey-java-springboot` criada pelo `git clone`. O código da aplicação fica na subpasta `backend`, e é nela que o comando `cd backend` entra na [seção 4](#4-subir-a-aplicação).

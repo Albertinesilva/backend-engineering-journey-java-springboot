@@ -1,8 +1,8 @@
-<h1 align="center">🏛️ Capítulo 04 — Domain Modeling, ORM, Business Use Cases & Data Access</h1>
+<h1 align="center">🧪 Capítulo 05 — Test Coverage with JaCoCo & Test Quality</h1>
 
 <p align="justify">
 <em>
-This chapter focuses on designing a robust domain model, implementing real business use cases, optimizing database access strategies, and applying advanced JPA/Hibernate techniques to build enterprise-grade backend applications aligned with real-world business requirements.
+This chapter measures what the automated tests actually execute, turns code coverage into a build gate, and raises the quality of the whole test suite: unit, web and integration tests rewritten to a single standard, scenarios tied to open issues made explicit, and a test suite that no longer depends on the network.
 </em>
 </p>
 
@@ -12,23 +12,17 @@ This chapter focuses on designing a robust domain model, implementing real busin
 
 <img src="https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
 
-<img src="https://img.shields.io/badge/Persistence-Spring_Data_JPA-success?style=for-the-badge" />
+<img src="https://img.shields.io/badge/JUnit-5-25A162?style=for-the-badge&logo=junit5&logoColor=white" />
 
-<img src="https://img.shields.io/badge/ORM-Hibernate-59666C?style=for-the-badge&logo=hibernate&logoColor=white" />
+<img src="https://img.shields.io/badge/Mockito-5-78A641?style=for-the-badge" />
 
-<img src="https://img.shields.io/badge/Database-PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white" />
+<img src="https://img.shields.io/badge/AssertJ-3-0A66C2?style=for-the-badge" />
 
-<img src="https://img.shields.io/badge/Queries-JPQL%20%7C%20Native_SQL-blue?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Coverage-JaCoCo_0.8.15-red?style=for-the-badge" />
 
-<img src="https://img.shields.io/badge/Performance-N%2B1_Select-red?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Build-Maven_Wrapper-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white" />
 
-<img src="https://img.shields.io/badge/Architecture-DDD--inspired-purple?style=for-the-badge" />
-
-<img src="https://img.shields.io/badge/Account_Management-Sign_Up%20%7C%20Password_Recovery-success?style=for-the-badge" />
-
-<img src="https://img.shields.io/badge/Email-Spring_Mail-yellow?style=for-the-badge" />
-
-<img src="https://img.shields.io/badge/Authentication-OAuth2%20%7C%20JWT-black?style=for-the-badge" />
+<img src="https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" />
 
 <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" /></a>
 
@@ -38,9 +32,7 @@ This chapter focuses on designing a robust domain model, implementing real busin
 
 <p align="justify">
 <em>
-Neste capítulo, o projeto <strong>ASJCatalog</strong> vai além do CRUD e implementa o ciclo de vida completo da conta do usuário: cadastro, ativação, recuperação e redefinição de senha e gestão dos próprios dados, com e-mails transacionais e tokens de negócio.
-
-A camada de persistência evolui com <strong>Spring Data JPA</strong>, <strong>JPQL</strong>, consultas nativas, projeções, paginação e filtros dinâmicos, e a listagem de produtos elimina o problema <strong>N+1 Select</strong>. O domínio passa a ser organizado em módulos, com conceitos inspirados em <strong>Domain-Driven Design (DDD)</strong>.
+Neste capítulo, o projeto <strong>ASJCatalog</strong> passa a medir o que os testes realmente executam. O <strong>JaCoCo</strong> gera relatórios de cobertura dos testes de unidade, dos testes de integração e dos dois juntos, e o build passa a falhar se a cobertura cair abaixo de um limite. Ao mesmo tempo, toda a suíte foi revisada para um padrão único de qualidade, os cenários ligados a issues abertas ficaram registrados nos próprios testes e os testes deixaram de depender da internet.
 
 O nome <strong>ASJCatalog</strong> vem das iniciais de <strong>Albert Silva de Jesus</strong>: o projeto nasceu da base do <strong>DSCatalog</strong>, do curso DevSuperior, e evoluiu de forma independente.
 </em>
@@ -48,7 +40,7 @@ O nome <strong>ASJCatalog</strong> vem das iniciais de <strong>Albert Silva de J
 </p>
 
 <p align="center">
-<a href="docs/HOME.md"><strong>📖 Documentação técnica</strong></a> · <a href="docs/guides/GETTING-STARTED.md">🚀 Primeiros Passos</a> · <a href="docs/guides/ARCHITECTURE.md">🏗️ Arquitetura</a> · <a href="docs/guides/DATA-ACCESS.md">🔍 Acesso a Dados</a>
+<a href="docs/HOME.md"><strong>📖 Documentação técnica</strong></a> · <a href="docs/guides/GETTING-STARTED.md">🚀 Primeiros Passos</a> · <a href="docs/guides/TESTING.md#9-cobertura-com-jacoco">🧪 Testes e Cobertura</a> · <a href="docs/guides/DESIGN-DECISIONS.md">🧭 Decisões Técnicas</a> · <a href="https://asjcatalog-jacoco.netlify.app/">📊 Relatório JaCoCo</a>
 </p>
 
 ---
@@ -59,317 +51,593 @@ O nome <strong>ASJCatalog</strong> vem das iniciais de <strong>Albert Silva de J
 
 ---
 
-| 🧩 Module                                                                       | ⚡ Description                                            |
-| ------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [📚 Contexto da Implementação](#-contexto-da-implementação)                     | Ponto de partida e motivação do capítulo                  |
-| [🎯 Objetivos](#-objetivos)                                                     | Metas técnicas do capítulo                                |
-| [🚀 Como Executar](#-como-executar)                                             | Pré-requisitos e comandos para rodar o projeto localmente |
-| [📂 Organização dos Packages](#-organização-dos-packages)                       | Pacotes da aplicação e suas responsabilidades             |
-| [🧩 Domínio e Modelagem ORM](#-domínio-e-modelagem-orm)                         | Módulos do domínio, entidades e relacionamentos           |
-| [🧠 Conceitos Fundamentais Trabalhados](#-conceitos-fundamentais-trabalhados)   | Conceitos de modelagem e persistência aplicados           |
-| [🛠️ Tecnologias e Frameworks Utilizados](#️-tecnologias-e-frameworks-utilizados) | Stack tecnológica e versões                               |
-| [🎯 Casos de Uso](#-casos-de-uso)                                               | Fluxos de negócio implementados                           |
-| [🔍 Consultas e Otimizações](#-consultas-e-otimizações)                         | A eliminação do N+1 Select na listagem de produtos        |
-| [📧 Integração com E-mail](#-integração-com-e-mail)                             | E-mails transacionais e tokens de conta                   |
-| [🧱 Boas Práticas Aplicadas](#-boas-práticas-aplicadas)                         | Práticas de engenharia adotadas no projeto                |
-| [📈 Evolução Arquitetural](#-evolução-arquitetural)                             | Principais evoluções, inclusive além do tema do capítulo  |
-| [🎓 Aprendizados](#-aprendizados)                                               | Conhecimentos consolidados ao longo do capítulo           |
-| [💼 Competências Técnicas Desenvolvidas](#-competências-técnicas-desenvolvidas) | Competências praticadas na implementação                  |
-| [🏁 Conclusão](#-conclusão)                                                     | Considerações finais                                      |
-| [📖 Documentação Técnica](#-documentação-técnica)                               | Onde encontrar os guias técnicos do backend               |
-| [📚 Referências Técnicas](#-referências-técnicas)                               | Documentações oficiais e materiais utilizados             |
-| [👨‍💻 Autor](#-autor)                                                             | Informações sobre o autor da documentação                 |
-| [📎 Contato](#-contato)                                                         | Canais de contato e redes profissionais                   |
+| 🧩 Module                                                                       | ⚡ Description                                                 |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| [📚 Contexto da Implementação](#-contexto-da-implementação)                     | Ponto de partida e motivação do capítulo                       |
+| [🎯 Objetivos](#-objetivos)                                                     | Metas técnicas do capítulo                                     |
+| [🏆 Resultados](#-resultados)                                                   | Relatório geral, evolução antes × depois e relatório publicado |
+| [🚀 Como Executar](#-como-executar)                                             | Rodar os testes e abrir o relatório de cobertura               |
+| [🔬 Abordagens de Teste](#-abordagens-de-teste)                                 | Caixa branca, caixa preta e o caso intermediário               |
+| [🎭 Mockito na Prática](#-mockito-na-prática)                                   | `@Mock`, `@InjectMocks` e `spy` com exemplos do projeto        |
+| [📐 Tipos de Cobertura](#-tipos-de-cobertura)                                   | Linhas, branches, métodos e complexidade ciclomática           |
+| [📊 Como Ler o Relatório](#-como-ler-o-relatório)                               | Colunas, cores e diamantes, com os prints do `UserService`     |
+| [🔧 Configuração do JaCoCo no pom.xml](#-configuração-do-jacoco-no-pomxml)      | Cada execução do plugin, exclusões e limites                   |
+| [🔀 Unidade, Integração e Consolidado](#-unidade-integração-e-consolidado)      | Por que o relatório consolidado é o principal                  |
+| [🎯 100% Não É Meta](#-100-não-é-meta)                                          | Exclusões, cenários pendentes e código sem uso                 |
+| [✅ Padrão de Qualidade dos Testes](#-padrão-de-qualidade-dos-testes)           | As regras que toda a suíte passou a seguir                     |
+| [🌐 Testes sem Dependência de Rede](#-testes-sem-dependência-de-rede)           | A consulta de MX fora dos testes (#20)                         |
+| [💡 Lições do Capítulo](#-lições-do-capítulo)                                   | Cobertura alta sem cenário completo e cobertura acidental      |
+| [🧩 Fora do Plano](#-fora-do-plano)                                             | Pipeline de CI e a primeira contribuição externa               |
+| [🎓 Aprendizados](#-aprendizados)                                               | Conhecimentos consolidados ao longo do capítulo                |
+| [💼 Competências Técnicas Desenvolvidas](#-competências-técnicas-desenvolvidas) | Competências praticadas na implementação                       |
+| [🏁 Conclusão](#-conclusão)                                                     | Considerações finais                                           |
+| [📖 Documentação Técnica](#-documentação-técnica)                               | Onde encontrar os guias técnicos do backend                    |
+| [📚 Referências Técnicas](#-referências-técnicas)                               | Documentações oficiais e materiais utilizados                  |
+| [👨‍💻 Autor](#-autor)                                                             | Informações sobre o autor da documentação                      |
+| [📎 Contato](#-contato)                                                         | Canais de contato e redes profissionais                        |
 
 ---
 
 ## 📚 Contexto da Implementação
 
-Com a autenticação e a autorização prontas (Spring Security, OAuth2 e JWT), o ASJCatalog precisava de fluxos de negócio próximos dos de uma aplicação real. Esses fluxos aumentaram o domínio e o volume de consultas, e o capítulo reorganiza as entidades em módulos e passa a planejar cada acesso ao banco.
+No fim do capítulo 04, o ASJCatalog tinha 301 testes de unidade e 150 testes de integração, e todos passavam. Faltava responder a uma pergunta simples: **quanto do código esses testes executam, e o que fica de fora?**
+
+Também havia problemas que só uma revisão da suíte mostraria: testes com nomes que não diziam o método testado, asserções que só conferiam se um valor existia, dados escritos à mão em cada teste e 19 testes que falhavam sem internet, porque a validação de e-mail consultava o DNS de verdade.
 
 ---
 
 ## 🎯 Objetivos
 
-- Reorganizar o domínio em módulos e evoluir a modelagem ORM.
-- Implementar o ciclo de vida completo da conta do usuário.
-- Integrar e-mails transacionais com tokens de ativação e de recuperação de senha.
-- Escrever consultas com JPQL, SQL nativo e projeções, com paginação e filtros.
-- Eliminar o problema N+1 na listagem de produtos.
-- Manter as regras de negócio nos services e nas entidades, fora dos controllers.
+- Medir a cobertura dos testes de unidade, dos testes de integração e dos dois juntos com o JaCoCo.
+- Fazer o build falhar quando a cobertura cair abaixo de um limite mínimo.
+- Revisar toda a suíte para um padrão único de qualidade, documentado no guia de testes.
+- Registrar nos próprios testes os cenários que dependem de issues abertas, sem congelar comportamento errado.
+- Remover a dependência de rede dos testes, pré-requisito para rodá-los num pipeline de CI.
+
+---
+
+## 🏆 Resultados
+
+O relatório consolidado do fim do capítulo, com todos os pacotes do projeto e a linha **Total**:
+
+<p align="center">
+<img src="docs/assets/imgs/jacoco-report.png" alt="Relatório consolidado do JaCoCo com todos os pacotes e o Total: 95% de instruções, 92% de branches e 96% de linhas" />
+</p>
+
+**Evolução do capítulo.** A coluna "Início" foi medida no commit `b1cb5cf`, o primeiro com o JaCoCo; a coluna "Fim", no commit `48ba709`.
+
+| Métrica                                  | Início (`b1cb5cf`)                   | Fim (`48ba709`)                   |
+| ---------------------------------------- | ------------------------------------ | --------------------------------- |
+| Testes de unidade                        | 301                                  | 453                               |
+| Testes de integração                     | 150                                  | 150                               |
+| Linhas, relatório consolidado            | 88,7% (1411 de 1591)                 | 96,2% (1539 de 1600)              |
+| Branches, relatório consolidado          | 71,1% (323 de 454)                   | 92,7% (421 de 454)                |
+| Linhas, relatório de unidade             | 79,0%                                | 95,6%                             |
+| Branches, relatório de unidade           | 64,1%                                | 92,3%                             |
+| Linhas dos mappers, relatório de unidade | de 2% a 5%                           | de 97,8% a 100%                   |
+| Limite mínimo do build                   | nenhum                               | 0,93 de linhas e 0,89 de branches |
+| Testes que falham sem internet           | 19 (8 de unidade e 11 de integração) | 0                                 |
+
+Os testes de integração continuam 150, mas foram todos revisados para o padrão de qualidade. O total de linhas passou de 1591 para 1600 porque a consulta de DNS ganhou uma classe própria (veja [Testes sem Dependência de Rede](#-testes-sem-dependência-de-rede)).
+
+> [!TIP]
+> O relatório completo, navegável até o código colorido de cada classe, está publicado em **[asjcatalog-jacoco.netlify.app](https://asjcatalog-jacoco.netlify.app/)**. É o relatório **consolidado**, gerado a partir do commit `48ba709`, e é um retrato fixo: ele não é atualizado a cada push. A publicação automática do relatório a cada build é um tema para o capítulo de Docker e CI/CD.
 
 ---
 
 ## 🚀 Como Executar
 
-**Pré-requisitos:** JDK 17, PostgreSQL com um banco chamado `asjcatalog` e as variáveis de ambiente `POSTGRES_DATASOURCE_USER` e `POSTGRES_DATASOURCE_PASSWORD` com o usuário e a senha do banco.
+**Pré-requisito:** JDK 17. Os testes usam o banco H2 em memória e não precisam de PostgreSQL, de servidor de e-mail nem de internet.
 
 **PowerShell**:
 
 ```powershell
 git clone https://github.com/Albertinesilva/backend-engineering-journey-java-springboot.git
-cd backend-engineering-journey-java-springboot; git checkout chapter-04-domain-orm
+cd backend-engineering-journey-java-springboot; git checkout chapter-05-jacoco
 cd backend
-.\mvnw spring-boot:run '-Dspring-boot.run.arguments=--spring.mail.test-connection=false'
+.\mvnw clean verify
+Start-Process .\target\site\jacoco-merged\index.html
 ```
 
 **bash**:
 
 ```bash
 git clone https://github.com/Albertinesilva/backend-engineering-journey-java-springboot.git
-cd backend-engineering-journey-java-springboot && git checkout chapter-04-domain-orm
+cd backend-engineering-journey-java-springboot && git checkout chapter-05-jacoco
 cd backend
-./mvnw spring-boot:run -Dspring-boot.run.arguments=--spring.mail.test-connection=false
+./mvnw clean verify
+xdg-open target/site/jacoco-merged/index.html
 ```
 
-O último comando sobe a aplicação sem exigir um servidor de e-mail (SMTP). A API fica em `http://localhost:8080`, e a documentação interativa (Swagger) em `http://localhost:8080/docs-asjcatalog.html`.
+O `clean verify` apaga os resultados anteriores, roda os testes de unidade e de integração, gera os três relatórios em `backend/target/site/` e confere o limite mínimo de cobertura. No macOS, troque `xdg-open` por `open`.
 
 > [!TIP]
-> O passo a passo completo, com criação do banco, usuários de exemplo, obtenção de token e solução de problemas comuns, está em [Primeiros Passos](docs/guides/GETTING-STARTED.md). Para rodar os testes: `./mvnw verify` (veja [Testes](docs/guides/TESTING.md)).
+> Para subir a aplicação (perfil `dev`, com PostgreSQL), siga [Primeiros Passos](docs/guides/GETTING-STARTED.md). Todos os comandos de teste, inclusive para rodar uma única classe, estão em [Testes](docs/guides/TESTING.md#3-comandos).
 
 ---
 
-## 📂 Organização dos Packages
+## 🔬 Abordagens de Teste
 
-O código fica em `backend/src/main/java`, no pacote base `com.albertsilva.dev.asjcatalog`:
+Um teste pode olhar para o código de duas formas, e o ASJCatalog usa as duas.
 
-| Package      | Responsabilidade                                |
-| ------------ | ----------------------------------------------- |
-| `config`     | Documentação OpenAPI e idiomas das mensagens    |
-| `domain`     | Entidades e regras de negócio, em módulos       |
-| `dto`        | Entrada (`request`) e saída (`response`) da API |
-| `mapper`     | Conversão entre entidades e DTOs                |
-| `projection` | Projeções das consultas otimizadas              |
-| `repository` | Acesso a dados com Spring Data JPA              |
-| `security`   | OAuth2, JWT e leitura do usuário autenticado    |
-| `service`    | Casos de uso e exceções de negócio              |
-| `util`       | Reordenação de resultados usada contra o N+1    |
-| `validation` | Anotações e validadores customizados            |
-| `web`        | Controllers REST e tratamento global de erros   |
+**Caixa branca** é o teste que conhece o código por dentro: sabe quais colaboradores a classe usa e confere como ela os chama. São os testes de unidade, como o `UserServiceTest`. Ele troca o repositório por um objeto falso e confere que o método saiu cedo, sem repetir a ativação:
 
-> [!NOTE]
-> A árvore completa de pacotes, o papel de cada tipo de classe e o caminho de uma requisição do controller ao banco estão em [Arquitetura](docs/guides/ARCHITECTURE.md).
+```java
+// UserServiceTest: o teste sabe que activate() não deve ser chamado de novo
+service.activate(EXISTING_ID);
 
----
-
-## 🧩 Domínio e Modelagem ORM
-
-Nas primeiras versões, as entidades ficavam num pacote `entity` e serviam só para mapear tabelas. Neste capítulo, o pacote passou a se chamar `domain`, foi dividido em módulos por assunto e as entidades ganharam regras de negócio próprias. O mapeamento usa **Jakarta Persistence (JPA)**, com o **Hibernate** como provedor ORM.
-
-| Módulo     | Entidades                                              | Responsabilidade                                                  |
-| ---------- | ------------------------------------------------------ | ----------------------------------------------------------------- |
-| `catalog`  | `Category`, `Product`                                  | Catálogo de produtos e suas categorias                            |
-| `user`     | `User`, `Role`                                         | Usuários e perfis de acesso (RBAC, controle de acesso por papéis) |
-| `recovery` | `Token`, `Email` e as enums `TokenType`, `EmailStatus` | Ativação de conta, recuperação de senha e registro dos e-mails    |
-
-```mermaid
-classDiagram
-    Product "*" -- "*" Category : tb_product_category
-    User "*" --> "*" Role : tb_user_role
-    User "1" -- "*" Token : user_id
-    class Email
+assertThat(user.isActive()).isTrue();
+verify(user, never()).activate();
 ```
 
-`User` implementa `UserDetails` e `Role` implementa `GrantedAuthority`, do Spring Security. `Email` não tem relacionamento com `User`.
+**Caixa preta** é o teste que só conhece a entrada e a saída: faz uma requisição HTTP e confere a resposta, sem saber que classes existem por trás dela. O `AccountFlowIT` testa assim os fluxos de conta: cadastra, ativa e faz login por HTTP, como faria um cliente da API. O `ResourceServerAuthorizationIT` é um exemplo puro:
 
-> [!NOTE]
-> Campos, relacionamentos, factory methods e regras de cada entidade estão em [Modelo de Domínio](docs/guides/DOMAIN-MODEL.md).
+```java
+// ResourceServerAuthorizationIT: só a requisição e a resposta
+ResultActions result = mockMvc.perform(get(USERS_URL)
+    .with(bearerToken(operatorToken))
+    .accept(MediaType.APPLICATION_JSON));
 
----
-
-## 🧠 Conceitos Fundamentais Trabalhados
-
-| 🧩 Conceito                           | 📖 Aplicação no ASJCatalog                                                                                                               | 🎯 Objetivo                                          |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| **Domain Modeling (DDD-inspired)**    | Módulos `catalog`, `user` e `recovery`, com regras dentro das entidades, como `User.activate()` e `Token.validate()`.                    | Aproximar o código da linguagem do negócio.          |
-| **ORM com JPA e Hibernate**           | Entidades Java mapeadas para tabelas do PostgreSQL, com o Hibernate como provedor.                                                       | Reduzir o SQL manual nas operações de persistência.  |
-| **Relacionamentos JPA**               | `@ManyToMany` entre produtos e categorias e entre usuários e roles; `@OneToMany`/`@ManyToOne` entre usuários e tokens.                   | Representar as relações do domínio.                  |
-| **Spring Data JPA**                   | Repositórios que estendem `JpaRepository`, com consultas derivadas como `findByNameContainingIgnoreCase()`.                              | Simplificar o acesso aos dados.                      |
-| **JPQL**                              | Carregamento de produtos com suas categorias via `JOIN FETCH`.                                                                           | Consultar pelas entidades, sem depender do banco.    |
-| **Native SQL**                        | Busca paginada de produtos por nome e categorias e busca do usuário com suas roles no login.                                             | Controlar o SQL em consultas específicas.            |
-| **Projection**                        | `ProductProjection` e `UserDetailsProjection` trazem só as colunas usadas.                                                               | Reduzir os dados lidos do banco.                     |
-| **Paginação e filtros dinâmicos**     | `Pageable` e `Page` nas listagens de produtos, categorias e usuários, com filtros opcionais.                                             | Escalar as consultas sem duplicar código.            |
-| **Fetch Join e N+1**                  | A listagem de produtos usa duas consultas controladas em vez de uma consulta por produto.                                                | Evitar consultas extras do carregamento lazy.        |
-| **Service Layer e transações**        | Seis services no pacote `service`, com `@Transactional`; o `AuthenticatedUserService`, em `security.auth`, lê o usuário do JWT.          | Centralizar os casos de uso e garantir consistência. |
-| **DTO e Mapper**                      | `record`s de entrada e saída e mappers dedicados; as entidades não saem pela API.                                                        | Desacoplar o domínio do contrato da API.             |
-| **Business Tokens e Factory Methods** | `Token.activationToken()` e `Token.passwordRecoveryToken()` criam tokens com validade; a entidade confere tipo, desativação e expiração. | Encapsular as regras dos tokens na própria entidade. |
-
----
-
-## 🛠️ Tecnologias e Frameworks Utilizados
-
-| 🛠️ Tecnologia                             | 📦 Versão | 📖 Utilização no Projeto                                | 🎯 Objetivo                                          |
-| ----------------------------------------- | --------- | ------------------------------------------------------- | ---------------------------------------------------- |
-| **Java**                                  | 17 (LTS)  | Linguagem principal                                     | Base da implementação, com recursos como `record`.   |
-| **Spring Boot**                           | 3.5       | Framework principal do backend                          | Configuração, inicialização e execução da aplicação. |
-| **Spring Web (Spring MVC)**               | 6.2       | API REST                                                | Exposição dos endpoints HTTP.                        |
-| **Spring Data JPA**                       | 3.5       | Camada de persistência                                  | Repositórios e consultas.                            |
-| **Hibernate ORM**                         | 6.6       | Implementação do JPA                                    | Mapeamento objeto-relacional.                        |
-| **PostgreSQL**                            | 42.7      | Banco dos perfis `dev` e `prod` (versão do driver JDBC) | Persistência relacional.                             |
-| **H2 Database**                           | 2.3       | Banco em memória, **apenas no perfil `test`**           | Testes automatizados sem banco externo.              |
-| **Flyway**                                | 11.7      | Versionamento do banco                                  | Criação e evolução do schema por migrations.         |
-| **Bean Validation (Hibernate Validator)** | 8.0       | Validação dos dados de entrada                          | Validações declarativas e validadores customizados.  |
-| **Spring Security**                       | 6.5       | Segurança da aplicação                                  | Autenticação e autorização dos recursos REST.        |
-| **Spring Authorization Server**           | 1.5       | Servidor OAuth2                                         | Emissão de access tokens e refresh tokens.           |
-| **OAuth2 Resource Server**                | 6.5       | Validação dos tokens JWT                                | Proteção dos endpoints com tokens assinados.         |
-| **JWT (JSON Web Token)**                  | —         | Tokens assinados com RS256                              | Representar a identidade e as permissões do usuário. |
-| **Spring Mail**                           | 6.2       | Envio de e-mails com `JavaMailSender`                   | E-mails de ativação de conta e recuperação de senha. |
-| **Thymeleaf**                             | 3.1       | Templates HTML                                          | Corpo HTML dos e-mails.                              |
-| **SpringDoc OpenAPI**                     | 2.8       | Documentação automática                                 | Especificação OpenAPI e Swagger UI.                  |
-| **Maven (Wrapper)**                       | 3.9       | Build do projeto (`mvnw`)                               | Dependências e ciclo de build sem instalar o Maven.  |
-| **JUnit**                                 | 5.12      | Testes automatizados                                    | Base dos testes de unidade e de integração.          |
-| **Mockito**                               | 5.17      | Testes de unidade                                       | Substituir dependências por mocks.                   |
-| **Spring Security Test e MockMvc**        | 6.5 / 6.2 | Testes de segurança e da camada web                     | Simular requisições, autenticação e autorização.     |
-| **Maven Failsafe**                        | 3.5       | Testes de integração                                    | Executar as classes `*IT` na fase `verify`.          |
-| **Spring Boot DevTools**                  | 3.5       | Desenvolvimento local                                   | Reinício automático ao alterar o código.             |
-
----
-
-## 🎯 Casos de Uso
-
-Além do CRUD, o ASJCatalog implementa fluxos completos de negócio. Os controllers expõem os endpoints e disparam a validação da entrada (`@Valid`); os services aplicam as regras de negócio, abrem as transações e acionam os tokens e os e-mails.
-
-| Caso de Uso                        | Descrição                                                                                                                               |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| 👤 **Gerenciamento de Usuários**   | Cadastro, consulta, atualização, ativação, desativação e remoção de usuários por administradores, com criptografia de senhas e perfis.  |
-| 🛍️ **Gerenciamento de Produtos**   | Cadastro, consulta, atualização, ativação, desativação e remoção de produtos, com categorias, paginação e filtros por nome e categoria. |
-| 🗂️ **Gerenciamento de Categorias** | Cadastro, consulta, atualização, ativação, desativação e remoção das categorias do catálogo.                                            |
-| 🔐 **Registro de Conta**           | Criação de novas contas com a role `ROLE_OPERATOR`, geração de token de ativação e envio de e-mail de confirmação.                      |
-| ✉️ **Ativação de Conta**           | Validação do token de ativação, habilitação da conta e invalidação do token utilizado.                                                  |
-| 🔄 **Reenvio de Ativação**         | Geração de um novo token de ativação para usuários que ainda não confirmaram o cadastro.                                                |
-| 🔑 **Recuperação de Senha**        | Solicitação de redefinição de senha mediante geração de token temporário e envio de e-mail transacional.                                |
-| 🔒 **Redefinição de Senha**        | Validação do token de recuperação, atualização segura da senha e invalidação do token utilizado.                                        |
-| 👤 **Usuário Autenticado**         | Consulta e atualização dos próprios dados e troca da própria senha, a partir do usuário identificado no token.                          |
-| 🔑 **Autenticação**                | Login com OAuth2 e JWT, renovação por refresh token e autorização baseada em papéis (RBAC).                                             |
-
-> [!NOTE]
-> Os fluxos de conta estão em [Fluxos de Conta](docs/guides/ACCOUNT-FLOWS.md), todas as rotas em [Endpoints da API](docs/guides/API-ENDPOINTS.md) e a responsabilidade de cada service em [Arquitetura](docs/guides/ARCHITECTURE.md#services).
-
----
-
-## 🔍 Consultas e Otimizações
-
-O destaque de desempenho do capítulo é a listagem de produtos, que combina SQL nativo, projeção, JPQL e paginação.
-
-### 🚀 Eliminação do N+1 Select
-
-O **problema N+1** acontece quando o sistema faz 1 consulta para buscar uma lista e depois mais 1 consulta para cada item, para carregar dados relacionados. Com 20 produtos na página, seriam 21 consultas só para trazer as categorias.
-
-A listagem de produtos resolve isso com **duas consultas controladas e uma reordenação**:
-
-```mermaid
-flowchart LR
-    A["1ª consulta (Native SQL + Projection)<br/>página de ids e nomes"] --> B["2ª consulta (JPQL + JOIN FETCH)<br/>produtos com categorias"]
-    B --> C["IdentifiableUtils.reorderByReference<br/>ordem da paginação"]
-    C --> D["DTOs de resposta"]
+result
+    .andExpect(status().isForbidden())
+    .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
 ```
 
-1. A consulta nativa aplica filtros e paginação e devolve só o id e o nome de cada produto (`ProductProjection`).
-2. A consulta JPQL com `JOIN FETCH` carrega esses produtos e suas categorias de uma vez.
-3. `IdentifiableUtils.reorderByReference()` devolve a ordem original da paginação.
+**O caso intermediário.** Muitos testes de integração chamam a API por HTTP e, depois, consultam o banco para conferir o que foi gravado. A requisição é de caixa preta, mas a conferência conhece a estrutura interna (o repositório e a entidade). No `CategoryControllerIT`, o `POST` é conferido pela resposta e também pelo registro salvo:
 
-> [!TIP]
-> Os tipos de consulta, as projeções, a paginação, o uso de `open-in-view=false` e as transações estão em [Acesso a Dados](docs/guides/DATA-ACCESS.md).
+```java
+// CategoryControllerIT: depois da requisição, confere o banco
+assertThat(categoryRepository.count()).isEqualTo(initialCount + 1);
+assertThat(categoryRepository.findById(id).orElseThrow())
+    .extracting(Category::getName, Category::getDescription)
+    .containsExactly(request.name(), request.description());
+```
+
+O próprio `AccountFlowIT` faz isso num ponto: o e-mail de ativação é simulado, então o teste lê o token de ativação no `TokenRepository` em vez de abri-lo numa caixa de entrada.
 
 ---
 
-## 📧 Integração com E-mail
+## 🎭 Mockito na Prática
 
-Os fluxos de ativação de conta e de recuperação de senha enviam e-mails HTML com **Spring Mail** e templates **Thymeleaf**:
+O **Mockito** cria objetos falsos para isolar a classe testada dos seus colaboradores. No `UserServiceTest`:
+
+```java
+@ExtendWith(MockitoExtension.class)
+class UserServiceTest {
+
+  @InjectMocks
+  private UserService service;
+
+  @Mock
+  private UserRepository repository;
+
+  @Mock
+  private RoleRepository roleRepository;
+
+  @Mock
+  private UserMapper userMapper;
+
+  @Mock
+  private PasswordEncoder passwordEncoder;
+```
+
+- **`@Mock`** cria um objeto falso: todos os métodos existem, mas não fazem nada e devolvem valores vazios (`null`, `0`, `false`), até que o teste programe uma resposta com `when(...).thenReturn(...)`. Aqui, o `UserRepository` falso devolve o usuário que o teste quiser, sem banco.
+- **`@InjectMocks`** cria a classe testada de verdade (`UserService`) e entrega a ela os mocks pelo construtor. O código do service roda inteiro; só os colaboradores são falsos.
+- **Spy** é um objeto **real** "espionado": os métodos funcionam de verdade, mas cada chamada fica registrada para ser conferida com `verify`. O Mockito oferece a anotação `@Spy` e o método `spy(objeto)`; o projeto usa o método, porque o objeto espionado é criado em cada teste, com um estado próprio.
+
+**Por que um spy nos testes de "status já definido".** O `UserService.activate` só ativa o usuário se ele estiver inativo. No teste do usuário que **já está ativo**, o estado final é o mesmo nos dois caminhos possíveis (ativo), então conferir `isActive()` não prova nada. O spy permite provar que o método saiu cedo, sem chamar `activate()` na entidade:
+
+```java
+// UserServiceTest.activateShouldNotChangeUserWhenUserIsAlreadyActive
+// O spy é necessário porque o estado final (ativo) é o mesmo nos dois
+// caminhos; só o verify prova que o método saiu cedo.
+User user = spy(UserFactory.createUser());
+user.setId(EXISTING_ID);
+
+when(repository.findById(EXISTING_ID)).thenReturn(Optional.of(user));
+
+service.activate(EXISTING_ID);
+
+assertThat(user.isActive()).isTrue();
+verify(user, never()).activate();
+```
+
+O mesmo recurso aparece nos testes de `activate` e `deactivate` do `CategoryServiceTest` e do `ProductServiceTest`.
+
+---
+
+## 📐 Tipos de Cobertura
+
+O JaCoCo conta a cobertura de várias formas. Os exemplos abaixo são do relatório consolidado do fim do capítulo.
+
+**Cobertura de linhas (*line coverage*).** Uma linha conta como coberta quando ao menos uma instrução dela foi executada. No `UserService.findRolesByIdsOrThrow`, 5 das 6 linhas com código foram executadas; a que falta é o `return Collections.emptySet()`.
+
+**Cobertura de branches (*branch coverage*).** Um *branch* é cada caminho possível de uma decisão. Neste método há seis:
+
+```java
+private Set<Role> findRolesByIdsOrThrow(Set<Long> roleIds) {
+
+  if (roleIds == null || roleIds.isEmpty()) {   // 4 branches: cada condição verdadeira ou falsa
+    return Collections.emptySet();
+  }
+
+  Set<Role> roles = new HashSet<>(roleRepository.findAllById(roleIds));
+
+  if (roles.size() != roleIds.size()) {          // 2 branches
+    throw new ResourceNotFoundException("error.role.ids.notFound");
+  }
+
+  return roles;
+}
+```
+
+Os testes passam por 4 dos 6 (66%): nunca enviam `roleIds` nulo nem vazio. A linha do primeiro `if` foi executada, mas a decisão não foi testada por completo. É por isso que a cobertura de linhas sozinha engana.
+
+**Cobertura de métodos (*method coverage*).** Um método conta como coberto quando ao menos uma instrução dele foi executada. O `Token.isValid()` aparece com 0%: nenhum código do projeto o chama, e ele está registrado como código sem uso na #25.
+
+```java
+public boolean isValid() {
+  return !disabled && !isExpired();
+}
+```
+
+**Complexidade ciclomática (coluna Cxty).** É o número mínimo de caminhos diferentes por um método: 1 para um método sem decisões, mais 1 para cada decisão. O `findRolesByIdsOrThrow` tem três decisões (`roleIds == null`, `roleIds.isEmpty()` e `roles.size() != roleIds.size()`), então seu Cxty é **4**. O relatório mostra **2** desses 4 caminhos sem teste. O `Token.isValid()` tem duas decisões (`!disabled` e `!isExpired()`) e Cxty 3. Quanto maior o Cxty, mais testes o método precisa para ter todos os caminhos conferidos.
+
+---
+
+## 📊 Como Ler o Relatório
+
+**As colunas.** Para cada pacote, classe ou método, o relatório mostra o que **não** foi coberto (colunas "Missed") e a porcentagem coberta (colunas "Cov."):
+
+| Coluna       | O que conta                                                                                              | Total do projeto                 |
+| ------------ | -------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| Instructions | Instruções de **bytecode**, o código que o compilador Java gera a partir do `.java`. É a medida mais fina | 261 de 6.391 sem cobertura (95%) |
+| Branches     | Caminhos de cada decisão (`if`, `&&`, `\|\|`, `switch`)                                                    | 33 de 454 sem cobertura (92%)    |
+| Cxty         | Complexidade ciclomática                                                                                 | 53 de 623 sem cobertura          |
+| Lines        | Linhas do `.java` com ao menos uma instrução                                                             | 61 de 1.600 sem cobertura (96%)  |
+| Methods      | Métodos com ao menos uma instrução                                                                       | 22 de 396 sem cobertura          |
+| Classes      | Classes com ao menos uma instrução                                                                       | 0 de 50 sem cobertura            |
+
+As porcentagens diferem porque cada coluna conta uma unidade diferente. Uma linha como `if (roleIds == null || roleIds.isEmpty())` tem várias instruções e quatro branches: basta uma instrução rodar para a linha contar como coberta, mas cada branch é contado separadamente.
+
+**A tabela de métodos.** Ao abrir a classe `UserService`, cada método aparece numa linha. O `findRolesByIdsOrThrow` é o único abaixo de 100%: 92% das instruções, 66% dos branches, 2 de 4 caminhos de complexidade e 1 de 6 linhas sem cobertura.
+
+<p align="center">
+<img src="docs/assets/imgs/jacoco-class-userservice.png" alt="Tabela de métodos do UserService no JaCoCo, com o findRolesByIdsOrThrow em 92% de instruções e 66% de branches" />
+</p>
+
+**O código colorido.** Ao abrir o código da classe, cada linha ganha uma cor, e cada decisão ganha um diamante:
+
+| Marca             | Significado                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------- |
+| Linha verde       | Todas as instruções da linha foram executadas                                      |
+| Linha amarela     | Só parte das instruções ou dos branches foi executada                              |
+| Linha vermelha    | Nenhuma instrução da linha foi executada                                           |
+| Diamante verde    | Todos os branches da decisão foram executados                                      |
+| Diamante amarelo  | Parte dos branches foi executada (passe o mouse sobre ele para ver quantos faltam) |
+| Diamante vermelho | Nenhum branch da decisão foi executado                                             |
+
+<p align="center">
+<img src="docs/assets/imgs/jacoco-class-detail.png" alt="Código do UserService no JaCoCo: linha 375 amarela com diamante amarelo, linha 376 vermelha e linha 381 com diamante verde" />
+</p>
+
+No print, as linhas 343 a 386 do `UserService`:
+
+- **linha 375, amarela, com diamante amarelo:** o `if (roleIds == null || roleIds.isEmpty())` foi executado, mas só com `roleIds` preenchido. Os branches de `roleIds` nulo e vazio nunca rodaram;
+- **linha 376, vermelha:** o `return Collections.emptySet()` nunca foi executado, porque nenhum teste chega nesse caminho;
+- **linha 381, com diamante verde:** o `if (roles.size() != roleIds.size())` foi testado nos dois sentidos, com todas as roles encontradas e com uma role inexistente.
+
+**Por que esse trecho ficou sem teste.** É o caminho de um usuário criado sem roles. Hoje, `POST /api/v1/users` sem `roleIds` cria o usuário sem nenhuma role, e ele não consegue fazer login: é o defeito da **#14**. Um teste desse caminho teria de confirmar o comportamento atual, que está errado, ou depender da correção que ainda não foi feita. Por isso o cenário fica sem teste, registrado na issue, até a correção.
+
+---
+
+## 🔧 Configuração do JaCoCo no pom.xml
+
+**Por que é um plugin, e não uma dependência.** Uma dependência é uma biblioteca que o código do projeto importa e usa, e por isso entra no *classpath* (o conjunto de classes que a aplicação carrega). O código do ASJCatalog não importa nenhuma classe do JaCoCo: ele só é necessário **durante o build**, enquanto os testes rodam. O JaCoCo funciona como um **agente Java**: um programa que a JVM carrega junto com os testes e que instrumenta (modifica em memória) as classes do projeto, para registrar cada instrução executada. Por isso ele fica em `<build><plugins>`, e não em `<dependencies>`, e não vai para o pacote final da aplicação.
+
+```xml
+<plugin>
+  <groupId>org.jacoco</groupId>
+  <artifactId>jacoco-maven-plugin</artifactId>
+  <version>0.8.15</version>
+```
+
+A versão é declarada no próprio `pom.xml`, porque o `spring-boot-starter-parent` não gerencia a versão do JaCoCo.
+
+**Execuções, na ordem em que rodam no `./mvnw verify`.** Cada `<execution>` liga um *goal* (uma tarefa) do plugin a uma fase do ciclo de vida do Maven:
+
+| Execução                    | Goal                        | Fase                            | O que faz                                                                                              |
+| --------------------------- | --------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `prepare-agent`             | `prepare-agent`             | `initialize` (padrão)           | Prepara o agente para os testes de unidade (Surefire). O resultado vai para `target/jacoco.exec`       |
+| `report`                    | `report`                    | `test`                          | Gera o relatório de unidade em `target/site/jacoco`                                                    |
+| `prepare-agent-integration` | `prepare-agent-integration` | `pre-integration-test` (padrão) | Prepara o agente para os testes de integração (Failsafe). O resultado vai para `target/jacoco-it.exec` |
+| `report-integration`        | `report-integration`        | `post-integration-test`         | Gera o relatório de integração em `target/site/jacoco-it`                                              |
+| `merge`                     | `merge`                     | `verify`                        | Junta `jacoco.exec` e `jacoco-it.exec` em `target/jacoco-merged.exec`                                  |
+| `report-merged`             | `report`                    | `verify`                        | Gera o relatório consolidado em `target/site/jacoco-merged`                                            |
+| `check-merged`              | `check`                     | `verify`                        | Confere os limites mínimos sobre o consolidado e falha o build se ficarem abaixo                       |
+
+O `prepare-agent` não roda os testes: ele monta o argumento `-javaagent` e o coloca na propriedade `argLine`, que o Surefire usa ao iniciar a JVM dos testes. Os nomes das sessões são fixos, para que o nome da máquina não apareça na página "Sessions" de um relatório publicado:
+
+```xml
+<execution>
+  <id>prepare-agent</id>
+  <goals>
+    <goal>prepare-agent</goal>
+  </goals>
+  <!-- Nome fixo da sessão: o padrão usa o nome da máquina, que apareceria na página Sessions dos relatórios -->
+  <configuration>
+    <sessionId>asjcatalog-unit</sessionId>
+  </configuration>
+</execution>
+```
+
+A junção dos dois arquivos de execução é o que permite o relatório consolidado:
+
+```xml
+<execution>
+  <id>merge</id>
+  <phase>verify</phase>
+  <goals>
+    <goal>merge</goal>
+  </goals>
+  <configuration>
+    <fileSets>
+      <fileSet>
+        <directory>${project.build.directory}</directory>
+        <includes>
+          <include>jacoco.exec</include>
+          <include>jacoco-it.exec</include>
+        </includes>
+      </fileSet>
+    </fileSets>
+    <destFile>${project.build.directory}/jacoco-merged.exec</destFile>
+  </configuration>
+</execution>
+```
+
+**Exclusões.** Classes sem lógica ficam fora do cálculo, para que a porcentagem reflita só o código que pode ter defeito:
+
+```xml
+<excludes>
+  <!-- Classe principal: só o main com SpringApplication.run -->
+  <exclude>com/albertsilva/dev/asjcatalog/AsjcatalogApplication.class</exclude>
+  <!-- DTOs: records sem lógica -->
+  <exclude>com/albertsilva/dev/asjcatalog/dto/**</exclude>
+  <!-- Projections: interfaces sem métodos default -->
+  <exclude>com/albertsilva/dev/asjcatalog/projection/**</exclude>
+  <!-- Configurações que só criam beans, sem desvios -->
+  <exclude>com/albertsilva/dev/asjcatalog/config/documentation/**</exclude>
+  <exclude>com/albertsilva/dev/asjcatalog/config/i18n/**</exclude>
+  <!-- Respostas de erro sem lógica (ValidationError fica, por causa do addError) -->
+  <exclude>com/albertsilva/dev/asjcatalog/web/exception/response/ProblemDetails.class</exclude>
+  <exclude>com/albertsilva/dev/asjcatalog/web/exception/response/FieldMessage.class</exclude>
+</excludes>
+```
+
+As interfaces dos repositórios também não aparecem no relatório, sem precisar de exclusão: o código delas é gerado pelo Spring Data enquanto a aplicação roda, e o JaCoCo só mede as classes compiladas do projeto.
+
+**Limites mínimos.** O `check-merged` avalia o elemento `BUNDLE`, que é o projeto inteiro:
+
+```xml
+<rule>
+  <element>BUNDLE</element>
+  <limits>
+    <limit>
+      <counter>LINE</counter>
+      <value>COVEREDRATIO</value>
+      <minimum>${jacoco.minimum.line.coverage}</minimum>
+    </limit>
+    <limit>
+      <counter>BRANCH</counter>
+      <value>COVEREDRATIO</value>
+      <minimum>${jacoco.minimum.branch.coverage}</minimum>
+    </limit>
+  </limits>
+</rule>
+```
+
+Os valores ficam em propriedades, no início do `pom.xml`:
+
+```xml
+<!-- Limites mínimos de cobertura do goal check do JaCoCo (relatório consolidado) -->
+<jacoco.minimum.line.coverage>0.93</jacoco.minimum.line.coverage>
+<jacoco.minimum.branch.coverage>0.89</jacoco.minimum.branch.coverage>
+```
+
+Cada limite é o valor medido no fim do capítulo menos **3 pontos de folga**, arredondado para baixo: 0,9619 de linhas vira 0,93, e 0,9273 de branches vira 0,89. A folga deixa espaço para código novo ainda sem teste completo, sem permitir uma queda grande. O limite é do projeto inteiro, e não de cada pacote, porque vários pacotes têm de 2 a 20 linhas, e um limite por pacote faria o build falhar com a mudança de um único teste.
+
+Como as propriedades podem ser trocadas na linha de comando com `-D`, dá para conferir que o `check` funciona sem alterar o `pom.xml`. Com um limite acima do medido, o build falha:
+
+**PowerShell** (argumentos `-D` com ponto no nome vão entre aspas simples):
+
+```powershell
+.\mvnw verify '-Djacoco.minimum.line.coverage=0.97'
+```
+
+**bash**:
+
+```bash
+./mvnw verify -Djacoco.minimum.line.coverage=0.97
+```
 
 ```text
-AccountService ──► TokenService   (cria o token de ativação ou de recuperação)
-      │
-      └──────────► EmailService ──► Template Thymeleaf ──► Servidor SMTP ──► Usuário
+[WARNING] Rule violated for bundle asjcatalog: lines covered ratio is 0.96, but expected minimum is 0.97
+[INFO] BUILD FAILURE
 ```
 
-- O envio de e-mail é síncrono: a requisição espera o envio terminar.
-- O token de ativação vale 24 horas e o de recuperação, 30 minutos; os dois prazos são configuráveis por variáveis de ambiente.
-- Cada envio bem-sucedido é registrado na entidade `Email`.
+---
 
-> [!NOTE]
-> Os fluxos completos, os templates e como testar sem servidor de e-mail estão em [Fluxos de Conta](docs/guides/ACCOUNT-FLOWS.md).
+## 🔀 Unidade, Integração e Consolidado
+
+O build gera três relatórios porque os testes de unidade e os de integração cobrem partes diferentes do código:
+
+| Relatório       | Pasta                       | Linhas    | Branches  |
+| --------------- | --------------------------- | --------- | --------- |
+| Unidade         | `target/site/jacoco`        | 95,6%     | 92,3%     |
+| Integração      | `target/site/jacoco-it`     | 76,3%     | 43,6%     |
+| **Consolidado** | `target/site/jacoco-merged` | **96,2%** | **92,7%** |
+
+Os testes de integração sobem a aplicação inteira e passam por muitas linhas, mas por poucos branches: em geral, seguem o caminho de sucesso e alguns erros. Os testes de unidade isolam cada classe e conseguem forçar cada desvio.
+
+**Por que o consolidado é o principal.** No início do capítulo, os mappers (`CategoryMapper`, `ProductMapper` e `UserMapper`) apareciam com **2% a 5%** de linhas no relatório de unidade, porque os testes dos services usam mappers falsos (`@Mock`). No consolidado, os mesmos mappers tinham **81% a 90%**, porque os testes de integração os executavam de verdade. Olhar só o relatório de unidade levaria a escrever testes para algo que já estava coberto; olhar só o de integração esconderia os desvios testados na unidade. Por isso o limite do build é avaliado sobre o consolidado. Ao longo do capítulo, os mappers ganharam testes de unidade próprios e passaram a ter de 97,8% a 100% de linhas também no relatório de unidade.
 
 ---
 
-## 🧱 Boas Práticas Aplicadas
+## 🎯 100% Não É Meta
 
-| Boa prática                        | Aplicação no projeto                                                                                                       |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| **Arquitetura em Camadas**         | Controller → Service → Repository; cada camada conversa só com a vizinha.                                                  |
-| **Validação Declarativa**          | Bean Validation nos DTOs, com validadores customizados (e-mail único, senha forte), executada pelo `@Valid` no controller. |
-| **Tratamento Global de Exceções**  | `ControllerExceptionHandler` converte as exceções em `ProblemDetails` com um código estável (`ApiErrorCode`).              |
-| **Internacionalização**            | Mensagens da API em português, inglês e espanhol, escolhidas pelo cabeçalho `Accept-Language`.                             |
-| **Configuração por Perfis**        | Perfis `dev`, `test` e `prod`; no `prod`, segredos e credenciais vêm de variáveis de ambiente, sem valor padrão.           |
-| **Open Session in View Desligado** | Os dados são carregados dentro dos services, sem consultas escondidas na camada web.                                       |
-| **Migrations Versionadas**         | Flyway com as pastas `schema`, `reference` e `data`; os dados de exemplo não chegam à produção.                            |
-| **Testes Automatizados**           | Testes de unidade e de integração, separados pelo nome da classe: `*Test` e `*Tests` no Surefire e `*IT` no Failsafe.      |
-| **Documentação da API**            | OpenAPI e Swagger UI em `/docs-asjcatalog.html` nos perfis `dev` e `test`.                                                 |
+As 61 linhas e os 33 branches sem cobertura no fim do capítulo não são esquecimento. Perseguir 100% levaria a testes que só executam código, sem conferir nada, ou a testes que congelam comportamentos que o projeto quer mudar.
+
+**Exclusões.** Classes sem lógica ficam fora do cálculo (seção [Configuração do JaCoCo](#-configuração-do-jacoco-no-pomxml)).
+
+**Cenários pendentes ligados às issues.** Quando o comportamento certo depende de uma issue aberta, o cenário fica sem teste e é registrado no JavaDoc da classe de teste, numa seção "Cenários pendentes", com o número da issue. Um exemplo, no `ProductServiceTest`:
+
+```java
+/**
+ * <b>Cenários pendentes:</b>
+ * <ul>
+ * <li>{@code categoryIds} nulo ou vazio: o produto seria criado sem categoria
+ * e não apareceria na listagem; hoje o {@code @NotEmpty} do DTO bloqueia o
+ * caso na API (#4).</li>
+ * </ul>
+ */
+```
+
+Os trechos sem teste por esse motivo estão ligados às issues #4, #5, #9, #13, #14, #25, #28, #36, #39 e #44.
+
+**Código sem uso.** A revisão encontrou código que nenhuma parte do projeto chama: `Token.isValid()`, `ProductMapper.toResponsePage`, os construtores com id de `Product` e `Category` e `Category.getProducts()`. Escrever testes para eles daria cobertura a algo que talvez deva ser removido. Eles foram registrados num [comentário da #25](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/issues/25#issuecomment-6614166933), que vai decidir se cada um sai ou fica documentado. Dois ramos da deduplicação de erros de senha também são inalcançáveis e estão no [item 11 da #25](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/issues/25#issuecomment-6620385478).
+
+**Não congelar comportamento errado.** Se uma asserção afirmava um valor que uma issue diz estar errado, ela foi removida, e o cenário foi para "Cenários pendentes". Assim:
+
+- o `EmailServiceTest` deixou de conferir o link de recuperação de senha com o caminho atual (#46) e o status gravado do registro de e-mail (#26);
+- o `UserUpdateValidatorTest` perdeu o teste que esperava um `NullPointerException`, que congelava um defeito em vez de uma regra.
+
+Um teste que defende o comportamento errado faria a correção da issue parecer uma regressão.
 
 ---
 
-## 📈 Evolução Arquitetural
+## ✅ Padrão de Qualidade dos Testes
 
-O ASJCatalog deixou de ser uma aplicação centrada na persistência de entidades e passou a ser organizado em torno dos conceitos do negócio:
+Toda a suíte foi revisada, classe por classe, para um padrão único, documentado com exemplos de "evitar" e "preferir" na [seção 7 do guia de testes](docs/guides/TESTING.md#7-padrão-de-qualidade-dos-testes). Em resumo:
 
-- Entidades com regras próprias, organizadas em módulos de domínio.
-- Serviços especializados para conta, tokens, e-mail e usuário autenticado.
-- Consultas planejadas para cada listagem, em vez do carregamento padrão do ORM.
+- **Nomes:** `<método>Should<resultado>When<condição>`, com um `@DisplayName` em inglês que diz o mesmo, como `findByIdShouldReturnCategoryWhenIdExists`.
+- **Estrutura:** um `@Nested` por método ou endpoint (nos testes HTTP, `"<VERBO> <rota>"`, como `GET /categories/{id}`), um comportamento por teste e os blocos Arrange, Act e Assert.
+- **Asserções:** AssertJ (`assertThat`) nos testes novos e retrabalhados, sem misturar estilos na mesma classe; o valor esperado conferido por inteiro; exceções conferidas pelo tipo e pela chave da mensagem.
+- **Dados:** das fábricas do pacote `factory` e das suas constantes, sem valores escritos à mão. As constantes que vêm do seed, como `UserFactory.ADMIN_USER_ID`, citam a #21 no JavaDoc.
+- **Mocks:** só para colaboradores; `spy` só quando o resultado é o mesmo nos dois caminhos.
+- **Testes parametrizados:** `@ParameterizedTest` quando o comportamento é o mesmo para vários valores. O `EntityIdentityContractTest` confere o contrato de `equals` e `hashCode` das seis entidades num único teste, com 42 casos.
+- **Issues abertas:** sem congelar comportamento errado, com os cenários pendentes registrados no JavaDoc (seção [100% Não É Meta](#-100-não-é-meta)).
 
-### 🔧 Além do tema do capítulo
+A seção termina com um checklist de revisão, usado também nos Pull Requests.
 
-Durante este capítulo, o projeto também recebeu melhorias de infraestrutura que vão além da modelagem de domínio:
+---
 
-- **Perfis `dev`, `test` e `prod`**, com `dev` como padrão e um perfil `prod` seguro: sem valores padrão para segredos e com Swagger e console do H2 desligados. Veja [Configuração e Perfis](docs/guides/CONFIGURATION.md).
-- **Migrations separadas em `schema`, `reference` e `data`**, para que os dados de exemplo nunca cheguem à produção. Veja [Migrations](docs/guides/DATABASE-MIGRATIONS.md).
-- **Testes de integração com o Maven Failsafe**, executados na fase `verify`. Veja [Testes](docs/guides/TESTING.md).
-- **Internacionalização em pt-BR, en e es**, com testes que garantem a consistência das mensagens e a escolha do idioma. Veja [Internacionalização](docs/guides/INTERNATIONALIZATION.md).
-- **Ampliação da suíte de testes**, com testes de conta, autorização, CORS, OAuth2 e consultas nativas. Veja [Testes](docs/guides/TESTING.md#6-o-que-cada-grupo-cobre).
-- **Renomeação do pacote base** para `com.albertsilva.dev.asjcatalog`. Veja [Arquitetura](docs/guides/ARCHITECTURE.md#5-origem-do-nome).
-- **Reorganização da documentação** em guias técnicos, contrato de segurança e histórico de auditorias. Veja o [Índice da Documentação](docs/HOME.md).
+## 🌐 Testes sem Dependência de Rede
+
+O `@ValidEmail` confere se o domínio do e-mail tem um registro **MX** (o registro de DNS que indica o servidor de e-mail do domínio). Antes do capítulo, a consulta ficava dentro do `ValidEmailValidator` e ia direto para a internet. Sem rede, **19 testes falhavam** (8 de unidade e 11 de integração), e a suíte não podia rodar de forma confiável num pipeline de CI (#20).
+
+A consulta passou para uma interface própria, no pacote `validation.user.dns`:
+
+```java
+public interface MxRecordLookup {
+
+  boolean hasMxRecord(String domain);
+}
+```
+
+Em produção, quem a implementa é o `JndiMxRecordLookup`, que faz a mesma consulta de antes. Nos testes, o `MxRecordLookupTestConfig` registra uma implementação que considera que todo domínio tem MX:
+
+```java
+@TestConfiguration
+public class MxRecordLookupTestConfig {
+
+  @Bean
+  @Primary
+  MxRecordLookup mxRecordLookup() {
+    return domain -> true;
+  }
+}
+```
+
+O formato do e-mail continua validado pela expressão regular real; só a consulta de MX é substituída. O comportamento em produção não mudou.
+
+Para conferir, a suíte roda com o DNS simulado fora do ar, apontando o JNDI para uma porta do próprio computador em que nada responde. Antes da mudança, 19 testes falhavam assim; hoje, nenhum:
+
+```powershell
+.\mvnw clean verify '-Djava.naming.provider.url=dns://127.0.0.1:9'
+```
+
+A consulta real não ficou sem teste. O `JndiMxRecordLookupTest` a testa com um contexto de DNS falso, e o `JndiMxRecordLookupDnsTest` consulta o DNS de verdade (`gmail.com` tem MX; `asjcatalog.invalid` não existe). Ele tem a tag `dns`, que fica fora do build padrão, e roda só quando pedido:
+
+```powershell
+.\mvnw test '-Dtest=JndiMxRecordLookupDnsTest' '-Dsurefire.excludedGroups=none'
+```
+
+---
+
+## 💡 Lições do Capítulo
+
+**Cobertura alta não garante cenários completos.** Com **88,7%** de linhas cobertas no relatório consolidado, a API aceitava um produto **sem preço**: `POST /api/v1/products` com `"price": null`, sem o campo ou com `"price": ""` respondia 201 e gravava o produto (#44). O código do cadastro estava coberto, mas nenhum teste enviava o preço nulo. A cobertura mostra o que **não** foi executado; o que foi executado ainda pode estar sem o cenário certo. A correção está registrada na #44, com impacto no frontend.
+
+**Cobertura acidental.** No `TokenServiceTest`, um teste conferia o token devolvido com `isEqualTo(token)`. O AssertJ chama o `equals` para comparar, e com isso o ramo `this == obj` do `Token.equals` aparecia como coberto, sem que nenhum teste tratasse do `equals`. Ao trocar a asserção por `isSameAs(token)` (que confere se é o mesmo objeto, que era o que o teste queria dizer), o ramo deixou de ser coberto. O contrato de `equals` e `hashCode` passou a ser testado de propósito, no `EntityIdentityContractTest`. Uma linha verde no relatório só diz que o código rodou, e não que ele foi conferido.
+
+---
+
+## 🧩 Fora do Plano
+
+**Pipeline de CI.** O repositório ganhou um workflow do GitHub Actions (`.github/workflows/ci.yml`, commits `cedeba7` e `dd40232`). Em todo push e Pull Request para a branch `develop`, ele roda `./mvnw -B verify` com o JDK 17 (Temurin) no `ubuntu-24.04`. Como o `check` do JaCoCo roda na fase `verify`, um Pull Request que derrube a cobertura abaixo do limite falha no CI. Esse é também o motivo da #20: sem tirar o DNS dos testes, o CI dependeria da rede do runner.
+
+**A primeira contribuição externa.** O Pull Request **#42**, de um contribuidor externo, padronizou a capitalização e a pontuação das mensagens da API nos três idiomas (commit `f35bfe5`). Foi a primeira contribuição de fora do projeto.
 
 ---
 
 ## 🎓 Aprendizados
 
-- Uma entidade pode guardar regras do negócio, e não apenas mapear colunas.
-- O carregamento lazy esconde consultas; desligar o open-in-view torna esse custo visível.
-- Paginação e `JOIN FETCH` de coleções não combinam na mesma consulta, e por isso a listagem usa duas.
-- Projeções evitam carregar a entidade inteira quando só algumas colunas são necessárias.
-- Fluxos de conta exigem cuidado com o que a resposta revela, como na recuperação de senha, que sempre responde da mesma forma.
-- Tokens de uso único precisam de tipo, validade e invalidação explícitos.
+- Cobertura mede o que foi executado, e não o que foi conferido.
+- Relatórios de unidade e de integração contam histórias diferentes; o consolidado mostra a cobertura real.
+- Branches dizem mais que linhas: uma linha coberta pode esconder uma decisão testada pela metade.
+- Um limite mínimo no build transforma a cobertura em regra, e a folga evita que ele vire um obstáculo.
+- Nem todo trecho sem cobertura é um problema: exclusões, código sem uso e cenários ligados a issues abertas são decisões.
+- Um teste que confirma um comportamento errado é pior que a falta de teste.
+- Testes que dependem de rede são um risco para qualquer pipeline.
 
 ---
 
 ## 💼 Competências Técnicas Desenvolvidas
 
-- Modelagem de entidades e relacionamentos com JPA e Hibernate.
-- Escrita de consultas com Spring Data JPA, JPQL e SQL nativo.
-- Diagnóstico e correção do N+1 Select em listagens paginadas.
-- Implementação de casos de uso em uma camada de serviços transacional.
-- Envio de e-mails transacionais com Spring Mail e Thymeleaf.
-- Integração do domínio com Spring Security, OAuth2 e JWT.
-- Versionamento do banco com Flyway.
-- Documentação da API com OpenAPI e Swagger.
+- Configuração do `jacoco-maven-plugin` com relatórios de unidade, de integração e consolidado.
+- Leitura de relatórios de cobertura: instruções, branches, linhas, métodos e complexidade ciclomática.
+- Definição de limites mínimos de cobertura no build.
+- Testes de unidade com JUnit 5, Mockito e AssertJ.
+- Testes de integração com MockMvc, banco H2 e tokens JWT reais.
+- Testes parametrizados com `@ParameterizedTest`.
+- Isolamento de dependências externas (DNS) com interfaces e configurações de teste.
+- Revisão sistemática de uma suíte de testes, com padrão documentado e checklist.
+- Integração contínua com GitHub Actions.
 
 ---
 
 ## 🏁 Conclusão
 
-Este capítulo levou o ASJCatalog a um backend mais próximo dos padrões corporativos: um domínio organizado em módulos, fluxos de conta completos, e-mails transacionais e consultas planejadas para desempenho. Com essa base, a aplicação está preparada para receber novos requisitos sem perder organização nem manutenibilidade.
+Este capítulo trocou a pergunta "os testes passam?" por "o que os testes realmente conferem?". O ASJCatalog passou a medir a própria cobertura, a falhar o build quando ela cai e a registrar, nos próprios testes, o que fica sem teste e por quê. A suíte ficou mais legível, mais confiável e independente da rede, pronta para rodar a cada Pull Request. O próximo capítulo, de Docker e CI/CD, parte dessa base.
 
 ---
 
 ## 📖 Documentação Técnica
 
 > [!TIP]
-> Os guias técnicos do backend (primeiros passos, configuração, arquitetura, domínio, acesso a dados, endpoints, autenticação, testes e outros), o contrato de segurança e o histórico de auditorias estão reunidos no [Índice da Documentação](docs/HOME.md). O contexto e os motivos das principais escolhas técnicas estão em [Decisões Técnicas](docs/guides/DESIGN-DECISIONS.md).
+> Os guias técnicos do backend (primeiros passos, configuração, arquitetura, domínio, acesso a dados, endpoints, autenticação, testes e outros), o contrato de segurança e o histórico de auditorias estão reunidos no [Índice da Documentação](docs/HOME.md). A cobertura com JaCoCo está detalhada em [Testes, seção 9](docs/guides/TESTING.md#9-cobertura-com-jacoco), e o contexto e os motivos das principais escolhas técnicas, inclusive as deste capítulo (D-20 a D-23), estão em [Decisões Técnicas](docs/guides/DESIGN-DECISIONS.md).
 
 ---
 
 ## 📚 Referências Técnicas
 
-As documentações oficiais e os livros usados no projeto, organizados por assunto e ligados aos guias, estão em [Referências Técnicas](docs/REFERENCES.md).
+As documentações oficiais e os livros usados no projeto, organizados por assunto e ligados aos guias, estão em [Referências Técnicas](docs/REFERENCES.md). Para este capítulo:
+
+- [JaCoCo — documentação](https://www.jacoco.org/jacoco/trunk/doc/) e [contadores de cobertura](https://www.jacoco.org/jacoco/trunk/doc/counters.html)
+- [JaCoCo — plugin do Maven](https://www.jacoco.org/jacoco/trunk/doc/maven.html)
+- [JUnit 5.12 — User Guide](https://docs.junit.org/5.12.2/user-guide/)
+- [Mockito — site oficial](https://site.mockito.org/)
+- [AssertJ — documentação](https://assertj.github.io/doc/)
 
 ---
 

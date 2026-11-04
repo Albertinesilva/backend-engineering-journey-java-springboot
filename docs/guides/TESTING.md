@@ -14,7 +14,8 @@ Este guia explica como os testes do ASJCatalog estão organizados, como rodá-lo
 6. [O que cada grupo cobre](#6-o-que-cada-grupo-cobre)
 7. [Padrão de qualidade dos testes](#7-padrão-de-qualidade-dos-testes)
 8. [Dependências externas](#8-dependências-externas)
-9. [Limitações conhecidas](#9-limitações-conhecidas)
+9. [Cobertura com JaCoCo](#9-cobertura-com-jacoco)
+10. [Limitações conhecidas](#10-limitações-conhecidas)
 
 ## 1. Tipos de teste
 
@@ -23,7 +24,7 @@ Este guia explica como os testes do ASJCatalog estão organizados, como rodá-lo
 | **Unidade** | Uma classe isolada | As dependências são substituídas por **mocks** (objetos falsos, criados com o Mockito, que devolvem o que o teste mandar) | Rápido |
 | **Integração** | Várias camadas juntas, com o contexto do Spring e o banco H2 | Sobe a aplicação dentro do teste e faz requisições HTTP simuladas com o **MockMvc** | Mais lento |
 
-Hoje são **301 testes** executados na fase de unidade e **150** na fase de integração (resultado do `./mvnw verify`).
+Hoje são **453 testes** executados na fase de unidade e **150** na fase de integração (resultado do `./mvnw verify`). A cobertura que eles alcançam é medida pelo JaCoCo ([seção 9](#9-cobertura-com-jacoco)).
 
 ## 2. Surefire e Failsafe
 
@@ -95,6 +96,10 @@ Os testes `integrations/service/*ServiceIT` não estendem `AbstractIT`: usam `@S
 | `ProductFactory` | `createProduct()`, `createProductCreateRequest()`, `createProductDetailsResponse()` |
 | `UserFactory` | `createUser()`, `createUserCreateRequest()`, `createUserDetailsResponse()` |
 | `RoleFactory` | `createOperatorRoleResponse()`, `createAdminRoleResponse()` |
+| `TokenFactory` | `createActivationToken(user)`, `createPasswordRecoveryToken(user)` |
+| `UserDetailsFactory` | `createOperatorProjections()`, `createOperatorAndAdminProjections()` |
+
+As fábricas também guardam as constantes dos testes. Algumas são valores fixos do seed (`import.sql`), como `UserFactory.ADMIN_USER_ID`, `OPERATOR_EMAIL` e `SEED_PASSWORD`, e os totais `COUNT_TOTAL_*`; o JavaDoc delas cita a #21, que trata desse acoplamento.
 
 **Mocks de e-mail.** Nenhum teste envia e-mail de verdade:
 
@@ -117,10 +122,11 @@ O formato do e-mail continua validado pela expressão regular real; só a consul
 
 | Pacote | Classes | Tipo | O que cobre |
 | --- | --- | --- | --- |
-| `domain` | `CategoryTest`, `ProductTest`, `UserTest` | Java puro | Construtores, callbacks `@PrePersist`/`@PreUpdate`, `equals` e regras das entidades |
+| `domain` | `CategoryTest`, `ProductTest`, `UserTest`, `TokenTest`, `EmailTest`, `RoleTest` e `EntityIdentityContractTest` | Java puro | Construtores, callbacks `@PrePersist`/`@PreUpdate` e regras das entidades; o contrato de `equals`/`hashCode` das seis entidades fica num único teste parametrizado |
+| `mapper` | `CategoryMapperTest`, `ProductMapperTest`, `UserMapperTest` | Java puro | Conversões entre entidades e DTOs, inclusive as atualizações parciais |
 | `repository` | 6 classes `*RepositoryTest` | `@DataJpaTest` (sobe só a camada JPA, com H2) | Consultas derivadas, JPQL e nativas |
 | `service` | 6 classes `*ServiceTest` | Mockito | Regras de negócio de cada service, com repositórios e outros services falsos |
-| `validation` | 10 classes `*ValidatorTest` e `JndiMxRecordLookupTest` | Mockito | Cada validador customizado, incluindo senha forte, dados pessoais e e-mail, e a consulta de MX |
+| `validation` | 11 classes `*ValidatorTest`, `JndiMxRecordLookupTest` e `JndiMxRecordLookupDnsTest` (opcional, [seção 8](#8-dependências-externas)) | Mockito | Cada validador customizado, incluindo senha forte, dados pessoais e e-mail, e a consulta de MX |
 | `security` | `CustomPasswordAuthenticationConverterTest`, `CustomPasswordAuthenticationProviderTest`, `AuthenticatedUserServiceTest` | Mockito ou Java puro | Leitura dos parâmetros do login, regras do login e leitura do usuário a partir do JWT |
 | `web.controller` | 4 classes `*ControllerTest` | `@WebMvcTest` (sobe só a camada web) com os services como `@MockitoBean` | Rotas, status HTTP e JSON dos controllers |
 | `web.exception.handler` | `ControllerExceptionHandlerTest` | Java puro | Montagem das respostas de erro |
@@ -359,7 +365,7 @@ Use esta lista ao escrever ou revisar um teste (inclusive em Pull Requests):
 
 ## 8. Dependências externas
 
-**Servidor SMTP: não é necessário.** O `application.properties` liga `spring.mail.test-connection`, que faz a subida testar a conexão com o servidor de e-mail. O `application-test.properties` desliga esse teste (`spring.mail.test-connection=false`), e nenhum teste envia e-mail de verdade (seção 5). Por isso **os testes não precisam das variáveis `MAIL_USERNAME` e `MAIL_PASSWORD`**: sem elas, `./mvnw verify` passou com 301 e 150 testes, sem erros.
+**Servidor SMTP: não é necessário.** O `application.properties` liga `spring.mail.test-connection`, que faz a subida testar a conexão com o servidor de e-mail. O `application-test.properties` desliga esse teste (`spring.mail.test-connection=false`), e nenhum teste envia e-mail de verdade (seção 5). Por isso **os testes não precisam das variáveis `MAIL_USERNAME` e `MAIL_PASSWORD`**: sem elas, `./mvnw verify` passa com 453 e 150 testes, sem erros.
 
 **DNS (internet): não é necessário.** Em produção, o `@ValidEmail` consulta o registro MX do domínio do e-mail pela internet (veja [VALIDATION.md](VALIDATION.md#6-validação-de-e-mail)). Nos testes, essa consulta é substituída (seção 5), e `./mvnw verify` passa sem acesso à rede.
 
@@ -367,9 +373,121 @@ Para conferir, rode a suíte com o DNS simulado fora do ar (comando na seção 3
 
 **Teste opcional contra o DNS real.** O `JndiMxRecordLookupDnsTest` consulta o DNS de verdade (`gmail.com` tem MX; `asjcatalog.invalid` não existe) e confere que a consulta JNDI de produção continua funcionando. Ele tem a tag `dns`, que fica fora do build padrão: o `pom.xml` passa a propriedade `surefire.excludedGroups` (valor `dns`) ao `excludedGroups` do Surefire. Para rodá-lo, troque o valor por uma tag que nenhum teste usa, como `none` (comando na seção 3). Sem internet, o teste de `gmail.com` falha.
 
-## 9. Limitações conhecidas
+## 9. Cobertura com JaCoCo
 
-- **Testes ainda fora do padrão da seção 7.** A adequação das classes existentes está em andamento no capítulo 05; até lá, parte delas usa as `Assertions` do JUnit, nomes sem o método testado ou valores escritos à mão.
+**Cobertura de testes** é a medida de quanto do código de produção foi executado pelos testes. O projeto mede com o **JaCoCo** (Java Code Coverage), configurado como plugin no `backend/pom.xml` (`jacoco-maven-plugin` 0.8.15). Cobertura alta mostra que o código **rodou** durante os testes, e não que todos os cenários foram conferidos.
+
+### 9.1 Os três relatórios
+
+O `./mvnw verify` gera três relatórios em HTML, em `backend/target/site/`:
+
+| Relatório | Pasta | O que mede | Gerado na fase |
+| --- | --- | --- | --- |
+| Unidade | `jacoco/` | Só os testes do Surefire (`*Test` e `*Tests`) | `test` |
+| Integração | `jacoco-it/` | Só os testes do Failsafe (`*IT`) | `post-integration-test` |
+| **Consolidado** | `jacoco-merged/` | Unidade e integração somadas. **É o principal** e o usado pelo limite mínimo (9.5) | `verify` |
+
+Para abrir o consolidado depois do build (a partir da pasta `backend`):
+
+| PowerShell | bash (Linux) | bash (macOS) |
+| --- | --- | --- |
+| `Start-Process .\target\site\jacoco-merged\index.html` | `xdg-open target/site/jacoco-merged/index.html` | `open target/site/jacoco-merged/index.html` |
+
+Cada pasta também traz um `jacoco.csv` (os números por classe) e um `jacoco.xml`, úteis para conferir os totais por script. A página **Sessions** lista as execuções que alimentaram o relatório; os nomes são fixos (`asjcatalog-unit` e `asjcatalog-it`, propriedade `sessionId` no `pom.xml`) para que o nome da máquina não apareça num relatório publicado.
+
+**Relatório publicado.** O relatório consolidado do fim do capítulo 05 está em [asjcatalog-jacoco.netlify.app](https://asjcatalog-jacoco.netlify.app/). É um retrato fixo, gerado a partir do commit `48ba709`: não é atualizado a cada push.
+
+### 9.2 Unidade, integração e consolidado
+
+Os dois tipos de teste cobrem partes diferentes do código, e por isso os três relatórios dão números diferentes:
+
+| Relatório | Linhas | Branches |
+| --- | --- | --- |
+| Unidade | 1530/1600 (95,6%) | 419/454 (92,3%) |
+| Integração | 1220/1600 (76,3%) | 198/454 (43,6%) |
+| Consolidado | 1539/1600 (96,2%) | 421/454 (92,7%) |
+
+Os testes de integração passam por muitas linhas (sobem a aplicação inteira), mas por poucos branches: em geral, seguem o caminho de sucesso e alguns erros. Os testes de unidade cobrem os desvios com mais detalhe. Um exemplo do início do capítulo: os mappers eram mockados em todos os `*ServiceTest`, e por isso tinham de 2% a 5% de linhas cobertas no relatório de unidade e de 81% a 90% no consolidado, porque só os ITs os executavam. Olhar apenas um dos relatórios esconde parte da cobertura real.
+
+### 9.3 Como ler o relatório
+
+O relatório começa pela lista de pacotes; cada pacote abre a lista de classes, cada classe abre a lista de métodos, e o nome do arquivo `.java` abre o código colorido. As colunas são:
+
+| Coluna | O que conta |
+| --- | --- |
+| **Instructions** | Instruções de **bytecode** (o código que o compilador Java gera a partir do `.java`). É a medida mais fina e não depende da formatação do código |
+| **Branches** | Cada resultado possível de uma decisão: os dois lados de um `if`, cada condição de um `&&` ou `\|\|`, cada `case` de um `switch` |
+| **Cxty** | **Complexidade ciclomática**: o número mínimo de caminhos diferentes por um método. Um método sem decisões tem 1; cada decisão soma 1 |
+| **Lines** | Linhas do `.java` com ao menos uma instrução |
+| **Methods** e **Classes** | Métodos e classes com ao menos uma instrução executada |
+
+Cada coluna "Missed" mostra o que **não** foi executado. No Total do consolidado: 261 de 6.391 instruções (95%), 33 de 454 branches (92%) e 61 de 1.600 linhas (96%) sem cobertura. As porcentagens diferem porque cada coluna conta uma unidade diferente: uma linha com um `if` pode estar "coberta" (executou) e ainda ter um branch sem teste.
+
+No código colorido:
+
+| Marca | Significado |
+| --- | --- |
+| Linha verde | Todas as instruções da linha foram executadas |
+| Linha amarela | Parte das instruções ou dos branches foi executada |
+| Linha vermelha | Nenhuma instrução da linha foi executada |
+| Diamante verde | Todos os branches da decisão foram executados |
+| Diamante amarelo | Parte dos branches foi executada (passe o mouse para ver quantos faltam) |
+| Diamante vermelho | Nenhum branch da decisão foi executado |
+
+### 9.4 Exclusões
+
+Algumas classes ficam fora do cálculo porque não têm lógica para testar (`<excludes>` na configuração do plugin):
+
+| Exclusão | Motivo |
+| --- | --- |
+| `AsjcatalogApplication` | Só o `main` com `SpringApplication.run` |
+| `dto/**` | `record`s sem lógica |
+| `projection/**` | Interfaces sem métodos `default` |
+| `config/documentation/**` e `config/i18n/**` | Configurações que só criam beans, sem desvios |
+| `ProblemDetails` e `FieldMessage` | Respostas de erro sem lógica. O `ValidationError` continua no cálculo por causa do `addError` |
+
+As interfaces dos repositórios não aparecem no relatório: o código delas é gerado pelo Spring Data em tempo de execução, e o JaCoCo só mede as classes compiladas do projeto.
+
+### 9.5 Limite mínimo (`check`)
+
+A execução `check-merged` do JaCoCo, na fase `verify`, **falha o build** se a cobertura do consolidado, somada no projeto inteiro (elemento `BUNDLE`), ficar abaixo de:
+
+| Contador | Limite | Medido no fim do capítulo 05 | Propriedade do `pom.xml` |
+| --- | --- | --- | --- |
+| Linhas | 0,93 | 0,9619 | `jacoco.minimum.line.coverage` |
+| Branches | 0,89 | 0,9273 | `jacoco.minimum.branch.coverage` |
+
+**Regra dos 3 pontos de folga.** Cada limite é o valor medido menos 0,03, arredondado para baixo na segunda casa. A folga deixa espaço para código novo ainda sem teste completo, mas impede uma queda grande sem que ninguém perceba. O limite é por projeto, e não por classe ou pacote: vários pacotes têm de 2 a 20 linhas, e um limite por pacote faria o build falhar pela mudança de um único teste.
+
+Os limites podem ser trocados numa execução, sem alterar o `pom.xml` (útil para conferir o `check`):
+
+| PowerShell | bash |
+| --- | --- |
+| `.\mvnw verify '-Djacoco.minimum.line.coverage=0.97'` | `./mvnw verify -Djacoco.minimum.line.coverage=0.97` |
+
+### 9.6 Quando o `check` falha
+
+A mensagem diz qual contador ficou abaixo do limite:
+
+```text
+[WARNING] Rule violated for bundle asjcatalog: lines covered ratio is 0.96, but expected minimum is 0.97
+[ERROR] Failed to execute goal org.jacoco:jacoco-maven-plugin:0.8.15:check (check-merged) on project asjcatalog: Coverage checks have not been met.
+```
+
+O que fazer:
+
+1. Abra o relatório consolidado e ordene pela coluna "Missed" do contador citado, para achar o pacote e a classe que perderam cobertura.
+2. Abra o código colorido e veja as linhas vermelhas e os diamantes amarelos ou vermelhos do código novo ou alterado.
+3. Escreva os testes que faltam, no padrão da seção 7. Se o cenário depende de uma issue aberta, registre-o em "Cenários pendentes" (7.7) e não escreva um teste que congele o comportamento errado.
+4. **Não baixe o limite para o build passar.** Mudar os limites é uma decisão do projeto, feita num commit próprio (`build(jacoco): ...`), com a nova medição.
+
+Se um teste falha, o build para antes do `check`; o JaCoCo só é avaliado quando todos os testes passam.
+
+## 10. Limitações conhecidas
+
+- **Cobertura não garante cenários completos.** No início do capítulo 05, com 88,7% de linhas no consolidado, `POST /products` aceitava produto sem preço (#44): o código do cadastro estava coberto, mas nenhum teste enviava o preço nulo. A cobertura mostra o que não foi executado; o que foi executado ainda pode estar sem a conferência certa.
+- **Código sem uso e cenários pendentes.** Parte do que aparece sem cobertura é código sem uso (registrado na #25, como `Token.isValid()` e `ProductMapper.toResponsePage`) ou cenário que depende de uma issue aberta (seção 7.7). Esses trechos ficam sem teste de propósito, e por isso a meta não é 100%.
+- **Relatório publicado não é atualizado.** O relatório do Netlify é um retrato do commit `48ba709`; a publicação automática a cada build fica para o capítulo de Docker e CI/CD.
 - **Flyway não é testado.** O perfil `test` cria as tabelas a partir das entidades, e não pelas migrations. Um erro numa migration só aparece ao subir nos perfis `dev` ou `prod`.
 - **Comportamentos sem teste.** Não há teste para `PUT /users/{id}` feito por um OPERATOR no próprio id, para `GET /accounts/me` sem token, para `GET /products?sort=price` nem para o comportamento após reiniciar a aplicação (tokens invalidados). Veja as limitações em [API-ENDPOINTS.md](API-ENDPOINTS.md#9-limitações-conhecidas) e [AUTHENTICATION.md](AUTHENTICATION.md#10-limitações-conhecidas).
 

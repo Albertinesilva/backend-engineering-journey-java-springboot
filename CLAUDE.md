@@ -231,14 +231,12 @@ Atualizado em 04/11/2026.
     - item 11: medição final de 0,96 de linhas (1539/1600) e 0,93 de branches (421/454) no consolidado, com 453 testes de unidade e 150 de integração; limites do `check` elevados para 0,93 de linhas e 0,89 de branches (medido menos 0,03, arredondado para baixo), nas mesmas propriedades do `pom.xml`. Demonstração: `-Djacoco.minimum.line.coverage=0.97` e `-Djacoco.minimum.branch.coverage=0.95` fazem o build falhar no `check-merged`. **Concluído.**
     - Decisões: AssertJ nos testes novos e em cada classe retrabalhada, sem misturar estilos na mesma classe e sem migração em massa; o `andExpect` do MockMvc continua nos testes HTTP.
     - Trechos sem teste por terem issue aberta: #4, #5, #9, #13, #14, #25, #28, #36, #39 e #44 (lista por classe na auditoria). O código sem uso encontrado na auditoria (`Token.isValid()`, `ProductMapper.toResponsePage`, construtores com id de `Product` e `Category` e `Category.getProducts()`) foi registrado num [comentário da #25](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/issues/25#issuecomment-6614166933) e não recebe teste: a decisão de remover ou documentar fica para a #25.
-  - Etapa 4: documentação e README do capítulo 05:
-    - TESTING (cobertura, contagens e CI);
-    - DESIGN-DECISIONS;
-    - HOME (capítulo 05 e "Falta um capítulo");
-    - CONVENTIONS (branch do capítulo 05 e tipo `ci`);
-    - GETTING-STARTED (`git checkout` do capítulo);
-    - REFERENCES;
-    - exemplo de 404 do API-ENDPOINTS sem o ponto final da #31.
+  - Etapa 4: documentação e README do capítulo 05. **Em andamento.** Primeira entrega pronta, aguardando commit:
+    - TESTING: nova seção 9 (cobertura com JaCoCo: relatórios, colunas, exclusões, limites, `check` e relatório publicado), "Limitações conhecidas" na seção 10 e contagens atualizadas;
+    - DESIGN-DECISIONS: D-20 a D-23 (JaCoCo e limite sobre o consolidado; limites no BUNDLE, exclusões e folga; `MxRecordLookup`; padrão de qualidade), com os motivos informados pelo autor;
+    - HOME (capítulo 05 e "Falta um capítulo"), CONVENTIONS (branch do capítulo 05, tipo `ci` e escopos), GETTING-STARTED (`git checkout` do capítulo), REFERENCES (JaCoCo, AssertJ e testes parametrizados, com as versões) e o exemplo de 404 do API-ENDPOINTS com o ponto final da #31;
+    - README do capítulo 05, com os prints de `docs/assets/imgs/` (`jacoco-report.png`, `jacoco-class-userservice.png` e `jacoco-class-detail.png`) e o link do relatório publicado em https://asjcatalog-jacoco.netlify.app/ (consolidado, retrato fixo do commit `48ba709`).
+    - Medição do início do capítulo, no commit `b1cb5cf` (worktree temporária, já apagada): 301 testes de unidade e 150 de integração; consolidado com 88,7% de linhas (1411/1591) e 71,1% de branches (323/454); unidade com 79,0% e 64,1%; integração com 76,6% e 44,3%; mappers com 2,2% a 4,8% de linhas no relatório de unidade e 81,0% a 89,5% no consolidado. Igual à auditoria do início do capítulo.
 - Fora do plano, já na branch:
   - `ea58b16`: torna o `mvnw` executável;
   - `cedeba7` e `dd40232`: pipeline de CI;

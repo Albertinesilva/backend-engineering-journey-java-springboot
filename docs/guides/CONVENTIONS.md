@@ -105,8 +105,9 @@ Tipos usados no histórico:
 | `test` | Testes | `test: amplia a cobertura com ITs de conta, autorização, CORS e consultas nativas` |
 | `docs` | Documentação | `docs: reorganiza estrutura de documentação, move auditorias e adiciona licença MIT` |
 | `build` | Build e dependências | `build: adiciona o maven-failsafe-plugin para executar os testes *IT` |
+| `ci` | Integração contínua (workflows do GitHub Actions) | `ci: adiciona workflow de build e testes` |
 
-Escopos já usados: `i18n`, `flyway` e `config`.
+Escopos já usados: `i18n`, `flyway`, `config`, `email`, `domain` e, no capítulo 05, `jacoco`, `surefire`, `testing`, `service`, `user`, `handler`, `security`, `web`, `mapper`, `validation`, `repository` e `integration`.
 
 Os commits mais antigos do repositório não seguem esse formato (há mensagens como `Update README.md`). A convenção vale para os commits novos.
 
@@ -120,6 +121,7 @@ O projeto é documentado por **capítulos**, e cada capítulo tem sua branch:
 | `chapter-02-tests` | 02 — Testes automatizados |
 | `chapter-03-validation-security` | 03 — Validação e segurança |
 | `chapter-04-domain-orm` | 04 — Domínio, ORM, casos de uso e acesso a dados |
+| `chapter-05-jacoco` | 05 — Cobertura de testes com JaCoCo e qualidade dos testes |
 
 Também existem `main` (a branch padrão do repositório remoto) e `develop`. O trabalho de um capítulo é feito na branch dele, e o `README.md` da raiz de cada branch apresenta aquele capítulo.
 
