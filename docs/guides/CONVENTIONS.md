@@ -74,7 +74,7 @@ Ao mudar um comportamento, atualize o JavaDoc junto.
 
 ## 5. Testes
 
-- Nome do método no padrão `<método>Should<resultado>When<condição>`, por exemplo `findByIdShouldReturnCategoryWhenIdExists` ou `deleteShouldReturnForbiddenWithoutWriteRole`.
+- Nome do método no padrão `<método>Should<resultado>When<condição>`, por exemplo `findByIdShouldReturnCategoryWhenIdExists` ou `deleteCategoryShouldReturnForbiddenWhenUserHasNoWriteRole`.
 - `@DisplayName` em inglês, dizendo o mesmo que o nome do método.
 - `@Nested` agrupa os testes de um mesmo método ou endpoint.
 - Dados de teste vêm das fábricas do pacote `factory`, sem valores escritos à mão.

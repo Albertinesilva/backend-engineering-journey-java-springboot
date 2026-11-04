@@ -20,6 +20,12 @@ public class UserFactory {
   public static final Long OPERATOR_USER_ID = 1L;
 
   /**
+   * E-mail do usuário {@code albert@gmail.com} ({@link #OPERATOR_USER_ID}), só
+   * com a role OPERATOR no seed ({@code import.sql}). Valor fixo do seed (#21).
+   */
+  public static final String OPERATOR_EMAIL = "albert@gmail.com";
+
+  /**
    * Id da usuária {@code maria@gmail.com} ({@link #EXISTING_EMAIL}), com as roles
    * OPERATOR e ADMIN no seed ({@code import.sql}). Valor fixo do seed (#21).
    */

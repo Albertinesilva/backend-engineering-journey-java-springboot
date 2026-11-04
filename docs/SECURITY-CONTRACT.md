@@ -633,9 +633,9 @@ Não há código customizado de invalidação. A rotação vem da configuração
 
 Confirmado por teste em [backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/oauth2/OAuth2TokenIT.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/integrations/oauth2/OAuth2TokenIT.java):
 
-- `refreshTokenGrantShouldIssueNewAccessTokenAndRotateRefreshToken`: o refresh devolve access e refresh tokens diferentes dos originais e mantém os claims `username`, `userId` e `authorities`;
-- `refreshTokenGrantShouldRejectReuseOfTheOldRefreshTokenAfterRotation`: reutilizar o refresh token antigo responde `400` com `invalid_grant`;
-- `refreshTokenGrantShouldRejectInvalidRefreshToken`: refresh token inexistente responde `400` com `invalid_grant`.
+- `refreshTokenGrantShouldRotateTokenPairAndKeepUserClaimsWhenRefreshTokenIsValid`: o refresh devolve access e refresh tokens diferentes dos originais e mantém os claims `username`, `userId` e `authorities`;
+- `refreshTokenGrantShouldReturnInvalidGrantWhenOldRefreshTokenIsReusedAfterRotation`: reutilizar o refresh token antigo responde `400` com `invalid_grant`;
+- `refreshTokenGrantShouldReturnInvalidGrantWhenRefreshTokenDoesNotExist`: refresh token inexistente responde `400` com `invalid_grant`.
 
 Também confirmado por execução.
 
@@ -672,7 +672,7 @@ O token e o refresh token são processados pelo Spring Authorization Server para
 
 O teste existente [backend/src/test/java/com/albertsilva/dev/asjcatalog/utils/TokenUtil.java](../backend/src/test/java/com/albertsilva/dev/asjcatalog/utils/TokenUtil.java) confirma que a resposta da requisição ao `/oauth2/token` é tratada como JSON e contém `access_token`.
 
-O `OAuth2TokenIT` (`passwordGrantShouldIssueAccessAndRefreshTokenWithUserClaims`) confirma que a resposta traz `access_token` e `refresh_token` e que o JWT contém os claims `username`, `userId` e `authorities`.
+O `OAuth2TokenIT` (`passwordGrantShouldIssueAccessAndRefreshTokensWithUserClaimsWhenCredentialsAreValid`) confirma que a resposta traz `access_token` e `refresh_token` e que o JWT contém os claims `username`, `userId` e `authorities`.
 
 Confirmado por execução: a resposta tem os campos `access_token`, `refresh_token`, `token_type` (`Bearer`) e `expires_in` (`86400` com o valor padrão). Não há campo `scope` (veja 11.3).
 

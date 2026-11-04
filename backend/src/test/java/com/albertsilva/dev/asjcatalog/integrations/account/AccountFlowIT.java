@@ -1,8 +1,8 @@
 package com.albertsilva.dev.asjcatalog.integrations.account;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.EXISTING_EMAIL;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.SEED_PASSWORD;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -51,20 +51,37 @@ import jakarta.mail.internet.MimeMessage;
  * O envio de e-mail é substituído por um mock de {@link JavaMailSenderImpl}
  * (tipo concreto, porque o validador de conexão SMTP do Spring Boot injeta a
  * implementação). Os tokens de conta são obtidos pelo {@link TokenRepository}.
- * Os e-mails usam o domínio gmail.com porque {@code @ValidEmail} consulta o
- * registro MX no DNS. As mensagens de erro são conferidas em inglês
- * ({@code Accept-Language: en}).
+ * A consulta de MX do {@code @ValidEmail} é substituída pelo
+ * {@code MxRecordLookupTestConfig}, importado no {@link AbstractIT} (#20). As
+ * mensagens de erro são conferidas em inglês ({@code Accept-Language: en}).
  * </p>
+ *
+ * <p>
+ * Dependem do seed ({@code import.sql}): a usuária {@code maria@gmail.com} e a
+ * senha do seed (#21).
+ * </p>
+ *
+ * <p>
+ * <b>Cenários pendentes:</b>
+ * </p>
+ * <ul>
+ * <li>Status do registro de e-mail ({@code PENDING}, {@code SENT} ou
+ * {@code ERROR}) depois do envio, que depende da revisão do envio assíncrono
+ * (#26).</li>
+ * <li>Link do e-mail de recuperação de senha: hoje usa o caminho
+ * {@code /auth/reset-password} (#46).</li>
+ * <li>{@code GET /accounts/me} sem token: hoje responde {@code 403} em vez de
+ * {@code 401} (#10).</li>
+ * </ul>
  */
 @Transactional
-@DisplayName("Account Flow Integration Tests")
+@DisplayName("Integration tests for account flows")
 class AccountFlowIT extends AbstractIT {
 
   private static final String ACCOUNTS_URL = "/api/v1/accounts";
   private static final String STRONG_PASSWORD = "Kx9#mPq2Lw!";
   private static final String NEW_STRONG_PASSWORD = "Tz4$vBn8Qe@";
   private static final String NEW_USER_EMAIL = "joana.flowit@gmail.com";
-  private static final String EXISTING_EMAIL = "maria@gmail.com";
 
   @MockitoBean
   private JavaMailSenderImpl mailSender;
@@ -115,9 +132,9 @@ class AccountFlowIT extends AbstractIT {
           .andExpect(jsonPath("$.email").value(NEW_USER_EMAIL));
       activateResult.andExpect(status().isNoContent());
 
-      assertTrue(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive());
-      assertTrue(tokenRepository.findByToken(activationToken).orElseThrow().getDisabled());
-      assertFalse(tokenUtil.obtainAccessToken(mockMvc, NEW_USER_EMAIL, STRONG_PASSWORD).isBlank());
+      assertThat(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive()).isTrue();
+      assertThat(tokenRepository.findByToken(activationToken).orElseThrow().getDisabled()).isTrue();
+      assertThat(tokenUtil.obtainAccessToken(mockMvc, NEW_USER_EMAIL, STRONG_PASSWORD)).isNotBlank();
     }
 
     @Test
@@ -134,7 +151,7 @@ class AccountFlowIT extends AbstractIT {
       loginResult
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.error").value("invalid_grant"));
-      assertFalse(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive());
+      assertThat(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive()).isFalse();
     }
 
     @Test
@@ -155,13 +172,13 @@ class AccountFlowIT extends AbstractIT {
 
       // Assert
       resendResult.andExpect(status().isNoContent());
-      assertFalse(firstToken.equals(secondToken));
+      assertThat(firstToken).isNotEqualTo(secondToken);
       firstTokenResult
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.code").value("INVALID_TOKEN"))
           .andExpect(jsonPath("$.message").value("Token is disabled."));
       secondTokenResult.andExpect(status().isNoContent());
-      assertTrue(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive());
+      assertThat(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive()).isTrue();
     }
   }
 
@@ -183,8 +200,8 @@ class AccountFlowIT extends AbstractIT {
 
       // Assert
       resetResult.andExpect(status().isNoContent());
-      assertFalse(tokenUtil.obtainAccessToken(mockMvc, EXISTING_EMAIL, NEW_STRONG_PASSWORD).isBlank());
-      login(EXISTING_EMAIL, "123456")
+      assertThat(tokenUtil.obtainAccessToken(mockMvc, EXISTING_EMAIL, NEW_STRONG_PASSWORD)).isNotBlank();
+      login(EXISTING_EMAIL, SEED_PASSWORD)
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.error").value("invalid_grant"));
     }
@@ -205,7 +222,7 @@ class AccountFlowIT extends AbstractIT {
       ResultActions secondTokenResult = resetPassword(secondToken, NEW_STRONG_PASSWORD);
 
       // Assert
-      assertFalse(firstToken.equals(secondToken));
+      assertThat(firstToken).isNotEqualTo(secondToken);
       firstTokenResult
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.code").value("INVALID_TOKEN"))
@@ -244,7 +261,7 @@ class AccountFlowIT extends AbstractIT {
 
       // Assert
       expectInvalidToken(result, "Token is disabled.");
-      assertFalse(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive());
+      assertThat(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive()).isFalse();
     }
 
     @Test
@@ -259,7 +276,7 @@ class AccountFlowIT extends AbstractIT {
 
       // Assert
       expectInvalidToken(result, "Token expired.");
-      assertFalse(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive());
+      assertThat(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive()).isFalse();
     }
 
     @Test
@@ -274,7 +291,7 @@ class AccountFlowIT extends AbstractIT {
 
       // Assert
       expectInvalidToken(result, "Token type is invalid.");
-      assertFalse(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive());
+      assertThat(userRepository.findByEmail(NEW_USER_EMAIL).orElseThrow().isActive()).isFalse();
     }
 
     @Test
@@ -350,7 +367,7 @@ class AccountFlowIT extends AbstractIT {
 
       // Arrange
       User user = userRepository.findByEmail(EXISTING_EMAIL).orElseThrow();
-      bearerToken = tokenUtil.obtainAccessToken(mockMvc, EXISTING_EMAIL, "123456");
+      bearerToken = tokenUtil.obtainAccessToken(mockMvc, EXISTING_EMAIL, SEED_PASSWORD);
 
       // Act
       ResultActions result = mockMvc.perform(get(ACCOUNTS_URL + "/me")
@@ -371,7 +388,7 @@ class AccountFlowIT extends AbstractIT {
 
       // Arrange
       User user = userRepository.findByEmail(EXISTING_EMAIL).orElseThrow();
-      bearerToken = tokenUtil.obtainAccessToken(mockMvc, EXISTING_EMAIL, "123456");
+      bearerToken = tokenUtil.obtainAccessToken(mockMvc, EXISTING_EMAIL, SEED_PASSWORD);
       AuthenticatedUserUpdateRequest request = new AuthenticatedUserUpdateRequest("Mariana", "Souza", EXISTING_EMAIL);
 
       // Act
@@ -388,8 +405,8 @@ class AccountFlowIT extends AbstractIT {
           .andExpect(jsonPath("$.firstName").value("Mariana"))
           .andExpect(jsonPath("$.lastName").value("Souza"));
       User updated = userRepository.findById(user.getId()).orElseThrow();
-      assertEquals("Mariana", updated.getFirstName());
-      assertEquals("Souza", updated.getLastName());
+      assertThat(updated.getFirstName()).isEqualTo("Mariana");
+      assertThat(updated.getLastName()).isEqualTo("Souza");
     }
 
     @Test
@@ -406,7 +423,7 @@ class AccountFlowIT extends AbstractIT {
 
       // Assert
       result.andExpect(status().isNoContent());
-      assertFalse(tokenUtil.obtainAccessToken(mockMvc, EXISTING_EMAIL, NEW_STRONG_PASSWORD).isBlank());
+      assertThat(tokenUtil.obtainAccessToken(mockMvc, EXISTING_EMAIL, NEW_STRONG_PASSWORD)).isNotBlank();
       login(EXISTING_EMAIL, STRONG_PASSWORD).andExpect(status().isBadRequest());
     }
 
@@ -493,7 +510,7 @@ class AccountFlowIT extends AbstractIT {
 
   private Token singleOpenToken(User user, TokenType type) {
     List<Token> tokens = tokenRepository.findByUserAndTypeAndDisabledFalse(user, type);
-    assertEquals(1, tokens.size(), "Esperado exatamente um token em aberto do tipo " + type);
+    assertThat(tokens).as("Esperado exatamente um token em aberto do tipo " + type).hasSize(1);
     return tokens.get(0);
   }
 
@@ -543,6 +560,6 @@ class AccountFlowIT extends AbstractIT {
   }
 
   private void assertPasswordUnchanged() throws Exception {
-    login(EXISTING_EMAIL, "123456").andExpect(status().isOk());
+    login(EXISTING_EMAIL, SEED_PASSWORD).andExpect(status().isOk());
   }
 }

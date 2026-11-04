@@ -1,8 +1,6 @@
 package com.albertsilva.dev.asjcatalog.integrations.security;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -43,7 +41,7 @@ import com.albertsilva.dev.asjcatalog.repository.UserRepository;
  * teste confere também que nada foi alterado no banco.
  */
 @Transactional
-@DisplayName("Catalog Write Authorization Integration Tests")
+@DisplayName("Integration tests for catalog write authorization")
 class CatalogWriteAuthorizationIT extends AbstractIT {
 
   private static final String CATEGORIES_URL = "/api/v1/categories";
@@ -85,8 +83,8 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
   class CategoryWriteRoutes {
 
     @Test
-    @DisplayName("POST /categories should return 401 without token and create nothing")
-    void createShouldReturnUnauthorizedWithoutToken() throws Exception {
+    @DisplayName("POST /categories should return 401 and create nothing when token is missing")
+    void createCategoryShouldReturnUnauthorizedWhenTokenIsMissing() throws Exception {
 
       // Arrange
       long count = categoryRepository.count();
@@ -96,12 +94,12 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       result.andExpect(status().isUnauthorized());
-      assertEquals(count, categoryRepository.count());
+      assertThat(categoryRepository.count()).isEqualTo(count);
     }
 
     @Test
-    @DisplayName("POST /categories should return 403 for a user without ADMIN or OPERATOR role and create nothing")
-    void createShouldReturnForbiddenWithoutWriteRole() throws Exception {
+    @DisplayName("POST /categories should return 403 and create nothing when user has no write role")
+    void createCategoryShouldReturnForbiddenWhenUserHasNoWriteRole() throws Exception {
 
       // Arrange
       long count = categoryRepository.count();
@@ -112,12 +110,12 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       expectAccessDenied(result);
-      assertEquals(count, categoryRepository.count());
+      assertThat(categoryRepository.count()).isEqualTo(count);
     }
 
     @Test
-    @DisplayName("PATCH /categories/{id} should return 401 without token and keep the category")
-    void updateShouldReturnUnauthorizedWithoutToken() throws Exception {
+    @DisplayName("PATCH /categories/{id} should return 401 and keep the category when token is missing")
+    void updateCategoryShouldReturnUnauthorizedWhenTokenIsMissing() throws Exception {
 
       // Arrange
       String name = categoryName();
@@ -128,12 +126,12 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       result.andExpect(status().isUnauthorized());
-      assertEquals(name, categoryName());
+      assertThat(categoryName()).isEqualTo(name);
     }
 
     @Test
-    @DisplayName("PATCH /categories/{id} should return 403 for a user without ADMIN or OPERATOR role and keep the category")
-    void updateShouldReturnForbiddenWithoutWriteRole() throws Exception {
+    @DisplayName("PATCH /categories/{id} should return 403 and keep the category when user has no write role")
+    void updateCategoryShouldReturnForbiddenWhenUserHasNoWriteRole() throws Exception {
 
       // Arrange
       String name = categoryName();
@@ -144,36 +142,36 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       expectAccessDenied(result);
-      assertEquals(name, categoryName());
+      assertThat(categoryName()).isEqualTo(name);
     }
 
     @Test
-    @DisplayName("DELETE /categories/{id} should return 401 without token and keep the category")
-    void deleteShouldReturnUnauthorizedWithoutToken() throws Exception {
+    @DisplayName("DELETE /categories/{id} should return 401 and keep the category when token is missing")
+    void deleteCategoryShouldReturnUnauthorizedWhenTokenIsMissing() throws Exception {
 
       // Act
       ResultActions result = mockMvc.perform(delete(CATEGORIES_URL + "/{id}", DELETABLE_CATEGORY_ID));
 
       // Assert
       result.andExpect(status().isUnauthorized());
-      assertTrue(categoryRepository.existsById(DELETABLE_CATEGORY_ID));
+      assertThat(categoryRepository.existsById(DELETABLE_CATEGORY_ID)).isTrue();
     }
 
     @Test
-    @DisplayName("DELETE /categories/{id} should return 403 for a user without ADMIN or OPERATOR role and keep the category")
-    void deleteShouldReturnForbiddenWithoutWriteRole() throws Exception {
+    @DisplayName("DELETE /categories/{id} should return 403 and keep the category when user has no write role")
+    void deleteCategoryShouldReturnForbiddenWhenUserHasNoWriteRole() throws Exception {
 
       // Act
       ResultActions result = mockMvc.perform(asClient(delete(CATEGORIES_URL + "/{id}", DELETABLE_CATEGORY_ID)));
 
       // Assert
       expectAccessDenied(result);
-      assertTrue(categoryRepository.existsById(DELETABLE_CATEGORY_ID));
+      assertThat(categoryRepository.existsById(DELETABLE_CATEGORY_ID)).isTrue();
     }
 
     @Test
-    @DisplayName("PATCH /categories/{id}/activate should return 401 without token and keep the category inactive")
-    void activateShouldReturnUnauthorizedWithoutToken() throws Exception {
+    @DisplayName("PATCH /categories/{id}/activate should return 401 and keep the category inactive when token is missing")
+    void activateCategoryShouldReturnUnauthorizedWhenTokenIsMissing() throws Exception {
 
       // Arrange
       setCategoryActive(false);
@@ -183,12 +181,12 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       result.andExpect(status().isUnauthorized());
-      assertFalse(categoryActive());
+      assertThat(categoryActive()).isFalse();
     }
 
     @Test
-    @DisplayName("PATCH /categories/{id}/activate should return 403 for a user without ADMIN or OPERATOR role and keep the category inactive")
-    void activateShouldReturnForbiddenWithoutWriteRole() throws Exception {
+    @DisplayName("PATCH /categories/{id}/activate should return 403 and keep the category inactive when user has no write role")
+    void activateCategoryShouldReturnForbiddenWhenUserHasNoWriteRole() throws Exception {
 
       // Arrange
       setCategoryActive(false);
@@ -198,12 +196,12 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       expectAccessDenied(result);
-      assertFalse(categoryActive());
+      assertThat(categoryActive()).isFalse();
     }
 
     @Test
-    @DisplayName("PATCH /categories/{id}/deactivate should return 401 without token and keep the category active")
-    void deactivateShouldReturnUnauthorizedWithoutToken() throws Exception {
+    @DisplayName("PATCH /categories/{id}/deactivate should return 401 and keep the category active when token is missing")
+    void deactivateCategoryShouldReturnUnauthorizedWhenTokenIsMissing() throws Exception {
 
       // Arrange
       setCategoryActive(true);
@@ -213,12 +211,12 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       result.andExpect(status().isUnauthorized());
-      assertTrue(categoryActive());
+      assertThat(categoryActive()).isTrue();
     }
 
     @Test
-    @DisplayName("PATCH /categories/{id}/deactivate should return 403 for a user without ADMIN or OPERATOR role and keep the category active")
-    void deactivateShouldReturnForbiddenWithoutWriteRole() throws Exception {
+    @DisplayName("PATCH /categories/{id}/deactivate should return 403 and keep the category active when user has no write role")
+    void deactivateCategoryShouldReturnForbiddenWhenUserHasNoWriteRole() throws Exception {
 
       // Arrange
       setCategoryActive(true);
@@ -228,7 +226,7 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       expectAccessDenied(result);
-      assertTrue(categoryActive());
+      assertThat(categoryActive()).isTrue();
     }
 
     private String categoryName() {
@@ -251,8 +249,8 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
   class ProductWriteRoutes {
 
     @Test
-    @DisplayName("POST /products should return 401 without token and create nothing")
-    void createShouldReturnUnauthorizedWithoutToken() throws Exception {
+    @DisplayName("POST /products should return 401 and create nothing when token is missing")
+    void createProductShouldReturnUnauthorizedWhenTokenIsMissing() throws Exception {
 
       // Arrange
       long count = productRepository.count();
@@ -262,12 +260,12 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       result.andExpect(status().isUnauthorized());
-      assertEquals(count, productRepository.count());
+      assertThat(productRepository.count()).isEqualTo(count);
     }
 
     @Test
-    @DisplayName("POST /products should return 403 for a user without ADMIN or OPERATOR role and create nothing")
-    void createShouldReturnForbiddenWithoutWriteRole() throws Exception {
+    @DisplayName("POST /products should return 403 and create nothing when user has no write role")
+    void createProductShouldReturnForbiddenWhenUserHasNoWriteRole() throws Exception {
 
       // Arrange
       long count = productRepository.count();
@@ -278,12 +276,12 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       expectAccessDenied(result);
-      assertEquals(count, productRepository.count());
+      assertThat(productRepository.count()).isEqualTo(count);
     }
 
     @Test
-    @DisplayName("PUT /products/{id} should return 401 without token and keep the product")
-    void updateShouldReturnUnauthorizedWithoutToken() throws Exception {
+    @DisplayName("PUT /products/{id} should return 401 and keep the product when token is missing")
+    void updateProductShouldReturnUnauthorizedWhenTokenIsMissing() throws Exception {
 
       // Arrange
       String name = productName();
@@ -294,12 +292,12 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       result.andExpect(status().isUnauthorized());
-      assertEquals(name, productName());
+      assertThat(productName()).isEqualTo(name);
     }
 
     @Test
-    @DisplayName("PUT /products/{id} should return 403 for a user without ADMIN or OPERATOR role and keep the product")
-    void updateShouldReturnForbiddenWithoutWriteRole() throws Exception {
+    @DisplayName("PUT /products/{id} should return 403 and keep the product when user has no write role")
+    void updateProductShouldReturnForbiddenWhenUserHasNoWriteRole() throws Exception {
 
       // Arrange
       String name = productName();
@@ -310,36 +308,36 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       expectAccessDenied(result);
-      assertEquals(name, productName());
+      assertThat(productName()).isEqualTo(name);
     }
 
     @Test
-    @DisplayName("DELETE /products/{id} should return 401 without token and keep the product")
-    void deleteShouldReturnUnauthorizedWithoutToken() throws Exception {
+    @DisplayName("DELETE /products/{id} should return 401 and keep the product when token is missing")
+    void deleteProductShouldReturnUnauthorizedWhenTokenIsMissing() throws Exception {
 
       // Act
       ResultActions result = mockMvc.perform(delete(PRODUCTS_URL + "/{id}", PRODUCT_ID));
 
       // Assert
       result.andExpect(status().isUnauthorized());
-      assertTrue(productRepository.existsById(PRODUCT_ID));
+      assertThat(productRepository.existsById(PRODUCT_ID)).isTrue();
     }
 
     @Test
-    @DisplayName("DELETE /products/{id} should return 403 for a user without ADMIN or OPERATOR role and keep the product")
-    void deleteShouldReturnForbiddenWithoutWriteRole() throws Exception {
+    @DisplayName("DELETE /products/{id} should return 403 and keep the product when user has no write role")
+    void deleteProductShouldReturnForbiddenWhenUserHasNoWriteRole() throws Exception {
 
       // Act
       ResultActions result = mockMvc.perform(asClient(delete(PRODUCTS_URL + "/{id}", PRODUCT_ID)));
 
       // Assert
       expectAccessDenied(result);
-      assertTrue(productRepository.existsById(PRODUCT_ID));
+      assertThat(productRepository.existsById(PRODUCT_ID)).isTrue();
     }
 
     @Test
-    @DisplayName("PATCH /products/{id}/activate should return 401 without token and keep the product inactive")
-    void activateShouldReturnUnauthorizedWithoutToken() throws Exception {
+    @DisplayName("PATCH /products/{id}/activate should return 401 and keep the product inactive when token is missing")
+    void activateProductShouldReturnUnauthorizedWhenTokenIsMissing() throws Exception {
 
       // Arrange
       setProductActive(false);
@@ -349,12 +347,12 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       result.andExpect(status().isUnauthorized());
-      assertFalse(productActive());
+      assertThat(productActive()).isFalse();
     }
 
     @Test
-    @DisplayName("PATCH /products/{id}/activate should return 403 for a user without ADMIN or OPERATOR role and keep the product inactive")
-    void activateShouldReturnForbiddenWithoutWriteRole() throws Exception {
+    @DisplayName("PATCH /products/{id}/activate should return 403 and keep the product inactive when user has no write role")
+    void activateProductShouldReturnForbiddenWhenUserHasNoWriteRole() throws Exception {
 
       // Arrange
       setProductActive(false);
@@ -364,12 +362,12 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       expectAccessDenied(result);
-      assertFalse(productActive());
+      assertThat(productActive()).isFalse();
     }
 
     @Test
-    @DisplayName("PATCH /products/{id}/deactivate should return 401 without token and keep the product active")
-    void deactivateShouldReturnUnauthorizedWithoutToken() throws Exception {
+    @DisplayName("PATCH /products/{id}/deactivate should return 401 and keep the product active when token is missing")
+    void deactivateProductShouldReturnUnauthorizedWhenTokenIsMissing() throws Exception {
 
       // Arrange
       setProductActive(true);
@@ -379,12 +377,12 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       result.andExpect(status().isUnauthorized());
-      assertTrue(productActive());
+      assertThat(productActive()).isTrue();
     }
 
     @Test
-    @DisplayName("PATCH /products/{id}/deactivate should return 403 for a user without ADMIN or OPERATOR role and keep the product active")
-    void deactivateShouldReturnForbiddenWithoutWriteRole() throws Exception {
+    @DisplayName("PATCH /products/{id}/deactivate should return 403 and keep the product active when user has no write role")
+    void deactivateProductShouldReturnForbiddenWhenUserHasNoWriteRole() throws Exception {
 
       // Arrange
       setProductActive(true);
@@ -394,7 +392,7 @@ class CatalogWriteAuthorizationIT extends AbstractIT {
 
       // Assert
       expectAccessDenied(result);
-      assertTrue(productActive());
+      assertThat(productActive()).isTrue();
     }
 
     private String productName() {
