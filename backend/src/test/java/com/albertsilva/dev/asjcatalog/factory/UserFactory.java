@@ -18,6 +18,18 @@ public class UserFactory {
   public static final String EXISTING_EMAIL = "maria@gmail.com";
   public static final String NON_EXISTING_EMAIL = "naoexiste@gmail.com";
   public static final Long OPERATOR_USER_ID = 1L;
+
+  /**
+   * Id da usuária {@code maria@gmail.com} ({@link #EXISTING_EMAIL}), com as roles
+   * OPERATOR e ADMIN no seed ({@code import.sql}). Valor fixo do seed (#21).
+   */
+  public static final Long ADMIN_USER_ID = 2L;
+
+  /**
+   * Senha dos usuários do seed ({@code import.sql}), usada no login dos testes de
+   * integração. Valor fixo do seed (#21).
+   */
+  public static final String SEED_PASSWORD = "123456";
   public static final String PASSWORD = "JAVA!@#ResTIc18";
   public static final String ENCODED_PASSWORD = "encoded_password";
   public static final String NEW_PASSWORD = "NovaSenha#2026x";

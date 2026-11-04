@@ -2,24 +2,22 @@ package com.albertsilva.dev.asjcatalog.integrations.web.controller;
 
 import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.EXISTING_ID;
 import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NON_EXISTING_ID;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.EXISTING_EMAIL;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.SEED_PASSWORD;
+import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectNotFound;
+import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectValidationError;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -29,12 +27,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,8 +40,18 @@ import com.albertsilva.dev.asjcatalog.factory.ProductFactory;
 import com.albertsilva.dev.asjcatalog.integrations.common.AbstractIT;
 import com.albertsilva.dev.asjcatalog.repository.ProductRepository;
 
+/**
+ * Testes de integração dos endpoints de {@code /api/v1/products}, com o
+ * contexto completo, o banco H2 e o token de uma usuária ADMIN.
+ *
+ * <p>
+ * Dependem do seed ({@code import.sql}): o login de {@code maria@gmail.com}
+ * com a senha do seed, os ids fixos de produtos e de categorias, os nomes
+ * esperados nas ordenações e os totais por categoria (#21).
+ * </p>
+ */
 @Transactional
-@DisplayName("ProductController Integration Tests")
+@DisplayName("Integration tests for ProductController")
 class ProductControllerIT extends AbstractIT {
 
   private static final String BASE_URL = "/api/v1/products";
@@ -54,205 +59,210 @@ class ProductControllerIT extends AbstractIT {
   @Autowired
   private ProductRepository productRepository;
 
-  private String username;
-  private String password;
   private long totalProductsCount;
 
   @BeforeEach
   void setUp() throws Exception {
     totalProductsCount = productRepository.count();
+    bearerToken = tokenUtil.obtainAccessToken(mockMvc, EXISTING_EMAIL, SEED_PASSWORD);
+  }
 
-    username = "maria@gmail.com";
-    password = "123456";
-    bearerToken = tokenUtil.obtainAccessToken(mockMvc, username, password);
+  private Long idFrom(ResultActions resultActions) throws Exception {
+    return objectMapper.readTree(resultActions.andReturn().getResponse().getContentAsString()).get("id").asLong();
   }
 
   @Nested
-  @DisplayName("READ Operations")
-  class ReadOperations {
+  @DisplayName("GET /products")
+  class FindAllOperations {
 
-    @Nested
-    @DisplayName("FindAll Operations")
-    class FindAllOperations {
+    @Test
+    @DisplayName("GET /products should return products sorted by name when sort is name ascending")
+    void findAllShouldReturnProductsSortedByNameWhenSortIsNameAscending() throws Exception {
 
-      @Test
-      @DisplayName("GET /products should return sorted paged products when sort by name")
-      void findAllShouldReturnSortedPagedWhenSortByNameProducts() throws Exception {
+      // Arrange
+      // Nomes com acentos lidos do repositório (ids 155 e 162): literais Java com certos
+      // caracteres acentuados são corrompidos pelo compilador deste ambiente mesmo com o
+      // projeto configurado para UTF-8; os valores persistidos são lidos corretamente via
+      // JDBC, então a comparação permanece exata.
+      String expectedSecondName = productRepository.findById(155L).orElseThrow().getName();
+      String expectedThirdName = productRepository.findById(162L).orElseThrow().getName();
 
-        // Arrange
-        // Nomes com acentos lidos do repositório (ids 155 e 162): literais Java com certos
-        // caracteres acentuados são corrompidos pelo compilador deste ambiente mesmo com o
-        // projeto configurado para UTF-8; os valores persistidos são lidos corretamente via
-        // JDBC, então a comparação permanece exata.
-        String expectedSecondName = productRepository.findById(155L).orElseThrow().getName();
-        String expectedThirdName = productRepository.findById(162L).orElseThrow().getName();
+      // Act
+      ResultActions resultActions = mockMvc.perform(get(BASE_URL)
+          .param("page", "0")
+          .param("size", "12")
+          .param("sort", "name,asc")
+          .accept(MediaType.APPLICATION_JSON));
 
-        // Act
-        ResultActions resultActions = mockMvc.perform(get(BASE_URL)
-            .param("page", "0")
-            .param("size", "12")
-            .param("sort", "name,asc")
-            .accept(MediaType.APPLICATION_JSON));
-
-        // Assert
-        resultActions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content").isArray())
-            .andExpect(jsonPath("$.totalElements").value(totalProductsCount))
-            .andExpect(jsonPath("$.content[0].name").value("Air Fryer 5L Digital"))
-            .andExpect(jsonPath("$.content[1].name").value(expectedSecondName))
-            .andExpect(jsonPath("$.content[2].name").value(expectedThirdName))
-            .andExpect(jsonPath("$.number").value(0))
-            .andExpect(jsonPath("$.size").value(12));
-      }
-
-      @Test
-      @DisplayName("GET /products with one categoryId should return only the products of that category")
-      void findAllShouldReturnOnlyProductsOfTheInformedCategory() throws Exception {
-
-        // Act
-        ResultActions resultActions = mockMvc.perform(get(BASE_URL)
-            .param("categoryIds", "2")
-            .param("page", "0")
-            .param("size", "5")
-            .param("sort", "name,asc")
-            .accept(MediaType.APPLICATION_JSON));
-
-        // Assert
-        resultActions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.totalElements").value(27))
-            .andExpect(jsonPath("$.content[*].name").value(contains("Clean Architecture", "Clean Code",
-                "Continuous Delivery", "Design Patterns: Elements of Reusable Object-Oriented Software",
-                "Designing Data-Intensive Applications")))
-            .andExpect(jsonPath("$.content[*].categories[*].id").value(hasItem(2)));
-      }
-
-      @Test
-      @DisplayName("GET /products with several categoryIds should return the products of any of them without repetition")
-      void findAllShouldReturnProductsOfAnyInformedCategoryWithoutRepetition() throws Exception {
-
-        // Act
-        ResultActions resultActions = mockMvc.perform(get(BASE_URL)
-            .param("categoryIds", "29,33")
-            .param("page", "0")
-            .param("size", "30")
-            .accept(MediaType.APPLICATION_JSON));
-
-        // Assert
-        resultActions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.totalElements").value(7))
-            .andExpect(jsonPath("$.content[*].id").value(containsInAnyOrder(74, 75, 76, 85, 86, 87, 155)));
-      }
-
-      @Test
-      @DisplayName("GET /products with name and categoryIds should apply both filters")
-      void findAllShouldApplyNameAndCategoryFiltersTogether() throws Exception {
-
-        // Act
-        ResultActions resultActions = mockMvc.perform(get(BASE_URL)
-            .param("name", "rails")
-            .param("categoryIds", "2")
-            .accept(MediaType.APPLICATION_JSON));
-
-        // Assert
-        resultActions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.totalElements").value(1))
-            .andExpect(jsonPath("$.content[0].name").value("Ruby on Rails For Dummies"));
-      }
-
-      @Test
-      @DisplayName("GET /products with name filter should return only products whose name contains the filter")
-      void findAllShouldReturnFilteredProductsWhenNameParameterIsInformed() throws Exception {
-
-        // Act
-        ResultActions resultActions = mockMvc.perform(get(BASE_URL)
-            .param("name", "pc")
-            .param("page", "0")
-            .param("size", "10")
-            .accept(MediaType.APPLICATION_JSON));
-
-        // Assert
-        resultActions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content").isNotEmpty())
-            .andExpect(jsonPath("$.content[*].name").value(everyItem(containsStringIgnoringCase("pc"))));
-      }
+      // Assert
+      resultActions
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.totalElements").value(totalProductsCount))
+          .andExpect(jsonPath("$.content.length()").value(12))
+          .andExpect(jsonPath("$.content[0].name").value("Air Fryer 5L Digital"))
+          .andExpect(jsonPath("$.content[1].name").value(expectedSecondName))
+          .andExpect(jsonPath("$.content[2].name").value(expectedThirdName))
+          .andExpect(jsonPath("$.number").value(0))
+          .andExpect(jsonPath("$.size").value(12));
     }
 
-    @Nested
-    @DisplayName("FindById Operations")
-    class FindByIdOperations {
+    @Test
+    @DisplayName("GET /products should return only products of the category when one categoryId is informed")
+    void findAllShouldReturnOnlyProductsOfTheCategoryWhenOneCategoryIdIsInformed() throws Exception {
 
-      @Test
-      @DisplayName("GET /products/{id} should return product details when id exists")
-      void findByIdShouldReturnProductWhenIdExists() throws Exception {
+      // Act
+      ResultActions resultActions = mockMvc.perform(get(BASE_URL)
+          .param("categoryIds", "2")
+          .param("page", "0")
+          .param("size", "5")
+          .param("sort", "name,asc")
+          .accept(MediaType.APPLICATION_JSON));
 
-        ResultActions resultActions = mockMvc
-            .perform(get(BASE_URL + "/{id}", EXISTING_ID).accept(MediaType.APPLICATION_JSON));
+      // Assert
+      resultActions
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.totalElements").value(27))
+          .andExpect(jsonPath("$.content[*].name").value(contains("Clean Architecture", "Clean Code",
+              "Continuous Delivery", "Design Patterns: Elements of Reusable Object-Oriented Software",
+              "Designing Data-Intensive Applications")))
+          .andExpect(jsonPath("$.content[*].categories[*].id").value(hasItem(2)));
+    }
 
-        resultActions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(EXISTING_ID))
-            .andExpect(jsonPath("$.name").isNotEmpty())
-            .andExpect(jsonPath("$.description").isNotEmpty())
-            .andExpect(jsonPath("$.price").isNumber());
-      }
+    @Test
+    @DisplayName("GET /products should return products without repetition when several categoryIds are informed")
+    void findAllShouldReturnProductsWithoutRepetitionWhenSeveralCategoryIdsAreInformed() throws Exception {
 
-      @Test
-      @DisplayName("GET /products/{id} should return 404 with RESOURCE_NOT_FOUND code and translated message when id does not exist")
-      void findByIdShouldReturnNotFoundWhenIdDoesNotExist() throws Exception {
+      // Act
+      ResultActions resultActions = mockMvc.perform(get(BASE_URL)
+          .param("categoryIds", "29,33")
+          .param("page", "0")
+          .param("size", "30")
+          .accept(MediaType.APPLICATION_JSON));
 
-        ResultActions resultActions = mockMvc
-            .perform(get(BASE_URL + "/{id}", NON_EXISTING_ID).header(HttpHeaders.ACCEPT_LANGUAGE, "en")
-            .accept(MediaType.APPLICATION_JSON));
+      // Assert
+      resultActions
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.totalElements").value(7))
+          .andExpect(jsonPath("$.content[*].id").value(containsInAnyOrder(74, 75, 76, 85, 86, 87, 155)));
+    }
 
-        resultActions
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
-            .andExpect(jsonPath("$.message").value("Product not found."));
-      }
+    @Test
+    @DisplayName("GET /products should apply both filters when name and categoryIds are informed")
+    void findAllShouldApplyBothFiltersWhenNameAndCategoryIdsAreInformed() throws Exception {
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(get(BASE_URL)
+          .param("name", "rails")
+          .param("categoryIds", "2")
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      resultActions
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.totalElements").value(1))
+          .andExpect(jsonPath("$.content[0].name").value("Ruby on Rails For Dummies"));
+    }
+
+    @Test
+    @DisplayName("GET /products should return only matching products when name is informed")
+    void findAllShouldReturnOnlyMatchingProductsWhenNameIsInformed() throws Exception {
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(get(BASE_URL)
+          .param("name", "pc")
+          .param("page", "0")
+          .param("size", "10")
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      resultActions
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.content").isNotEmpty())
+          .andExpect(jsonPath("$.content[*].name").value(everyItem(containsStringIgnoringCase("pc"))));
     }
   }
 
   @Nested
-  @DisplayName("CREATE Operations")
+  @DisplayName("GET /products/{id}")
+  class FindByIdOperations {
+
+    @Test
+    @DisplayName("GET /products/{id} should return product details when id exists")
+    void findByIdShouldReturnProductDetailsWhenIdExists() throws Exception {
+
+      // Arrange
+      Product expected = productRepository.findById(EXISTING_ID).orElseThrow();
+
+      // Act
+      ResultActions resultActions = mockMvc
+          .perform(get(BASE_URL + "/{id}", EXISTING_ID).accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      resultActions
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.id").value(EXISTING_ID))
+          .andExpect(jsonPath("$.name").value(expected.getName()))
+          .andExpect(jsonPath("$.description").value(expected.getDescription()))
+          .andExpect(jsonPath("$.price").value(expected.getPrice()));
+    }
+
+    @Test
+    @DisplayName("GET /products/{id} should return 404 with translated message when id does not exist")
+    void findByIdShouldReturnNotFoundWithTranslatedMessageWhenIdDoesNotExist() throws Exception {
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(get(BASE_URL + "/{id}", NON_EXISTING_ID)
+          .header(HttpHeaders.ACCEPT_LANGUAGE, "en")
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      expectNotFound(resultActions, BASE_URL + "/" + NON_EXISTING_ID);
+      resultActions.andExpect(jsonPath("$.message").value("Product not found."));
+    }
+  }
+
+  @Nested
+  @DisplayName("POST /products")
   class CreateOperations {
 
     @Test
-    @DisplayName("POST /products should create product with valid data")
-    void insertShouldCreateProductWithValidData() throws Exception {
+    @DisplayName("POST /products should return 201 with location and persist product when request is valid")
+    void createShouldReturnCreatedWithLocationAndPersistProductWhenRequestIsValid() throws Exception {
 
       // Arrange
       ProductCreateRequest request = ProductFactory.createProductCreateRequest();
-      String jsonRequest = asJson(request);
       long initialCount = productRepository.count();
 
       // Act
       ResultActions resultActions = mockMvc.perform(post(BASE_URL)
           .with(bearerToken())
-          .content(jsonRequest)
+          .content(asJson(request))
           .contentType(MediaType.APPLICATION_JSON)
           .accept(MediaType.APPLICATION_JSON));
 
       // Assert
       resultActions
           .andExpect(status().isCreated())
-          .andExpect(header().exists("Location"))
-          .andExpect(jsonPath("$.id").isNotEmpty())
+          .andExpect(jsonPath("$.id").isNumber())
           .andExpect(jsonPath("$.name").value(request.name()))
           .andExpect(jsonPath("$.description").value(request.description()))
           .andExpect(jsonPath("$.price").value(request.price()))
           .andExpect(jsonPath("$.date").doesNotExist());
 
-      assertEquals(productRepository.count(), initialCount + 1);
+      Long id = idFrom(resultActions);
+      resultActions.andExpect(header().string("Location", "http://localhost" + BASE_URL + "/" + id));
+
+      assertThat(productRepository.count()).isEqualTo(initialCount + 1);
+      assertThat(productRepository.findById(id).orElseThrow())
+          .extracting(Product::getName, Product::getDescription, Product::getPrice)
+          .containsExactly(request.name(), request.description(), request.price());
     }
 
+    // #25 (item 2): o request ainda aceita "date", que o ProductMapper descarta; o teste passa por
+    // esse campo enquanto ele existir.
     @Test
-    @DisplayName("POST /products should accept date but discard it and fill audit dates on persistence")
-    void insertShouldDiscardDateAndFillAuditDatesOnPersistence() throws Exception {
+    @DisplayName("POST /products should fill audit dates and activate product when product is persisted")
+    void createShouldFillAuditDatesAndActivateProductWhenProductIsPersisted() throws Exception {
 
       // Arrange
       ProductCreateRequest request = ProductFactory.createProductCreateRequest();
@@ -267,20 +277,16 @@ class ProductControllerIT extends AbstractIT {
       // Assert
       resultActions.andExpect(status().isCreated());
 
-      Long id = objectMapper.readTree(resultActions.andReturn().getResponse().getContentAsString()).get("id")
-          .asLong();
-      Product persisted = productRepository.findById(id).orElseThrow();
+      Product persisted = productRepository.findById(idFrom(resultActions)).orElseThrow();
 
-      assertNotNull(persisted.getCreatedAt());
-      assertNotNull(persisted.getUpdatedAt());
-      assertNotEquals(request.date(), persisted.getCreatedAt());
-      assertEquals(persisted.getCreatedAt(), persisted.getUpdatedAt());
-      assertEquals(true, persisted.isActive());
+      assertThat(persisted.getCreatedAt()).isNotNull().isNotEqualTo(request.date());
+      assertThat(persisted.getUpdatedAt()).isEqualTo(persisted.getCreatedAt());
+      assertThat(persisted.isActive()).isTrue();
     }
 
     @Test
-    @DisplayName("POST /products should return 422 with the translated field error when categoryIds is empty and create nothing")
-    void createShouldReturnUnprocessableEntityWhenCategoryIdsIsEmpty() throws Exception {
+    @DisplayName("POST /products should return 422 with translated field error and create nothing when categoryIds is empty")
+    void createShouldReturnUnprocessableEntityAndCreateNothingWhenCategoryIdsIsEmpty() throws Exception {
 
       // Arrange
       ProductCreateRequest request = new ProductCreateRequest("Valid Product Name", "Valid description", 10.0,
@@ -296,35 +302,29 @@ class ProductControllerIT extends AbstractIT {
           .accept(MediaType.APPLICATION_JSON));
 
       // Assert
-      resultActions
-          .andExpect(status().isUnprocessableEntity())
-          .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-          .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'categoryIds')].message")
-              .value(hasItem("Product must contain at least one category.")));
+      expectValidationError(resultActions, BASE_URL, "categoryIds");
+      resultActions.andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'categoryIds')].message")
+          .value(hasItem("Product must contain at least one category.")));
 
-      assertEquals(initialCount, productRepository.count());
+      assertThat(productRepository.count()).isEqualTo(initialCount);
     }
   }
 
   @Nested
-  @DisplayName("UPDATE Operations")
+  @DisplayName("PUT /products/{id}")
   class UpdateOperations {
 
     @Test
-    @DisplayName("PUT /products/{id} should update product when id exists")
-    void updateShouldReturnProductResponseWhenIdExists() throws Exception {
+    @DisplayName("PUT /products/{id} should return 200 and persist changes when id exists")
+    void updateShouldReturnOkAndPersistChangesWhenIdExists() throws Exception {
 
       // Arrange
       ProductUpdateRequest request = ProductFactory.createProductUpdateRequest();
-      String jsonRequest = asJson(request);
-
-      String expectedName = request.name();
-      String expectedDescription = request.description();
 
       // Act
       ResultActions resultActions = mockMvc.perform(put(BASE_URL + "/{id}", EXISTING_ID)
           .with(bearerToken())
-          .content(jsonRequest)
+          .content(asJson(request))
           .contentType(MediaType.APPLICATION_JSON)
           .accept(MediaType.APPLICATION_JSON));
 
@@ -332,8 +332,13 @@ class ProductControllerIT extends AbstractIT {
       resultActions
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.id").value(EXISTING_ID))
-          .andExpect(jsonPath("$.name").value(expectedName))
-          .andExpect(jsonPath("$.description").value(expectedDescription));
+          .andExpect(jsonPath("$.name").value(request.name()))
+          .andExpect(jsonPath("$.description").value(request.description()))
+          .andExpect(jsonPath("$.price").value(request.price()));
+
+      assertThat(productRepository.findById(EXISTING_ID).orElseThrow())
+          .extracting(Product::getName, Product::getDescription, Product::getPrice)
+          .containsExactly(request.name(), request.description(), request.price());
     }
 
     @Test
@@ -342,27 +347,26 @@ class ProductControllerIT extends AbstractIT {
 
       // Arrange
       ProductUpdateRequest request = ProductFactory.createProductUpdateRequest();
-      String jsonRequest = asJson(request);
 
       // Act
       ResultActions resultActions = mockMvc.perform(put(BASE_URL + "/{id}", NON_EXISTING_ID)
           .with(bearerToken())
-          .content(jsonRequest)
+          .content(asJson(request))
           .contentType(MediaType.APPLICATION_JSON)
           .accept(MediaType.APPLICATION_JSON));
 
       // Assert
-      resultActions.andExpect(status().isNotFound());
+      expectNotFound(resultActions, BASE_URL + "/" + NON_EXISTING_ID);
     }
   }
 
   @Nested
-  @DisplayName("ACTIVATE Operations")
+  @DisplayName("PATCH /products/{id}/activate")
   class ActivateOperations {
 
     @Test
-    @DisplayName("PATCH /products/{id}/activate should activate an inactive product")
-    void activateShouldActivateProductWhenProductIsInactive() throws Exception {
+    @DisplayName("PATCH /products/{id}/activate should return 204 and activate product when product is inactive")
+    void activateShouldReturnNoContentAndActivateProductWhenProductIsInactive() throws Exception {
 
       // Arrange
       Product product = productRepository.findById(EXISTING_ID).orElseThrow();
@@ -376,7 +380,7 @@ class ProductControllerIT extends AbstractIT {
       // Assert
       resultActions.andExpect(status().isNoContent());
 
-      assertTrue(productRepository.findById(EXISTING_ID).orElseThrow().isActive());
+      assertThat(productRepository.findById(EXISTING_ID).orElseThrow().isActive()).isTrue();
     }
 
     @Test
@@ -388,17 +392,20 @@ class ProductControllerIT extends AbstractIT {
           .with(bearerToken()));
 
       // Assert
-      resultActions.andExpect(status().isNotFound());
+      expectNotFound(resultActions, BASE_URL + "/" + NON_EXISTING_ID + "/activate");
     }
   }
 
   @Nested
-  @DisplayName("DEACTIVATE Operations")
+  @DisplayName("PATCH /products/{id}/deactivate")
   class DeactivateOperations {
 
     @Test
-    @DisplayName("PATCH /products/{id}/deactivate should deactivate product when id exists")
-    void deactivateShouldDeactivateProductWhenIdExists() throws Exception {
+    @DisplayName("PATCH /products/{id}/deactivate should return 204 and deactivate product when product is active")
+    void deactivateShouldReturnNoContentAndDeactivateProductWhenProductIsActive() throws Exception {
+
+      // Arrange
+      assertThat(productRepository.findById(EXISTING_ID).orElseThrow().isActive()).isTrue();
 
       // Act
       ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}/deactivate", EXISTING_ID)
@@ -407,7 +414,7 @@ class ProductControllerIT extends AbstractIT {
       // Assert
       resultActions.andExpect(status().isNoContent());
 
-      assertEquals(false, productRepository.findById(EXISTING_ID).get().isActive());
+      assertThat(productRepository.findById(EXISTING_ID).orElseThrow().isActive()).isFalse();
     }
 
     @Test
@@ -419,17 +426,17 @@ class ProductControllerIT extends AbstractIT {
           .with(bearerToken()));
 
       // Assert
-      resultActions.andExpect(status().isNotFound());
+      expectNotFound(resultActions, BASE_URL + "/" + NON_EXISTING_ID + "/deactivate");
     }
   }
 
   @Nested
-  @DisplayName("DELETE Operations")
+  @DisplayName("DELETE /products/{id}")
   class DeleteOperations {
 
     @Test
-    @DisplayName("DELETE /products/{id} should delete product when id exists")
-    void deleteShouldRemoveProductWhenIdExists() throws Exception {
+    @DisplayName("DELETE /products/{id} should return 204 and remove product when id exists")
+    void deleteShouldReturnNoContentAndRemoveProductWhenIdExists() throws Exception {
 
       // Arrange
       long initialCount = productRepository.count();
@@ -441,8 +448,8 @@ class ProductControllerIT extends AbstractIT {
       // Assert
       resultActions.andExpect(status().isNoContent());
 
-      assertEquals(productRepository.count(), initialCount - 1);
-      assertFalse(productRepository.existsById(EXISTING_ID));
+      assertThat(productRepository.count()).isEqualTo(initialCount - 1);
+      assertThat(productRepository.existsById(EXISTING_ID)).isFalse();
     }
 
     @Test
@@ -454,7 +461,7 @@ class ProductControllerIT extends AbstractIT {
           .with(bearerToken()));
 
       // Assert
-      resultActions.andExpect(status().isNotFound());
+      expectNotFound(resultActions, BASE_URL + "/" + NON_EXISTING_ID);
     }
   }
 }

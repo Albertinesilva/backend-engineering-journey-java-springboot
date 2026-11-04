@@ -1,18 +1,13 @@
 package com.albertsilva.dev.asjcatalog.integrations.service;
 
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.ADMIN_USER_ID;
 import static com.albertsilva.dev.asjcatalog.factory.UserFactory.COUNT_TOTAL_USERS;
 import static com.albertsilva.dev.asjcatalog.factory.UserFactory.EXISTING_ID;
 import static com.albertsilva.dev.asjcatalog.factory.UserFactory.NON_EXISTING_ID;
 import static com.albertsilva.dev.asjcatalog.factory.UserFactory.OPERATOR_USER_ID;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.List;
-
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -34,11 +29,23 @@ import com.albertsilva.dev.asjcatalog.repository.UserRepository;
 import com.albertsilva.dev.asjcatalog.service.UserService;
 import com.albertsilva.dev.asjcatalog.service.exception.ResourceNotFoundException;
 
+/**
+ * Testes de integração do {@link UserService} com o banco H2 do perfil
+ * {@code test}.
+ *
+ * <p>
+ * Dependem do seed ({@code import.sql}): os dois usuários Albert
+ * ({@code OPERATOR_USER_ID}) e Maria ({@code ADMIN_USER_ID}), o total
+ * {@code COUNT_TOTAL_USERS} e os primeiros nomes esperados na ordenação (#21).
+ * </p>
+ */
 @SpringBootTest
 @Transactional
 @ActiveProfiles("test")
-@DisplayName("UserService Integration Tests")
+@DisplayName("Integration tests for UserService")
 class UserServiceIT {
+
+  private static final String NOT_FOUND_KEY = "error.user.notFound";
 
   @Autowired
   private UserService service;
@@ -46,112 +53,114 @@ class UserServiceIT {
   @Autowired
   private UserRepository repository;
 
+  private User saveUser(String firstName, String email) {
+    return repository.saveAndFlush(new User(null, firstName, "Souza", email, "encoded-password", true));
+  }
+
   @Nested
-  @DisplayName("Read Operations")
-  class ReadOperations {
+  @DisplayName("Search Operations")
+  class SearchOperations {
 
-    @Nested
-    @DisplayName("Search Operations")
-    class SearchOperations {
+    @Test
+    @DisplayName("search should return first page of all users when firstName is empty")
+    void searchShouldReturnFirstPageOfAllUsersWhenFirstNameIsEmpty() {
 
-      @Test
-      @DisplayName("search should return paged users when firstName is empty")
-      void searchShouldReturnPagedUsersWhenFirstNameIsEmpty() {
+      // Arrange
+      PageRequest pageRequest = PageRequest.of(0, 10);
 
-        // Arrange
-        String firstName = "";
-        PageRequest pageRequest = PageRequest.of(0, 10);
+      // Act
+      Page<UserResponse> result = service.search("", pageRequest);
 
-        // Act
-        Page<UserResponse> result = service.search(firstName, pageRequest);
-
-        // Assert
-        assertNotNull(result);
-        assertFalse(result.isEmpty());
-        assertEquals(0, result.getNumber());
-        assertEquals(10, result.getSize());
-        assertEquals(COUNT_TOTAL_USERS, result.getTotalElements());
-      }
-
-      @Test
-      @DisplayName("search should return empty page when page does not exist")
-      void searchShouldReturnEmptyPageWhenPageDoesNotExist() {
-
-        // Arrange
-        String firstName = "";
-        PageRequest pageRequest = PageRequest.of(50, 10);
-
-        // Act
-        Page<UserResponse> result = service.search(firstName, pageRequest);
-
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        assertEquals(50, result.getNumber());
-        assertEquals(10, result.getSize());
-        assertEquals(COUNT_TOTAL_USERS, result.getTotalElements());
-      }
-
-      @Test
-      @DisplayName("search should return ordered page when sorting by firstName")
-      void searchShouldReturnOrderedPageWhenSortingByFirstName() {
-
-        // Arrange
-        // "Aaron" recebe o maior id; sem ordenação por firstName ele viria por último.
-        repository.saveAndFlush(new User(null, "Aaron", "Souza", "aaron@gmail.com", "encoded-password", true));
-        String firstName = "";
-        PageRequest pageRequest = PageRequest.of(0, 10, Sort.by("firstName"));
-
-        // Act
-        Page<UserResponse> result = service.search(firstName, pageRequest);
-
-        // Assert
-        List<String> firstNames = result.getContent().stream().map(UserResponse::firstName).toList();
-        assertEquals(List.of("Aaron", "Albert", "Maria"), firstNames);
-      }
-
-      @Test
-      @DisplayName("search should return filtered users when firstName exists")
-      void searchShouldReturnFilteredUsersWhenFirstNameExists() {
-
-        // Arrange
-        String firstName = "maria";
-        PageRequest pageRequest = PageRequest.of(0, 10);
-
-        // Act
-        Page<UserResponse> result = service.search(firstName, pageRequest);
-
-        // Assert
-        assertNotNull(result);
-        assertFalse(result.isEmpty());
-
-        result.getContent().forEach(user -> assertTrue(user.firstName().toLowerCase().contains(firstName)));
-      }
+      // Assert
+      assertThat(result.getNumber()).isZero();
+      assertThat(result.getSize()).isEqualTo(10);
+      assertThat(result.getContent()).hasSize(COUNT_TOTAL_USERS.intValue());
+      assertThat(result.getTotalElements()).isEqualTo(COUNT_TOTAL_USERS);
     }
 
-    @Nested
-    @DisplayName("FindById Operations")
-    class FindByIdOperations {
+    @Test
+    @DisplayName("search should return empty page with the real total when page does not exist")
+    void searchShouldReturnEmptyPageWithTheRealTotalWhenPageDoesNotExist() {
 
-      @Test
-      @DisplayName("findById should return user details when id exists")
-      void findByIdShouldReturnUserDetailsWhenIdExists() {
+      // Arrange
+      PageRequest pageRequest = PageRequest.of(50, 10);
 
-        // Act
-        UserDetailsResponse result = service.findById(EXISTING_ID);
+      // Act
+      Page<UserResponse> result = service.search("", pageRequest);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(EXISTING_ID, result.id());
-      }
+      // Assert
+      assertThat(result.getContent()).isEmpty();
+      assertThat(result.getNumber()).isEqualTo(50);
+      assertThat(result.getSize()).isEqualTo(10);
+      assertThat(result.getTotalElements()).isEqualTo(COUNT_TOTAL_USERS);
+    }
 
-      @Test
-      @DisplayName("findById should throw ResourceNotFoundException when id does not exist")
-      void findByIdShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
+    @Test
+    @DisplayName("search should return ordered page when sorting by firstName")
+    void searchShouldReturnOrderedPageWhenSortingByFirstName() {
 
-        // Act + Assert
-        assertThrows(ResourceNotFoundException.class, () -> service.findById(NON_EXISTING_ID));
-      }
+      // Arrange
+      // "Aaron" recebe o maior id; sem ordenação por firstName ele viria por último.
+      saveUser("Aaron", "aaron@gmail.com");
+      PageRequest pageRequest = PageRequest.of(0, 10, Sort.by("firstName"));
+
+      // Act
+      Page<UserResponse> result = service.search("", pageRequest);
+
+      // Assert
+      assertThat(result.getContent())
+          .extracting(UserResponse::firstName)
+          .containsExactly("Aaron", "Albert", "Maria");
+    }
+
+    @Test
+    @DisplayName("search should return only matching users when firstName has text")
+    void searchShouldReturnOnlyMatchingUsersWhenFirstNameHasText() {
+
+      // Arrange
+      User created = saveUser("Mariane", "mariane@gmail.com");
+      saveUser("Pedro", "pedro.souza@gmail.com");
+      PageRequest pageRequest = PageRequest.of(0, 10);
+
+      // Act
+      Page<UserResponse> result = service.search("maria", pageRequest);
+
+      // Assert
+      assertThat(result.getContent())
+          .extracting(UserResponse::firstName)
+          .contains(created.getFirstName())
+          .allSatisfy(firstName -> assertThat(firstName).containsIgnoringCase("maria"));
+    }
+  }
+
+  @Nested
+  @DisplayName("FindById Operations")
+  class FindByIdOperations {
+
+    @Test
+    @DisplayName("findById should return user details when id exists")
+    void findByIdShouldReturnUserDetailsWhenIdExists() {
+
+      // Arrange
+      User expected = repository.findById(EXISTING_ID).orElseThrow();
+
+      // Act
+      UserDetailsResponse result = service.findById(EXISTING_ID);
+
+      // Assert
+      assertThat(result)
+          .extracting(UserDetailsResponse::id, UserDetailsResponse::firstName, UserDetailsResponse::email)
+          .containsExactly(EXISTING_ID, expected.getFirstName(), expected.getEmail());
+    }
+
+    @Test
+    @DisplayName("findById should throw ResourceNotFoundException when id does not exist")
+    void findByIdShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
+
+      // Act + Assert
+      assertThatThrownBy(() -> service.findById(NON_EXISTING_ID))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage(NOT_FOUND_KEY);
     }
   }
 
@@ -160,8 +169,8 @@ class UserServiceIT {
   class CreateOperations {
 
     @Test
-    @DisplayName("create should persist user when valid data")
-    void createShouldPersistUserWhenValidData() {
+    @DisplayName("create should persist user when request is valid")
+    void createShouldPersistUserWhenRequestIsValid() {
 
       // Arrange
       UserCreateRequest request = UserFactory.createUserCreateRequest();
@@ -170,9 +179,11 @@ class UserServiceIT {
       UserResponse result = service.create(request);
 
       // Assert
-      assertNotNull(result);
-      assertNotNull(result.id());
-      assertEquals(COUNT_TOTAL_USERS + 1, repository.count());
+      assertThat(result.id()).isNotNull();
+      assertThat(result)
+          .extracting(UserResponse::firstName, UserResponse::lastName, UserResponse::email)
+          .containsExactly(request.firstName(), request.lastName(), request.email());
+      assertThat(repository.count()).isEqualTo(COUNT_TOTAL_USERS + 1);
     }
   }
 
@@ -181,8 +192,8 @@ class UserServiceIT {
   class UpdateOperations {
 
     @Test
-    @DisplayName("update should update user when id exists")
-    void updateShouldUpdateUserWhenIdExists() {
+    @DisplayName("update should persist new data when id exists")
+    void updateShouldPersistNewDataWhenIdExists() {
 
       // Arrange
       UserUpdateRequest request = UserFactory.createUserUpdateRequest();
@@ -191,9 +202,11 @@ class UserServiceIT {
       UserResponse result = service.update(EXISTING_ID, request);
 
       // Assert
-      assertNotNull(result);
-      assertEquals(EXISTING_ID, result.id());
-      assertEquals(request.firstName(), result.firstName());
+      assertThat(result.id()).isEqualTo(EXISTING_ID);
+      assertThat(result.firstName()).isEqualTo(request.firstName());
+      assertThat(repository.findById(EXISTING_ID).orElseThrow())
+          .extracting(User::getFirstName, User::getLastName, User::getEmail)
+          .containsExactly(request.firstName(), request.lastName(), request.email());
     }
 
     @Test
@@ -204,7 +217,9 @@ class UserServiceIT {
       UserUpdateRequest request = UserFactory.createUserUpdateRequest();
 
       // Act + Assert
-      assertThrows(ResourceNotFoundException.class, () -> service.update(NON_EXISTING_ID, request));
+      assertThatThrownBy(() -> service.update(NON_EXISTING_ID, request))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage(NOT_FOUND_KEY);
     }
   }
 
@@ -225,21 +240,21 @@ class UserServiceIT {
       service.activate(OPERATOR_USER_ID);
 
       // Assert
-      assertTrue(repository.findById(OPERATOR_USER_ID).orElseThrow().isActive());
+      assertThat(repository.findById(OPERATOR_USER_ID).orElseThrow().isActive()).isTrue();
     }
 
     @Test
-    @DisplayName("activate should keep an already active user active")
+    @DisplayName("activate should keep user active when user is already active")
     void activateShouldKeepUserActiveWhenUserIsAlreadyActive() {
 
       // Arrange
-      assertTrue(repository.findById(OPERATOR_USER_ID).orElseThrow().isActive());
+      assertThat(repository.findById(OPERATOR_USER_ID).orElseThrow().isActive()).isTrue();
 
       // Act
       service.activate(OPERATOR_USER_ID);
 
       // Assert
-      assertTrue(repository.findById(OPERATOR_USER_ID).orElseThrow().isActive());
+      assertThat(repository.findById(OPERATOR_USER_ID).orElseThrow().isActive()).isTrue();
     }
 
     @Test
@@ -247,7 +262,9 @@ class UserServiceIT {
     void activateShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
 
       // Act + Assert
-      assertThrows(ResourceNotFoundException.class, () -> service.activate(NON_EXISTING_ID));
+      assertThatThrownBy(() -> service.activate(NON_EXISTING_ID))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage(NOT_FOUND_KEY);
     }
   }
 
@@ -256,17 +273,17 @@ class UserServiceIT {
   class DeactivateOperations {
 
     @Test
-    @DisplayName("deactivate should set active to false when user exists")
-    void deactivateShouldSetActiveToFalseWhenUserExists() {
+    @DisplayName("deactivate should set active to false when user is active")
+    void deactivateShouldSetActiveToFalseWhenUserIsActive() {
 
       // Arrange
-      Long userId = 2L;
+      assertThat(repository.findById(ADMIN_USER_ID).orElseThrow().isActive()).isTrue();
 
       // Act
-      service.deactivate(userId);
+      service.deactivate(ADMIN_USER_ID);
 
       // Assert
-      assertFalse(repository.findById(userId).get().isActive());
+      assertThat(repository.findById(ADMIN_USER_ID).orElseThrow().isActive()).isFalse();
     }
 
     @Test
@@ -274,7 +291,9 @@ class UserServiceIT {
     void deactivateShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
 
       // Act + Assert
-      assertThrows(ResourceNotFoundException.class, () -> service.deactivate(NON_EXISTING_ID));
+      assertThatThrownBy(() -> service.deactivate(NON_EXISTING_ID))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage(NOT_FOUND_KEY);
     }
   }
 
@@ -286,15 +305,12 @@ class UserServiceIT {
     @DisplayName("delete should remove user when id exists")
     void deleteShouldRemoveUserWhenIdExists() {
 
-      // Arrange
-      Long userId = 2L;
-
       // Act
-      service.delete(userId);
+      service.delete(ADMIN_USER_ID);
 
       // Assert
-      Assertions.assertEquals(COUNT_TOTAL_USERS - 1, repository.count());
-      assertFalse(repository.existsById(userId));
+      assertThat(repository.count()).isEqualTo(COUNT_TOTAL_USERS - 1);
+      assertThat(repository.existsById(ADMIN_USER_ID)).isFalse();
     }
 
     @Test
@@ -302,8 +318,9 @@ class UserServiceIT {
     void deleteShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
 
       // Act + Assert
-      assertThrows(ResourceNotFoundException.class, () -> service.delete(NON_EXISTING_ID));
+      assertThatThrownBy(() -> service.delete(NON_EXISTING_ID))
+          .isInstanceOf(ResourceNotFoundException.class)
+          .hasMessage(NOT_FOUND_KEY);
     }
   }
-
 }
