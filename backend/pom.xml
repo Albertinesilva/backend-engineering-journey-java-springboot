@@ -44,8 +44,8 @@
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- Limites mínimos de cobertura do goal check do JaCoCo (relatório consolidado) -->
-		<jacoco.minimum.line.coverage>0.85</jacoco.minimum.line.coverage>
-		<jacoco.minimum.branch.coverage>0.68</jacoco.minimum.branch.coverage>
+		<jacoco.minimum.line.coverage>0.93</jacoco.minimum.line.coverage>
+		<jacoco.minimum.branch.coverage>0.89</jacoco.minimum.branch.coverage>
 		<!-- Tags de teste fora do build padrão; para incluir o teste de DNS real: -Dsurefire.excludedGroups=none -->
 		<surefire.excludedGroups>dns</surefire.excludedGroups>
 	</properties>
