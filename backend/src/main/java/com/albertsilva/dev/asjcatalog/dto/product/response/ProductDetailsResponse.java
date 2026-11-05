@@ -1,5 +1,6 @@
 package com.albertsilva.dev.asjcatalog.dto.product.response;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -19,7 +20,7 @@ import com.albertsilva.dev.asjcatalog.dto.category.response.CategoryDetailsRespo
  * @param id          identificador do produto
  * @param name        nome
  * @param description descrição (pode ser {@code null})
- * @param price       preço (pode ser {@code null})
+ * @param price       preço do produto, representado por {@link BigDecimal}
  * @param imgUrl      URL da imagem (pode ser {@code null})
  * @param createdAt   instante de criação (preenchido na persistência)
  * @param updatedAt   instante da última atualização
@@ -30,7 +31,7 @@ public record ProductDetailsResponse(
     Long id,
     String name,
     String description,
-    Double price,
+    BigDecimal price,
     String imgUrl,
     Instant createdAt,
     Instant updatedAt,

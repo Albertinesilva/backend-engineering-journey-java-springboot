@@ -123,7 +123,7 @@ class ProductControllerTest {
           .andExpect(jsonPath("$.id").value(productResponse.id()))
           .andExpect(jsonPath("$.name").value(productResponse.name()))
           .andExpect(jsonPath("$.description").value(productResponse.description()))
-          .andExpect(jsonPath("$.price").value(productResponse.price()));
+          .andExpect(jsonPath("$.price").value(org.hamcrest.Matchers.comparesEqualTo(productResponse.price()),java.math.BigDecimal.class));
 
       verify(productService).create(any(ProductCreateRequest.class));
     }
@@ -197,10 +197,11 @@ class ProductControllerTest {
 
       resultActions
           .andExpect(status().isOk())
+          .andExpect(status().isOk())
           .andExpect(jsonPath("$.id").value(EXISTING_ID))
           .andExpect(jsonPath("$.name").value(productDetailsResponse.name()))
           .andExpect(jsonPath("$.description").value(productDetailsResponse.description()))
-          .andExpect(jsonPath("$.price").value(productDetailsResponse.price()));
+          .andExpect(jsonPath("$.price").value(org.hamcrest.Matchers.comparesEqualTo(productDetailsResponse.price()),java.math.BigDecimal.class));
 
       verify(productService).findById(EXISTING_ID);
     }
@@ -248,7 +249,7 @@ class ProductControllerTest {
           .andExpect(jsonPath("$.id").value(updatedResponse.id()))
           .andExpect(jsonPath("$.name").value(updatedResponse.name()))
           .andExpect(jsonPath("$.description").value(updatedResponse.description()))
-          .andExpect(jsonPath("$.price").value(updatedResponse.price()));
+          .andExpect(jsonPath("$.price").value( org.hamcrest.Matchers.comparesEqualTo(updatedResponse.price()),java.math.BigDecimal.class));
 
       verify(productService).update(eq(EXISTING_ID), any(ProductUpdateRequest.class));
     }

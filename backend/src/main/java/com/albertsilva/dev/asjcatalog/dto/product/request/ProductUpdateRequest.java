@@ -1,5 +1,6 @@
 package com.albertsilva.dev.asjcatalog.dto.product.request;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.albertsilva.dev.asjcatalog.validation.product.annotation.ProductUpdateValid;
@@ -40,7 +41,8 @@ import jakarta.validation.constraints.Size;
  *
  * @param name        novo nome (obrigatório; 3 a 100 caracteres)
  * @param description nova descrição (opcional; se informada, 3 a 200 caracteres)
- * @param price       novo preço (opcional; se informado, maior que zero)
+ * @param price       novo preço, representado por BigDecimal;
+ *                    se informado, deve ser maior que zero
  * @param imgUrl      nova URL da imagem (opcional; {@code http://} ou
  *                    {@code https://})
  * @param categoryIds identificadores das categorias que substituirão as atuais
@@ -58,7 +60,7 @@ public record ProductUpdateRequest(
     String description,
 
     @Positive(message = "{product.price.positive}") 
-    Double price,
+    BigDecimal price,
 
     @Pattern(regexp = "^(https?://).+$", message = "{product.imgUrl.pattern}") 
     String imgUrl,

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -115,7 +116,7 @@ class ProductCreateValidatorTest {
   }
 
   private ProductCreateRequest request(String name, List<Long> categoryIds) {
-    return new ProductCreateRequest(name, "Product description", 100.0, "https://example.com/image.png",
+    return new ProductCreateRequest(name, "Product description", new BigDecimal("100.00"), "https://example.com/image.png",
         Instant.now(), categoryIds);
   }
 }

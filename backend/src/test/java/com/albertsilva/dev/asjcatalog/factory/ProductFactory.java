@@ -1,5 +1,6 @@
 package com.albertsilva.dev.asjcatalog.factory;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -18,33 +19,32 @@ public class ProductFactory {
 
   public static Product createProduct() {
     return new Product("Smart TV-Test",
-        "Smart TV com alta resolução, acesso a streaming e conectividade Wi-Fi.", 2190.0,
+        "Smart TV com alta resolução, acesso a streaming e conectividade Wi-Fi.", new BigDecimal("2190.00"),
         "https://raw.githubusercontent.com/devsuperior/dscatalog-resources/master/backend/img/2-big.jpg", true);
   }
 
   public static ProductResponse createProductResponse() {
     return new ProductResponse(1L, "Smart TV", "Smart TV com alta resolução, acesso a streaming e conectividade Wi-Fi.",
-        2190.0, "https://raw.githubusercontent.com/devsuperior/dscatalog-resources/master/backend/img/2-big.jpg", List.of());
+            new BigDecimal("2190.00"), "https://raw.githubusercontent.com/devsuperior/dscatalog-resources/master/backend/img/2-big.jpg", List.of());
   }
 
   public static ProductDetailsResponse createProductDetailsResponse() {
-    return new ProductDetailsResponse(1L, "Smart TV", "TV 50 polegadas", 2500.0,
+    return new ProductDetailsResponse(1L, "Smart TV", "TV 50 polegadas", new BigDecimal("2500.00"),
         "https://img.com/tv.png", Instant.parse("2024-01-10T10:00:00Z"), Instant.parse("2024-01-10T10:00:00Z"), true, List.of());
   }
 
   public static ProductUpdateRequest createProductUpdateRequest() {
-    return new ProductUpdateRequest("Updated Smart TV", "TV 50 polegadas atualizada", 2799.0,
+    return new ProductUpdateRequest("Updated Smart TV", "TV 50 polegadas atualizada", new BigDecimal("2799.00"),
         "https://img.com/updated-tv.png", List.of(1L));
   }
 
   public static ProductResponse createUpdatedProductResponse() {
-    return new ProductResponse(1L, "Updated Smart TV", "TV 50 polegadas atualizada", 2799.0,
+    return new ProductResponse(1L, "Updated Smart TV", "TV 50 polegadas atualizada", new BigDecimal("2799.00"),
         "https://img.com/updated-tv.png", List.of());
   }
 
   public static ProductCreateRequest createProductCreateRequest() {
-    return new ProductCreateRequest("New Smart TV", "TV 50 polegadas nova", 1999.0, "https://img.com/new-tv.png",
+    return new ProductCreateRequest("New Smart TV", "TV 50 polegadas nova", new BigDecimal("1999.00"), "https://img.com/new-tv.png",
         Instant.parse("2024-01-10T10:00:00Z"), List.of(1L));
   }
-
 }

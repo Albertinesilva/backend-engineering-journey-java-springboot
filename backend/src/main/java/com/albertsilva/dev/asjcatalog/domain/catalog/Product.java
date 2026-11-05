@@ -1,6 +1,7 @@
 package com.albertsilva.dev.asjcatalog.domain.catalog;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -32,9 +33,9 @@ import jakarta.persistence.Table;
  * </p>
  * <ul>
  * <li>O nome é obrigatório e único (restrições do mapeamento)</li>
- * <li>A entidade <b>não</b> valida o preço: o campo é um {@link Double}
- * opcional, e a exigência de valor positivo é feita no DTO de entrada
- * ({@code @Positive}), não aqui</li>
+ * <li>O preço utiliza {@link BigDecimal} para garantir precisão decimal.
+ * O campo é obrigatório no banco de dados, enquanto a validação
+ * de valor positivo é realizada nos DTOs de entrada.</li>
  * <li>O indicador {@code active} é apenas armazenado: a entidade não impõe
  * restrições com base nele. Uma instância nova nasce inativa ({@code false})
  * até que o valor seja definido</li>
@@ -98,12 +99,14 @@ public class Product implements Serializable, Identifiable<Long> {
    * Preço do produto.
    *
    * <p>
-   * Valor do produto. É um {@link Double} sem restrição de nulidade ou de faixa
-   * na entidade (a validação ocorre nos DTOs de entrada); por ser ponto
-   * flutuante, não oferece precisão decimal exata.
+   * Representado por {@link BigDecimal} para garantir precisão decimal.
+   * O campo é obrigatório no banco de dados e possui precisão de 10 dígitos,
+   * sendo 2 casas decimais. A validação de valor positivo ocorre nos
+   * DTOs de entrada.
    * </p>
    */
-  private Double price;
+  @Column(nullable = false, precision = 10, scale = 2)
+  private BigDecimal price;
 
   /**
    * URL da imagem do produto.
@@ -202,7 +205,7 @@ public class Product implements Serializable, Identifiable<Long> {
    * @param imgUrl      URL da imagem do produto
    * @param active      indica se o produto está ativo
    */
-  public Product(Long id, String name, String description, Double price, String imgUrl, boolean active) {
+  public Product(Long id, String name, String description, BigDecimal price, String imgUrl, boolean active) {
     this.id = id;
     this.name = name;
     this.description = description;
@@ -226,7 +229,7 @@ public class Product implements Serializable, Identifiable<Long> {
    * @param imgUrl      URL da imagem do produto
    * @param active      indica se o produto está ativo
    */
-  public Product(String name, String description, Double price, String imgUrl, boolean active) {
+  public Product(String name, String description, BigDecimal price, String imgUrl, boolean active) {
     this.name = name;
     this.description = description;
     this.price = price;
@@ -280,14 +283,14 @@ public class Product implements Serializable, Identifiable<Long> {
   /**
    * @return preço do produto
    */
-  public Double getPrice() {
+  public BigDecimal getPrice() {
     return price;
   }
 
   /**
    * @param price valor monetário do produto
    */
-  public void setPrice(Double price) {
+  public void setPrice(BigDecimal price) {
     this.price = price;
   }
 

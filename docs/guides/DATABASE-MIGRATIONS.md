@@ -47,7 +47,7 @@ As migrations ficam em `backend/src/main/resources/db/migration`, em três pasta
 
 | Pasta | Conteúdo | Arquivos |
 | --- | --- | --- |
-| `schema` | Estrutura do banco: tabelas, chaves e restrições | `V001` a `V011` |
+| `schema` | Estrutura do banco: tabelas, chaves e restrições | `V001` a `V011` e `V106` |
 | `reference` | Dados de referência, necessários em todos os ambientes | `V104__insert_role.sql` (roles `ROLE_OPERATOR` e `ROLE_ADMIN`) |
 | `data` | Dados de exemplo para desenvolvimento | `V100` a `V103` e `V105` |
 
@@ -66,6 +66,7 @@ Arquivos de `schema`:
 | V009 | `create_table_token` | Cria `tb_token` |
 | V010 | `alter_table_token` | Adiciona a chave estrangeira de `tb_token` para `tb_user` |
 | V011 | `create_table_email` | Cria `tb_email` |
+| V106 | `alter_table_tb_product_price` | Altera `tb_product.price` de `FLOAT(53)` para `NUMERIC(10,2)` e define `NOT NULL` |
 
 Arquivos de `reference` e `data`:
 
@@ -80,7 +81,7 @@ Arquivos de `reference` e `data`:
 
 **A versão é global, não por pasta.** O Flyway junta os arquivos de todas as pastas configuradas e os ordena só pela versão. Por isso a V104, de `reference`, roda entre a V103 e a V105, de `data`, e duas pastas não podem ter a mesma versão.
 
-**Regra de numeração: global e sequencial.** Toda migration nova recebe a **maior versão existente + 1**, em qualquer pasta. Hoje a maior é V105, então as próximas são V106, V107, e assim por diante, seja em `schema`, `reference` ou `data`.
+**Regra de numeração: global e sequencial.** Toda migration nova recebe a **maior versão existente + 1**, em qualquer pasta. Atualmente, a maior versão é V106, então as próximas são V107, V108, e assim por diante, seja em `schema`, `reference` ou `data`.
 
 - **A pasta define em quais perfis a migration roda** (seção 4).
 - **O número define a ordem** em que ela roda.
@@ -114,8 +115,8 @@ O `import.sql` só é executado quando o Hibernate cria as tabelas. Nos perfis `
    - Mudou a estrutura (tabela, coluna, índice, restrição)? Use `schema`.
    - São dados que precisam existir em todos os ambientes, inclusive produção? Use `reference`.
    - São dados de exemplo para desenvolvimento? Use `data`.
-2. **Escolha a versão** pela regra da [seção 3](#3-pastas-e-versões): a maior versão existente em qualquer pasta + 1. Hoje a maior é V105, então a próxima é **V106**, qualquer que seja a pasta.
-3. **Crie o arquivo** com o nome no padrão, por exemplo `schema/V106__add_column_stock_to_product.sql`.
+2. **Escolha a versão** pela regra da [seção 3](#3-pastas-e-versões): a maior versão existente em qualquer pasta + 1. Atualmente, a maior versão é V106, então a próxima é **V107**, qualquer que seja a pasta.
+3. **Crie o arquivo** com o nome no padrão, por exemplo `schema/V107__add_column_stock_to_product.sql`.
 4. **Escreva o SQL para PostgreSQL**, que é o banco de `dev` e `prod`.
 5. **Atualize as entidades** se a estrutura mudou. O perfil `prod` valida as entidades contra as tabelas, e o perfil `test` cria as tabelas a partir delas.
 6. **Atualize o `import.sql`** se a migration insere dados que também devem existir nos testes.
@@ -134,7 +135,7 @@ O `import.sql` só é executado quando o Hibernate cria as tabelas. Nos perfis `
    psql -U postgres -c "CREATE DATABASE asjcatalog;"
    ```
 
-3. Suba a aplicação no perfil `dev`. O Flyway encontra o banco vazio e aplica todas as migrations, da V001 à V105.
+3. Suba a aplicação no perfil `dev`. O Flyway encontra o banco vazio e aplica todas as migrations, da V001 à V106.
 
 ## 8. Limitações conhecidas
 
