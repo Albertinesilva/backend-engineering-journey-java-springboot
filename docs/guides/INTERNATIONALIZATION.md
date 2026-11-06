@@ -48,13 +48,13 @@ O **`MessageSource`** é o componente do Spring que busca um texto pela chave e 
 
 ## 3. Arquivos de mensagens
 
-Os três arquivos ficam em `backend/src/main/resources`, estão em UTF-8 e têm **exatamente as mesmas chaves** (hoje, 79). Muda só o texto. Títulos usam capitalização de frase e não têm ponto final; as demais mensagens, inclusive validações, terminam com um único ponto final. Veja a regra em [CONVENTIONS.md](CONVENTIONS.md#3-idioma). Cada arquivo é dividido em blocos comentados:
+Os três arquivos ficam em `backend/src/main/resources`, estão em UTF-8 e têm **exatamente as mesmas chaves** (hoje, 81). Muda só o texto. Títulos usam capitalização de frase e não têm ponto final; as demais mensagens, inclusive validações, terminam com um único ponto final. Veja a regra em [CONVENTIONS.md](CONVENTIONS.md#3-idioma). Cada arquivo é dividido em blocos comentados:
 
 | Bloco | Exemplos de chave |
 | --- | --- |
 | API - Erros Globais (ProblemDetails) | `error.resource.title`, `error.category.notFound`, `error.token.expired` |
 | Category - Validação | `category.name.notBlank`, `category.name.unique` |
-| Product - Validação | `product.price.positive`, `product.categoryIds.invalid` |
+| Product - Validação | `product.price.notNull`, `product.price.digits`, `product.categoryIds.invalid` |
 | Role - Validação | `role.invalid` |
 | User - Dados pessoais | `user.email.invalid`, `user.email.unique` |
 | User - Senha | `user.password.uppercase`, `user.password.personalData` |

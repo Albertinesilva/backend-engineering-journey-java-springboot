@@ -46,7 +46,7 @@ Todos os DTOs de entrada passam por `@Valid`.
 | | | (classe) | `@CategoryUpdateValid`: nome único, desconsiderando a própria categoria |
 | `ProductCreateRequest` | `POST /products` | `name` | Obrigatório; 3 a 100 caracteres; letras, números, espaços, hífen e parênteses |
 | | | `description` | 3 a 200 caracteres |
-| | | `price` | Positivo |
+| | | `price` | Obrigatório; positivo; no máximo 8 dígitos inteiros e 2 casas decimais, o mesmo limite da coluna `NUMERIC(10,2)` (até 99.999.999,99) |
 | | | `imgUrl` | Começa com `http://` ou `https://` |
 | | | `date` | No passado ou no presente |
 | | | `categoryIds` | Lista não vazia |
@@ -160,6 +160,7 @@ Qualquer falha na consulta, como falta de internet, DNS fora do ar ou domínio i
 - **Regras de e-mail diferentes.** `PUT /accounts/me` aceita e-mails que o `@ValidEmail` recusaria (domínios sem MX), porque usa só o `@Email`.
 - **Validação dependente de rede.** Uma falha temporária de DNS recusa e-mails válidos.
 - **`PATCH` de categoria exige o nome.** Apesar de ser um `PATCH` (atualização parcial), `CategoryUpdateRequest` tem `@NotBlank` no `name`.
+- **Zeros à direita contam como casas decimais no preço.** O `@Digits(integer = 8, fraction = 2)` conta a escala do valor (o número de casas depois da vírgula) como ele chega, sem remover os zeros à direita: `10.000` vale 10, mas tem 3 casas decimais e é recusado com 422. O frontend deve arredondar o preço para 2 casas antes de enviar; uma soma sem arredondamento, como `0.30000000000000004`, também é recusada.
 
 ---
 

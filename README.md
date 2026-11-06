@@ -502,7 +502,7 @@ As 61 linhas e os 33 branches sem cobertura no fim do capítulo não são esquec
  */
 ```
 
-Os trechos sem teste por esse motivo estão ligados às issues #4, #5, #9, #13, #14, #25, #28, #36, #39 e #44.
+Os trechos sem teste por esse motivo estão ligados às issues #4, #5, #9, #13, #14, #25, #28, #36 e #39. A #44 também estava nessa lista ao fim do capítulo e foi resolvida logo depois, com os testes que faltavam.
 
 **Código sem uso.** A revisão encontrou código que nenhuma parte do projeto chama: `Token.isValid()`, `ProductMapper.toResponsePage`, os construtores com id de `Product` e `Category` e `Category.getProducts()`. Escrever testes para eles daria cobertura a algo que talvez deva ser removido. Eles foram registrados num [comentário da #25](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/issues/25#issuecomment-6614166933), que vai decidir se cada um sai ou fica documentado. Dois ramos da deduplicação de erros de senha também são inalcançáveis e estão no [item 11 da #25](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/issues/25#issuecomment-6620385478).
 
@@ -576,7 +576,7 @@ A consulta real não ficou sem teste. O `JndiMxRecordLookupTest` a testa com um 
 
 ## 💡 Lições do Capítulo
 
-**Cobertura alta não garante cenários completos.** Com **88,7%** de linhas cobertas no relatório consolidado, a API aceitava um produto **sem preço**: `POST /api/v1/products` com `"price": null`, sem o campo ou com `"price": ""` respondia 201 e gravava o produto (#44). O código do cadastro estava coberto, mas nenhum teste enviava o preço nulo. A cobertura mostra o que **não** foi executado; o que foi executado ainda pode estar sem o cenário certo. Desde o PR #50 (migration V106), a coluna `price` é `NOT NULL`, e o banco recusa o produto sem preço; a validação no DTO, com a resposta 422, continua registrada na #44, com impacto no frontend.
+**Cobertura alta não garante cenários completos.** Com **88,7%** de linhas cobertas no relatório consolidado, a API aceitava um produto **sem preço**: `POST /api/v1/products` com `"price": null`, sem o campo ou com `"price": ""` respondia 201 e gravava o produto (#44). O código do cadastro estava coberto, mas nenhum teste enviava o preço nulo. A cobertura mostra o que **não** foi executado; o que foi executado ainda pode estar sem o cenário certo. Desde o PR #50 (migration V106), a coluna `price` é `NOT NULL`, e o banco recusa o produto sem preço; depois do capítulo, a correção da #44 acrescentou a validação no DTO, e a API passou a responder 422 com erro no campo `price`.
 
 **Cobertura acidental.** No `TokenServiceTest`, um teste conferia o token devolvido com `isEqualTo(token)`. O AssertJ chama o `equals` para comparar, e com isso o ramo `this == obj` do `Token.equals` aparecia como coberto, sem que nenhum teste tratasse do `equals`. Ao trocar a asserção por `isSameAs(token)` (que confere se é o mesmo objeto, que era o que o teste queria dizer), o ramo deixou de ser coberto. O contrato de `equals` e `hashCode` passou a ser testado de propósito, no `EntityIdentityContractTest`. Uma linha verde no relatório só diz que o código rodou, e não que ele foi conferido.
 
