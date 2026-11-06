@@ -117,8 +117,8 @@ Ele é um **mapa**: traz só as regras e os fatos que valem para toda tarefa. Os
 
 | Branch | Papel | Regra |
 |---|---|---|
-| `chapter-01-crud` a `chapter-04-domain-orm` | Registro histórico de cada capítulo publicado | Não recebem código novo nem PR. Não apagar |
-| `chapter-05-jacoco` | Capítulo atual (cobertura de testes) | Trabalho atual |
+| `chapter-01-crud` a `chapter-05-jacoco` | Registro histórico de cada capítulo publicado | Não recebem código novo nem PR. Não apagar |
+| Branch da #44 (com o número no nome, por exemplo `fix/44-…`), criada a partir da `develop` | Trabalho atual (validação do preço nos DTOs) | Volta para a `develop` por PR, com squash |
 | `develop` | Projeto completo e atualizado | Destino de todos os Pull Requests |
 | `main` | Branch padrão e página de entrada (README, CONTRIBUTING, CODE_OF_CONDUCT, modelos em `.github/`) | Não recebe código do projeto até o deploy final |
 
@@ -211,12 +211,13 @@ Ele é um **mapa**: traz só as regras e os fatos que valem para toda tarefa. Os
 Atualizado em 06/11/2026.
 
 - Branch do capítulo: `chapter-05-jacoco`, criada a partir da `develop`, parada em `dc545b6` como registro histórico. **Não reescrever** (sem rebase nem force push): os SHAs citados no README, nos guias e no relatório do Netlify (`48ba709`) dependem dela.
-- Branch de trabalho: `integracao/chapter-05-develop`, criada a partir da `chapter-05-jacoco` para integrar o capítulo na `develop` (seção 9). Ela tem o merge da `develop` com o PR #50 (`5592dcb`). A cópia `backup/chapter-05-jacoco` (`dc545b6`) fica até a integração terminar.
-- **Regra do capítulo 05:** até o fim dos estudos de JaCoCo, nada de correções de bugs nem de melhorias (regra 3 da seção 10). Infraestrutura de testes, como a #20, continua no capítulo.
+- Capítulo 05 **integrado na `develop`** em 06/11/2026, pelo PR #52 (merge commit `f7703cf`), a partir da branch `integracao/chapter-05-develop` (seção 9). A `integracao/chapter-05-develop` e a cópia `backup/chapter-05-jacoco` (`dc545b6`) já cumpriram o papel e podem ser apagadas quando o autor decidir.
+- Próximo trabalho: a #44, numa branch própria a partir da `develop` (veja "Depois da integração", abaixo).
+- **Regra do capítulo 05: encerrada** com a integração pelo PR #52. Ela proibia correções de bugs e melhorias até o fim dos estudos de JaCoCo (regra 3 da seção 10), com exceção da infraestrutura de testes, como a #20. A partir de agora, correções em `src/main` são permitidas, começando pela #44.
 - Plano do capítulo 05:
   - Etapa 1: JaCoCo 0.8.15 com relatórios de unidade, integração e consolidado, e exclusões. **Concluída** (`b1cb5cf`). Depois do item 11 da Etapa 3b, o `sessionId` passou a ser fixo (`asjcatalog-unit` no `prepare-agent` e `asjcatalog-it` no `prepare-agent-integration`), para que a página Sessions dos relatórios não mostre o nome da máquina.
   - Etapa 2: limite mínimo de cobertura (`check`) com 0,85 de linhas e 0,68 de branches no BUNDLE, sobre o consolidado (limites elevados no item 11 da Etapa 3b). **Concluída.** Execução `check-merged` na fase `verify`; os limites ficam nas propriedades `jacoco.minimum.line.coverage` e `jacoco.minimum.branch.coverage` do `pom.xml` e podem ser trocados por `-D` na linha de comando. Medição nesta data: 0,89 de linhas (1417/1592) e 0,72 de branches (327/454); 314 testes de unidade e 150 de integração.
-  - Etapa 3a: issue #20 (dependência de DNS nos testes), por ser infraestrutura de testes e pré-requisito do CI. **Concluída.** A consulta MX saiu do `ValidEmailValidator` para o `MxRecordLookup`/`JndiMxRecordLookup` (`validation.user.dns`), sem mudar o comportamento em produção. Com o DNS simulado fora do ar (`-Djava.naming.provider.url=dns://127.0.0.1:9`), 19 testes falhavam antes e nenhum falha depois. Medição nesta data: 0,89 de linhas (1429/1600) e 0,73 de branches (331/454); 321 testes de unidade e 150 de integração. A #20 deve ser fechada manualmente depois do commit.
+  - Etapa 3a: issue #20 (dependência de DNS nos testes), por ser infraestrutura de testes e pré-requisito do CI. **Concluída.** A consulta MX saiu do `ValidEmailValidator` para o `MxRecordLookup`/`JndiMxRecordLookup` (`validation.user.dns`), sem mudar o comportamento em produção. Com o DNS simulado fora do ar (`-Djava.naming.provider.url=dns://127.0.0.1:9`), 19 testes falhavam antes e nenhum falha depois. Medição nesta data: 0,89 de linhas (1429/1600) e 0,73 de branches (331/454); 321 testes de unidade e 150 de integração. A #20 foi fechada em 06/11/2026, depois do merge do PR #52.
   - Etapa 3b: qualidade dos testes existentes e lacunas de cobertura. **Concluída.** Auditoria feita e plano aprovado, com uma parada para commit por item:
     - item 0: padrão de qualidade dos testes ([TESTING.md, seção 7](docs/guides/TESTING.md#7-padrão-de-qualidade-dos-testes)). **Concluído.**
     - item 1: `ControllerExceptionHandlerTest` reescrito com o `MessageSource` real (10 testes; handler de 57% para 80% de linhas). Sem teste: `DatabaseException` e `DataIntegrityViolationException` (#5), `DisabledException` (#25) e o `message != null` falso, fora do contrato do `MessageSource`. **Concluído.**
@@ -238,11 +239,11 @@ Atualizado em 06/11/2026.
     - HOME (capítulo 05 e "Falta um capítulo"), CONVENTIONS (branch do capítulo 05, tipo `ci` e escopos), GETTING-STARTED (`git checkout` do capítulo), REFERENCES (JaCoCo, AssertJ e testes parametrizados, com as versões) e o exemplo de 404 do API-ENDPOINTS com o ponto final da #31;
     - README do capítulo 05, com os prints de `docs/assets/imgs/` (`jacoco-report.png`, `jacoco-class-userservice.png` e `jacoco-class-detail.png`) e o link do relatório publicado em https://asjcatalog-jacoco.netlify.app/ (consolidado, retrato fixo do commit `48ba709`).
     - Medição do início do capítulo, no commit `b1cb5cf` (worktree temporária, já apagada): 301 testes de unidade e 150 de integração; consolidado com 88,7% de linhas (1411/1591) e 71,1% de branches (323/454); unidade com 79,0% e 64,1%; integração com 76,6% e 44,3%; mappers com 2,2% a 4,8% de linhas no relatório de unidade e 81,0% a 89,5% no consolidado. Igual à auditoria do início do capítulo.
-  - Integração na `develop`, na `integracao/chapter-05-develop` (**em andamento**):
+  - Integração na `develop`, na `integracao/chapter-05-develop`. **Concluída** (PR #52, merge commit `f7703cf`):
     - merge da `develop` com o PR #50 (`475b07c`, BigDecimal no preço e V106), em `5592dcb`: conflitos em `ProductFactory`, `ProductCreateValidatorTest`, `ProductUpdateValidatorTest`, `ProductControllerTest` e `DOMAIN-MODEL.md`, resolvidos com a versão do capítulo e o `BigDecimal` do PR; `ProductTest` e `ProductControllerIT` adaptados (`comparesEqualTo` no `$.price`);
     - depois do merge: comparações de preço independentes da escala nos ITs (`isEqualByComparingTo` e `usingComparatorForType`); teste de preço 0 e -1 (422) no `POST` e no `PUT` do `ProductControllerTest`; cenários pendentes da #44 atualizados para o `NOT NULL` da V106; documentação atualizada (V106 e V107 nas regras de migration, trade-off do `Double` removido);
     - comportamento de `POST /products` sem preço depois da V106 confirmado: 409 `CONFLICT` genérico, sem gravar nada; na #44, foi publicado um comentário de atualização (tabela antes/depois da V106 e escopo ampliado) e o corpo da issue foi atualizado;
-    - próximo passo: Pull Request da `integracao/chapter-05-develop` para a `develop`, com merge commit.
+    - PR #52 da `integracao/chapter-05-develop` para a `develop`, com o CI `build` passando, integrado com merge commit em 06/11/2026 (`f7703cf`, pais `475b07c` e `461ea61`), pelo bypass do autor no ruleset `protect-develop` (que exige histórico linear e só permite squash). Medição no `461ea61`: 457 testes de unidade e 150 de integração; consolidado com 96,2% de linhas (1539/1600) e 92,7% de branches (421/454).
   - Depois da integração, numa branch própria a partir da `develop`: as correções de código do preço (o `@NotNull` da #44 e a validação de casas decimais e do limite do `NUMERIC(10,2)` com `@Digits`) e a documentação da V106 no DATABASE-MIGRATIONS, tudo pela #44. Não criar issue nova para casas decimais e limite: decisão do autor.
 - Fora do plano, já na branch:
   - `ea58b16`: torna o `mvnw` executável;
@@ -255,7 +256,8 @@ Atualizado em 06/11/2026.
 - Issues abertas nesta etapa:
   - #44 (produto criado sem preço; label `frontend`): **continua aberta**. Desde a V106, o banco recusa o preço nulo e a API responde 409 `CONFLICT` genérico, mas o DTO ainda não tem `@NotNull` e a API não responde 422. O corpo foi atualizado e agora inclui o `@Digits` e a documentação da V106;
   - #45 (coluna `price` NOT NULL): **fechada** em 06/11/2026, resolvida pelo PR #50; a documentação da V106 foi transferida para a #44;
-  - #6 (preço em `BigDecimal`): resolvida no código pelo PR #50, mas **continua aberta** até a verificação do frontend (critério de aceite da issue). Fechar manualmente depois dessa verificação.
+  - #6 (preço em `BigDecimal`): resolvida no código pelo PR #50, mas **continua aberta** até a verificação do frontend (critério de aceite da issue). Fechar manualmente depois dessa verificação;
+  - #20 (dependência de DNS nos testes): **fechada** em 06/11/2026, depois do merge do PR #52.
   - A label `frontend` foi criada e aplicada às issues com impacto no frontend.
 - PUT × PATCH de categoria: o frontend enviava `PUT` para `/api/v1/categories/{id}`, que só aceita `PATCH`. O problema está sendo corrigido diretamente no repositório do frontend, sem issue. No backend, fica o 405 que vira 500, registrado como cenário da #36.
 - Confira no `git log` qual etapa já foi commitada antes de continuar.
