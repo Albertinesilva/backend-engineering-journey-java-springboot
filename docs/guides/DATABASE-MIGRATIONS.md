@@ -68,6 +68,20 @@ Arquivos de `schema`:
 | V011 | `create_table_email` | Cria `tb_email` |
 | V106 | `alter_table_tb_product_price` | Altera `tb_product.price` de `FLOAT(53)` para `NUMERIC(10,2)` e define `NOT NULL` |
 
+**Antes de aplicar a V106 num banco que já tem produtos.** O `NOT NULL` da V106 falha se algum produto estiver sem preço, o que a API permitia antes dela. Confira antes de subir a aplicação:
+
+```sql
+SELECT id, name FROM tb_product WHERE price IS NULL;
+```
+
+Se a consulta devolver linhas, a V106 falha e a aplicação não sobe, com este erro do PostgreSQL (`SQLSTATE 23502`):
+
+```
+ERROR: column "price" of relation "tb_product" contains null values
+```
+
+Corrija os dados antes de subir de novo: defina um preço para cada produto listado (`UPDATE tb_product SET price = <valor> WHERE id = <id>;`) ou remova esses produtos, junto com os vínculos deles em `tb_product_category`. Num banco de `dev`, também dá para recriar o banco do zero (seção 7). Desde a correção da #44, a API responde 422 a um produto sem preço, então novos produtos sem preço não aparecem mais.
+
 Arquivos de `reference` e `data`:
 
 | Versão | Pasta | Arquivo | Conteúdo |
@@ -140,6 +154,7 @@ O `import.sql` só é executado quando o Hibernate cria as tabelas. Nos perfis `
 ## 8. Limitações conhecidas
 
 - **Migration nova de `schema` com versão V012 bloqueia a subida.** Num banco que já aplicou a V106, uma migration com versão menor fica fora de ordem. Na configuração atual (sem `outOfOrder`), o Flyway recusa a subida com `Detected resolved migration not applied to database: 012`. É o motivo da regra de numeração global e sequencial da seção 3. (Comportamento confirmado com o Flyway 11.7.2 do projeto contra um banco H2 de teste.)
+- **A V106 falha em bancos com produtos sem preço.** Bancos criados antes dela podem ter produtos com `price` nulo, e o `NOT NULL` recusa a migration. A verificação e a correção estão na [seção 3](#3-pastas-e-versões).
 - **O `import.sql` é mantido à mão.** Nada garante que ele continue igual às pastas `data` e `reference`; ao mudar os dados de exemplo, atualize os dois.
 - **Os vínculos usam ids fixos.** A V102, a V105 e o `import.sql` supõem que categorias, produtos, usuários e roles recebem os ids na ordem de inserção.
 - **Flyway desligado nos testes.** Os testes usam tabelas criadas pelo Hibernate a partir das entidades, e não pelas migrations. Um erro de SQL numa migration não é detectado pelos testes: aparece só ao subir nos perfis `dev` ou `prod`.

@@ -5,8 +5,10 @@ import java.util.List;
 
 import com.albertsilva.dev.asjcatalog.validation.product.annotation.ProductUpdateValid;
 
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
@@ -23,26 +25,27 @@ import jakarta.validation.constraints.Size;
  * </p>
  *
  * <p>
- * <b>Semântica de atualização:</b> o mapper só sobrescreve nome, descrição,
- * preço e URL da imagem quando o valor recebido é diferente de {@code null};
- * portanto, omitir um campo opcional mantém o valor atual e não é possível
- * limpá-lo enviando {@code null}. O nome e {@code categoryIds} são obrigatórios
- * neste DTO, então sempre chegam ao service; {@code categoryIds} substitui
- * integralmente as categorias do produto. O indicador {@code active} não é
+ * <b>Semântica de atualização:</b> o nome, o preço e {@code categoryIds} são
+ * obrigatórios neste DTO, então sempre chegam ao service; {@code categoryIds}
+ * substitui integralmente as categorias do produto. A descrição e a URL da
+ * imagem são opcionais: o mapper só as sobrescreve quando o valor recebido é
+ * diferente de {@code null}, então omiti-las mantém o valor atual e não é
+ * possível limpá-las enviando {@code null}. O indicador {@code active} não é
  * alterado por este request.
  * </p>
  *
  * <p>
- * <b>Validação estrutural:</b> mesmas regras de {@link ProductCreateRequest}
- * (preço, descrição e URL aceitam {@code null}). A unicidade do nome,
- * excluindo o próprio produto, e a existência das categorias são verificadas
- * por {@link ProductUpdateValid}.
+ * <b>Validação estrutural:</b> mesmas regras de {@link ProductCreateRequest},
+ * inclusive as do preço (obrigatório, positivo e dentro do
+ * {@code NUMERIC(10,2)}); a descrição e a URL aceitam {@code null}. A
+ * unicidade do nome, excluindo o próprio produto, e a existência das
+ * categorias são verificadas por {@link ProductUpdateValid}.
  * </p>
  *
  * @param name        novo nome (obrigatório; 3 a 100 caracteres)
  * @param description nova descrição (opcional; se informada, 3 a 200 caracteres)
- * @param price       novo preço, representado por BigDecimal;
- *                    se informado, deve ser maior que zero
+ * @param price       novo preço (obrigatório; maior que zero; no máximo 8
+ *                    dígitos inteiros e 2 casas decimais)
  * @param imgUrl      nova URL da imagem (opcional; {@code http://} ou
  *                    {@code https://})
  * @param categoryIds identificadores das categorias que substituirão as atuais
@@ -59,7 +62,9 @@ public record ProductUpdateRequest(
     @Size(min = 3, max = 200, message = "{product.description.size}") 
     String description,
 
-    @Positive(message = "{product.price.positive}") 
+    @NotNull(message = "{product.price.notNull}")
+    @Positive(message = "{product.price.positive}")
+    @Digits(integer = 8, fraction = 2, message = "{product.price.digits}")
     BigDecimal price,
 
     @Pattern(regexp = "^(https?://).+$", message = "{product.imgUrl.pattern}") 

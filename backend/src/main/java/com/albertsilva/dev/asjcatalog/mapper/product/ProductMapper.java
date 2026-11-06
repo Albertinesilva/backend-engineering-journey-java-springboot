@@ -82,6 +82,13 @@ public class ProductMapper {
    * nada é feito.
    * </p>
    *
+   * <p>
+   * Pela API, {@code name} e {@code price} nunca chegam nulos, porque são
+   * obrigatórios em {@link ProductUpdateRequest}; o teste de {@code null} só faz
+   * diferença para {@code description} e {@code imgUrl}, e para chamadas diretas
+   * ao mapper.
+   * </p>
+   *
    * @param request dados de atualização
    * @param entity  produto a ser modificado
    */

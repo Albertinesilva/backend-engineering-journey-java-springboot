@@ -5,6 +5,7 @@ import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NAME_FILTER;
 import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NON_EXISTING_ID;
 import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectNotFound;
 import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectValidationError;
+import static com.albertsilva.dev.asjcatalog.utils.JsonBodies.withMissingField;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +64,7 @@ import com.albertsilva.dev.asjcatalog.repository.ProductRepository;
 import com.albertsilva.dev.asjcatalog.security.oauth2.resource.config.ResourceServerConfig;
 import com.albertsilva.dev.asjcatalog.service.ProductService;
 import com.albertsilva.dev.asjcatalog.service.exception.ResourceNotFoundException;
+import com.albertsilva.dev.asjcatalog.utils.JsonBodies.MissingValue;
 import com.albertsilva.dev.asjcatalog.web.exception.handler.ControllerExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -124,19 +127,6 @@ class ProductControllerTest {
     return new ProductUpdateRequest(base.name(), base.description(), price, base.imgUrl(), base.categoryIds());
   }
 
-  /**
-   * Testes de {@code POST /products}.
-   *
-   * <p>
-   * <b>Cenários pendentes:</b>
-   * </p>
-   * <ul>
-   * <li>{@code price} nulo, ausente ou string vazia: o campo não tem
-   * {@code @NotNull}, então a requisição passa pela validação e só é recusada
-   * pelo banco, em que a coluna é {@code NOT NULL} desde a V106; a API ainda não
-   * responde com 422 (#44).</li>
-   * </ul>
-   */
   @Nested
   @DisplayName("POST /products")
   class CreateOperations {
@@ -159,6 +149,70 @@ class ProductControllerTest {
       // Assert
       expectValidationError(result, BASE_URL, "price");
       verify(productService, never()).create(any());
+    }
+
+    @ParameterizedTest(name = "[{0}]")
+    @EnumSource(MissingValue.class)
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
+    @DisplayName("POST /products should return 422 with error on price when price is missing")
+    void createShouldReturnUnprocessableEntityWithErrorOnPriceWhenPriceIsMissing(MissingValue missingValue)
+        throws Exception {
+
+      // Arrange
+      String body = withMissingField(objectMapper, ProductFactory.createProductCreateRequest(), "price", missingValue);
+
+      // Act
+      ResultActions result = mockMvc.perform(post(BASE_URL)
+          .content(body)
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      expectValidationError(result, BASE_URL, "price");
+      verify(productService, never()).create(any());
+    }
+
+    @ParameterizedTest(name = "[{0}]")
+    @ValueSource(strings = { "10.999", "100000000.00" })
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
+    @DisplayName("POST /products should return 422 with error on price when price exceeds column limits")
+    void createShouldReturnUnprocessableEntityWithErrorOnPriceWhenPriceExceedsColumnLimits(String price)
+        throws Exception {
+
+      // Arrange
+      ProductCreateRequest request = createRequestWithPrice(new BigDecimal(price));
+
+      // Act
+      ResultActions result = mockMvc.perform(post(BASE_URL)
+          .content(asJson(request))
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      expectValidationError(result, BASE_URL, "price");
+      verify(productService, never()).create(any());
+    }
+
+    @ParameterizedTest(name = "[{0}]")
+    @ValueSource(strings = { "0.01", "99999999.99" })
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
+    @DisplayName("POST /products should return 201 when price is at column limits")
+    void createShouldReturnCreatedWhenPriceIsAtColumnLimits(String price) throws Exception {
+
+      // Arrange
+      ProductCreateRequest request = createRequestWithPrice(new BigDecimal(price));
+
+      when(productService.create(request)).thenReturn(productResponse);
+
+      // Act
+      ResultActions result = mockMvc.perform(post(BASE_URL)
+          .content(asJson(request))
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      result.andExpect(status().isCreated());
+      verify(productService).create(request);
     }
 
     @Test
@@ -315,17 +369,6 @@ class ProductControllerTest {
     }
   }
 
-  /**
-   * Testes de {@code PUT /products/{id}}.
-   *
-   * <p>
-   * <b>Cenários pendentes:</b>
-   * </p>
-   * <ul>
-   * <li>{@code price} nulo, ausente ou string vazia: responde 200 e mantém o
-   * preço atual, em vez de 422 (#44).</li>
-   * </ul>
-   */
   @Nested
   @DisplayName("PUT /products/{id}")
   class UpdateOperations {
@@ -348,6 +391,70 @@ class ProductControllerTest {
       // Assert
       expectValidationError(result, BASE_URL + "/" + EXISTING_ID, "price");
       verify(productService, never()).update(anyLong(), any());
+    }
+
+    @ParameterizedTest(name = "[{0}]")
+    @EnumSource(MissingValue.class)
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
+    @DisplayName("PUT /products/{id} should return 422 with error on price when price is missing")
+    void updateShouldReturnUnprocessableEntityWithErrorOnPriceWhenPriceIsMissing(MissingValue missingValue)
+        throws Exception {
+
+      // Arrange
+      String body = withMissingField(objectMapper, ProductFactory.createProductUpdateRequest(), "price", missingValue);
+
+      // Act
+      ResultActions result = mockMvc.perform(put(BASE_URL + "/{id}", EXISTING_ID)
+          .content(body)
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      expectValidationError(result, BASE_URL + "/" + EXISTING_ID, "price");
+      verify(productService, never()).update(anyLong(), any());
+    }
+
+    @ParameterizedTest(name = "[{0}]")
+    @ValueSource(strings = { "10.999", "100000000.00" })
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
+    @DisplayName("PUT /products/{id} should return 422 with error on price when price exceeds column limits")
+    void updateShouldReturnUnprocessableEntityWithErrorOnPriceWhenPriceExceedsColumnLimits(String price)
+        throws Exception {
+
+      // Arrange
+      ProductUpdateRequest request = updateRequestWithPrice(new BigDecimal(price));
+
+      // Act
+      ResultActions result = mockMvc.perform(put(BASE_URL + "/{id}", EXISTING_ID)
+          .content(asJson(request))
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      expectValidationError(result, BASE_URL + "/" + EXISTING_ID, "price");
+      verify(productService, never()).update(anyLong(), any());
+    }
+
+    @ParameterizedTest(name = "[{0}]")
+    @ValueSource(strings = { "0.01", "99999999.99" })
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
+    @DisplayName("PUT /products/{id} should return 200 when price is at column limits")
+    void updateShouldReturnOkWhenPriceIsAtColumnLimits(String price) throws Exception {
+
+      // Arrange
+      ProductUpdateRequest request = updateRequestWithPrice(new BigDecimal(price));
+
+      when(productService.update(EXISTING_ID, request)).thenReturn(productResponse);
+
+      // Act
+      ResultActions result = mockMvc.perform(put(BASE_URL + "/{id}", EXISTING_ID)
+          .content(asJson(request))
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      result.andExpect(status().isOk());
+      verify(productService).update(EXISTING_ID, request);
     }
 
     @Test

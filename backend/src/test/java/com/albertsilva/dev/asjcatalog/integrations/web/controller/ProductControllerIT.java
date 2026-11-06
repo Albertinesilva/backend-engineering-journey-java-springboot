@@ -6,6 +6,7 @@ import static com.albertsilva.dev.asjcatalog.factory.UserFactory.EXISTING_EMAIL;
 import static com.albertsilva.dev.asjcatalog.factory.UserFactory.SEED_PASSWORD;
 import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectNotFound;
 import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectValidationError;
+import static com.albertsilva.dev.asjcatalog.utils.JsonBodies.withMissingField;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.hamcrest.Matchers.contains;
@@ -29,6 +30,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -41,6 +45,7 @@ import com.albertsilva.dev.asjcatalog.dto.product.request.ProductUpdateRequest;
 import com.albertsilva.dev.asjcatalog.factory.ProductFactory;
 import com.albertsilva.dev.asjcatalog.integrations.common.AbstractIT;
 import com.albertsilva.dev.asjcatalog.repository.ProductRepository;
+import com.albertsilva.dev.asjcatalog.utils.JsonBodies.MissingValue;
 
 /**
  * Testes de integração dos endpoints de {@code /api/v1/products}, com o
@@ -57,6 +62,11 @@ import com.albertsilva.dev.asjcatalog.repository.ProductRepository;
 class ProductControllerIT extends AbstractIT {
 
   private static final String BASE_URL = "/api/v1/products";
+
+  /** Mensagens de preço em inglês ({@code Accept-Language: en}). */
+  private static final String PRICE_REQUIRED_MESSAGE = "Product price is required.";
+  private static final String PRICE_POSITIVE_MESSAGE = "Price must be a positive value.";
+  private static final String PRICE_DIGITS_MESSAGE = "Price must have at most 8 integer digits and 2 decimal places.";
 
   @Autowired
   private ProductRepository productRepository;
@@ -311,6 +321,91 @@ class ProductControllerIT extends AbstractIT {
 
       assertThat(productRepository.count()).isEqualTo(initialCount);
     }
+
+    @ParameterizedTest(name = "[{0}]")
+    @EnumSource(MissingValue.class)
+    @DisplayName("POST /products should return 422 with translated error on price and create nothing when price is missing")
+    void createShouldReturnUnprocessableEntityAndCreateNothingWhenPriceIsMissing(MissingValue missingValue)
+        throws Exception {
+
+      // Arrange
+      String body = withMissingField(objectMapper, ProductFactory.createProductCreateRequest(), "price", missingValue);
+      long initialCount = productRepository.count();
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(post(BASE_URL)
+          .with(bearerToken())
+          .header(HttpHeaders.ACCEPT_LANGUAGE, "en")
+          .content(body)
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      expectValidationError(resultActions, BASE_URL, "price");
+      resultActions.andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'price')].message")
+          .value(hasItem(PRICE_REQUIRED_MESSAGE)));
+
+      assertThat(productRepository.count()).isEqualTo(initialCount);
+    }
+
+    @ParameterizedTest(name = "[{0}]")
+    @CsvSource(delimiter = '|', value = {
+        "0            | " + PRICE_POSITIVE_MESSAGE,
+        "-1           | " + PRICE_POSITIVE_MESSAGE,
+        "10.999       | " + PRICE_DIGITS_MESSAGE,
+        "100000000.00 | " + PRICE_DIGITS_MESSAGE })
+    @DisplayName("POST /products should return 422 with translated error on price and create nothing when price is invalid")
+    void createShouldReturnUnprocessableEntityAndCreateNothingWhenPriceIsInvalid(String price, String expectedMessage)
+        throws Exception {
+
+      // Arrange
+      ProductCreateRequest base = ProductFactory.createProductCreateRequest();
+      ProductCreateRequest request = new ProductCreateRequest(base.name(), base.description(), new BigDecimal(price),
+          base.imgUrl(), base.date(), base.categoryIds());
+      long initialCount = productRepository.count();
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(post(BASE_URL)
+          .with(bearerToken())
+          .header(HttpHeaders.ACCEPT_LANGUAGE, "en")
+          .content(asJson(request))
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      expectValidationError(resultActions, BASE_URL, "price");
+      resultActions.andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'price')].message")
+          .value(hasItem(expectedMessage)));
+
+      assertThat(productRepository.count()).isEqualTo(initialCount);
+    }
+
+    @Test
+    @DisplayName("POST /products should return 201 and persist price when price is at upper column limit")
+    void createShouldReturnCreatedAndPersistPriceWhenPriceIsAtUpperColumnLimit() throws Exception {
+
+      // Arrange
+      ProductCreateRequest base = ProductFactory.createProductCreateRequest();
+      BigDecimal maxPrice = new BigDecimal("99999999.99");
+      ProductCreateRequest request = new ProductCreateRequest(base.name(), base.description(), maxPrice,
+          base.imgUrl(), base.date(), base.categoryIds());
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(post(BASE_URL)
+          .with(bearerToken())
+          .content(asJson(request))
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      resultActions
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.price").value(comparesEqualTo(maxPrice), BigDecimal.class));
+
+      // O id é IDENTITY: o INSERT roda no save, e o H2 já conferiu o valor contra a coluna NUMERIC(10,2).
+      assertThat(productRepository.findById(idFrom(resultActions)).orElseThrow().getPrice())
+          .isEqualByComparingTo(maxPrice);
+    }
   }
 
   @Nested
@@ -361,6 +456,64 @@ class ProductControllerIT extends AbstractIT {
 
       // Assert
       expectNotFound(resultActions, BASE_URL + "/" + NON_EXISTING_ID);
+    }
+
+    @ParameterizedTest(name = "[{0}]")
+    @EnumSource(MissingValue.class)
+    @DisplayName("PUT /products/{id} should return 422 with translated error on price and keep price when price is missing")
+    void updateShouldReturnUnprocessableEntityAndKeepPriceWhenPriceIsMissing(MissingValue missingValue)
+        throws Exception {
+
+      // Arrange
+      String body = withMissingField(objectMapper, ProductFactory.createProductUpdateRequest(), "price", missingValue);
+      BigDecimal priceBefore = productRepository.findById(EXISTING_ID).orElseThrow().getPrice();
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(put(BASE_URL + "/{id}", EXISTING_ID)
+          .with(bearerToken())
+          .header(HttpHeaders.ACCEPT_LANGUAGE, "en")
+          .content(body)
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      expectValidationError(resultActions, BASE_URL + "/" + EXISTING_ID, "price");
+      resultActions.andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'price')].message")
+          .value(hasItem(PRICE_REQUIRED_MESSAGE)));
+
+      assertThat(productRepository.findById(EXISTING_ID).orElseThrow().getPrice()).isEqualByComparingTo(priceBefore);
+    }
+
+    @ParameterizedTest(name = "[{0}]")
+    @CsvSource(delimiter = '|', value = {
+        "0            | " + PRICE_POSITIVE_MESSAGE,
+        "-1           | " + PRICE_POSITIVE_MESSAGE,
+        "10.999       | " + PRICE_DIGITS_MESSAGE,
+        "100000000.00 | " + PRICE_DIGITS_MESSAGE })
+    @DisplayName("PUT /products/{id} should return 422 with translated error on price and keep price when price is invalid")
+    void updateShouldReturnUnprocessableEntityAndKeepPriceWhenPriceIsInvalid(String price, String expectedMessage)
+        throws Exception {
+
+      // Arrange
+      ProductUpdateRequest base = ProductFactory.createProductUpdateRequest();
+      ProductUpdateRequest request = new ProductUpdateRequest(base.name(), base.description(), new BigDecimal(price),
+          base.imgUrl(), base.categoryIds());
+      BigDecimal priceBefore = productRepository.findById(EXISTING_ID).orElseThrow().getPrice();
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(put(BASE_URL + "/{id}", EXISTING_ID)
+          .with(bearerToken())
+          .header(HttpHeaders.ACCEPT_LANGUAGE, "en")
+          .content(asJson(request))
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      expectValidationError(resultActions, BASE_URL + "/" + EXISTING_ID, "price");
+      resultActions.andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'price')].message")
+          .value(hasItem(expectedMessage)));
+
+      assertThat(productRepository.findById(EXISTING_ID).orElseThrow().getPrice()).isEqualByComparingTo(priceBefore);
     }
   }
 

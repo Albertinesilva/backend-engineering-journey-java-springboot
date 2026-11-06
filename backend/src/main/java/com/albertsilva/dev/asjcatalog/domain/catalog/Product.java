@@ -34,8 +34,10 @@ import jakarta.persistence.Table;
  * <ul>
  * <li>O nome é obrigatório e único (restrições do mapeamento)</li>
  * <li>O preço utiliza {@link BigDecimal} para garantir precisão decimal.
- * O campo é obrigatório no banco de dados, enquanto a validação
- * de valor positivo é realizada nos DTOs de entrada.</li>
+ * O campo é obrigatório no banco de dados; a obrigatoriedade, o valor
+ * positivo e o limite de 8 dígitos inteiros e 2 casas decimais também são
+ * validados nos DTOs de entrada, que respondem 422 antes de chegar ao
+ * banco.</li>
  * <li>O indicador {@code active} é apenas armazenado: a entidade não impõe
  * restrições com base nele. Uma instância nova nasce inativa ({@code false})
  * até que o valor seja definido</li>
@@ -101,8 +103,9 @@ public class Product implements Serializable, Identifiable<Long> {
    * <p>
    * Representado por {@link BigDecimal} para garantir precisão decimal.
    * O campo é obrigatório no banco de dados e possui precisão de 10 dígitos,
-   * sendo 2 casas decimais. A validação de valor positivo ocorre nos
-   * DTOs de entrada.
+   * sendo 2 casas decimais. Os DTOs de entrada validam o mesmo limite
+   * ({@code @Digits(integer = 8, fraction = 2)}), além da obrigatoriedade
+   * ({@code @NotNull}) e do valor positivo ({@code @Positive}).
    * </p>
    */
   @Column(nullable = false, precision = 10, scale = 2)

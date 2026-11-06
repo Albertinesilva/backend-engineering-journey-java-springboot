@@ -60,8 +60,6 @@ class ProductMapperTest {
    * <b>Cenários pendentes:</b>
    * </p>
    * <ul>
-   * <li>{@code price} nulo: é copiado para a entidade, e a gravação é recusada
-   * pelo banco, em que a coluna é {@code NOT NULL} desde a V106 (#44).</li>
    * <li>{@code date} do request: é descartado pelo mapper (#25, item 2).</li>
    * </ul>
    */
@@ -109,8 +107,9 @@ class ProductMapperTest {
    * <ul>
    * <li>Campos nulos ({@code name}, {@code description}, {@code price} ou
    * {@code imgUrl}): o valor atual é mantido, como numa atualização parcial num
-   * {@code PUT}; o preço nulo aparece na #44, e o padrão de atualização ainda não
-   * foi decidido (#28).</li>
+   * {@code PUT}, e o padrão de atualização ainda não foi decidido (#28). Pela API,
+   * só {@code description} e {@code imgUrl} chegam nulos, porque {@code name} e
+   * {@code price} são obrigatórios no DTO.</li>
    * </ul>
    */
   @Nested
