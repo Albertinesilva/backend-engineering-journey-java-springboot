@@ -5,6 +5,7 @@ import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NAME_FILTER;
 import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NON_EXISTING_ID;
 import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectNotFound;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -21,6 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -143,7 +145,7 @@ class ProductControllerTest {
           .andExpect(jsonPath("$.id").value(productResponse.id()))
           .andExpect(jsonPath("$.name").value(productResponse.name()))
           .andExpect(jsonPath("$.description").value(productResponse.description()))
-          .andExpect(jsonPath("$.price").value(productResponse.price()));
+          .andExpect(jsonPath("$.price").value(comparesEqualTo(productResponse.price()), BigDecimal.class));
       verify(productService).create(request);
     }
   }
@@ -256,7 +258,7 @@ class ProductControllerTest {
           .andExpect(jsonPath("$.id").value(response.id()))
           .andExpect(jsonPath("$.name").value(response.name()))
           .andExpect(jsonPath("$.description").value(response.description()))
-          .andExpect(jsonPath("$.price").value(response.price()));
+          .andExpect(jsonPath("$.price").value(comparesEqualTo(response.price()), BigDecimal.class));
     }
 
     @Test
@@ -301,7 +303,7 @@ class ProductControllerTest {
           .andExpect(jsonPath("$.id").value(updatedResponse.id()))
           .andExpect(jsonPath("$.name").value(updatedResponse.name()))
           .andExpect(jsonPath("$.description").value(updatedResponse.description()))
-          .andExpect(jsonPath("$.price").value(updatedResponse.price()));
+          .andExpect(jsonPath("$.price").value(comparesEqualTo(updatedResponse.price()), BigDecimal.class));
       verify(productService).update(EXISTING_ID, request);
     }
 

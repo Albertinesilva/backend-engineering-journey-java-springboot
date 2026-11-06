@@ -7,6 +7,7 @@ import static com.albertsilva.dev.asjcatalog.factory.UserFactory.SEED_PASSWORD;
 import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectNotFound;
 import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectValidationError;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
@@ -21,6 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -203,7 +205,7 @@ class ProductControllerIT extends AbstractIT {
           .andExpect(jsonPath("$.id").value(EXISTING_ID))
           .andExpect(jsonPath("$.name").value(expected.getName()))
           .andExpect(jsonPath("$.description").value(expected.getDescription()))
-          .andExpect(jsonPath("$.price").value(expected.getPrice()));
+          .andExpect(jsonPath("$.price").value(comparesEqualTo(expected.getPrice()), BigDecimal.class));
     }
 
     @Test
@@ -246,7 +248,7 @@ class ProductControllerIT extends AbstractIT {
           .andExpect(jsonPath("$.id").isNumber())
           .andExpect(jsonPath("$.name").value(request.name()))
           .andExpect(jsonPath("$.description").value(request.description()))
-          .andExpect(jsonPath("$.price").value(request.price()))
+          .andExpect(jsonPath("$.price").value(comparesEqualTo(request.price()), BigDecimal.class))
           .andExpect(jsonPath("$.date").doesNotExist());
 
       Long id = idFrom(resultActions);
@@ -289,7 +291,7 @@ class ProductControllerIT extends AbstractIT {
     void createShouldReturnUnprocessableEntityAndCreateNothingWhenCategoryIdsIsEmpty() throws Exception {
 
       // Arrange
-      ProductCreateRequest request = new ProductCreateRequest("Valid Product Name", "Valid description", 10.0,
+      ProductCreateRequest request = new ProductCreateRequest("Valid Product Name", "Valid description", new BigDecimal("10.00"),
           "https://img.com/product.png", null, List.of());
       long initialCount = productRepository.count();
 
@@ -334,7 +336,7 @@ class ProductControllerIT extends AbstractIT {
           .andExpect(jsonPath("$.id").value(EXISTING_ID))
           .andExpect(jsonPath("$.name").value(request.name()))
           .andExpect(jsonPath("$.description").value(request.description()))
-          .andExpect(jsonPath("$.price").value(request.price()));
+          .andExpect(jsonPath("$.price").value(comparesEqualTo(request.price()), BigDecimal.class));
 
       assertThat(productRepository.findById(EXISTING_ID).orElseThrow())
           .extracting(Product::getName, Product::getDescription, Product::getPrice)

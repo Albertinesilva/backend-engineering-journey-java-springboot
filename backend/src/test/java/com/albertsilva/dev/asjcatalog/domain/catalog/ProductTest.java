@@ -3,6 +3,8 @@ package com.albertsilva.dev.asjcatalog.domain.catalog;
 import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NAME_FILTER;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,7 +20,7 @@ import com.albertsilva.dev.asjcatalog.factory.ProductFactory;
 class ProductTest {
 
   private static final String DESCRIPTION = "TV 50 polegadas";
-  private static final Double PRICE = 2190.0;
+  private static final BigDecimal PRICE = new BigDecimal("2190.00");
   private static final String IMG_URL = "https://img.com/tv.png";
 
   @Nested

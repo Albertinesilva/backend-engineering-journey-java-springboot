@@ -2,6 +2,7 @@ package com.albertsilva.dev.asjcatalog.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -352,7 +353,7 @@ class ProductRepositoryTest {
     }
 
     private Product persistProduct(String name, Category... categories) {
-      Product product = new Product(name, "Description of " + name, 10.0, "https://img.com/qwzx.png", true);
+      Product product = new Product(name, "Description of " + name, new BigDecimal("10.00"), "https://img.com/qwzx.png", true);
       product.getCategories().addAll(List.of(categories));
       return productRepository.saveAndFlush(product);
     }

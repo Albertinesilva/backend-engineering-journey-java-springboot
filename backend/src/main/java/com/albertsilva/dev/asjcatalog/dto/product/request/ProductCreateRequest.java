@@ -1,5 +1,6 @@
 package com.albertsilva.dev.asjcatalog.dto.product.request;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -42,7 +43,7 @@ import jakarta.validation.constraints.Size;
  *
  * @param name        nome do produto (obrigatório; 3 a 100 caracteres)
  * @param description descrição (opcional; se informada, 3 a 200 caracteres)
- * @param price       preço (opcional; se informado, deve ser maior que zero)
+ * @param price       preço do produto, representado por BigDecimal; se informado, deve ser maior que zero
  * @param imgUrl      URL da imagem (opcional; se informada, deve começar com
  *                    {@code http://} ou {@code https://})
  * @param date        data (opcional; {@code null} ou passada/presente).
@@ -61,7 +62,7 @@ public record ProductCreateRequest(
     String description,
 
     @Positive(message = "{product.price.positive}") 
-    Double price,
+    BigDecimal price,
 
     @Pattern(regexp = "^(https?://).+$", message = "{product.imgUrl.pattern}") 
     String imgUrl,
