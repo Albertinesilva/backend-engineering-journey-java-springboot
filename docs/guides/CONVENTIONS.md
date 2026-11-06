@@ -74,13 +74,14 @@ Ao mudar um comportamento, atualize o JavaDoc junto.
 
 ## 5. Testes
 
-- Nome do método no padrão `<ação>Should<resultado>When<condição>`, por exemplo `findByIdShouldReturnCategoryWhenIdExists` ou `deleteShouldReturnForbiddenWithoutWriteRole`.
-- `@DisplayName` em inglês, descrevendo o cenário.
+- Nome do método no padrão `<método>Should<resultado>When<condição>`, por exemplo `findByIdShouldReturnCategoryWhenIdExists` ou `deleteCategoryShouldReturnForbiddenWhenUserHasNoWriteRole`.
+- `@DisplayName` em inglês, dizendo o mesmo que o nome do método.
 - `@Nested` agrupa os testes de um mesmo método ou endpoint.
-- Dados de teste vêm das fábricas do pacote `factory`.
+- Dados de teste vêm das fábricas do pacote `factory`, sem valores escritos à mão.
+- Asserções com o AssertJ nos testes novos e retrabalhados.
 - Classes que sobem o contexto do Spring fixam o perfil com `@ActiveProfiles("test")`.
 
-Como rodar e organizar: [TESTING.md](TESTING.md).
+O padrão completo, com exemplos e o checklist de revisão, está em [TESTING.md, seção 7](TESTING.md#7-padrão-de-qualidade-dos-testes).
 
 ## 6. Mensagens de commit
 
@@ -104,8 +105,9 @@ Tipos usados no histórico:
 | `test` | Testes | `test: amplia a cobertura com ITs de conta, autorização, CORS e consultas nativas` |
 | `docs` | Documentação | `docs: reorganiza estrutura de documentação, move auditorias e adiciona licença MIT` |
 | `build` | Build e dependências | `build: adiciona o maven-failsafe-plugin para executar os testes *IT` |
+| `ci` | Integração contínua (workflows do GitHub Actions) | `ci: adiciona workflow de build e testes` |
 
-Escopos já usados: `i18n`, `flyway` e `config`.
+Escopos já usados: `i18n`, `flyway`, `config`, `email`, `domain` e, no capítulo 05, `jacoco`, `surefire`, `testing`, `service`, `user`, `handler`, `security`, `web`, `mapper`, `validation`, `repository` e `integration`.
 
 Os commits mais antigos do repositório não seguem esse formato (há mensagens como `Update README.md`). A convenção vale para os commits novos.
 
@@ -119,18 +121,19 @@ O projeto é documentado por **capítulos**, e cada capítulo tem sua branch:
 | `chapter-02-tests` | 02 — Testes automatizados |
 | `chapter-03-validation-security` | 03 — Validação e segurança |
 | `chapter-04-domain-orm` | 04 — Domínio, ORM, casos de uso e acesso a dados |
+| `chapter-05-jacoco` | 05 — Cobertura de testes com JaCoCo e qualidade dos testes |
 
 Também existem `main` (a branch padrão do repositório remoto) e `develop`. O trabalho de um capítulo é feito na branch dele, e o `README.md` da raiz de cada branch apresenta aquele capítulo.
 
 ## 8. Migrations
 
-**Numeração global e sequencial.** A próxima migration recebe a **maior versão existente + 1**, **qualquer que seja a pasta**. Hoje a maior é `V105`, então a próxima é `V106`, depois `V107`, e assim por diante.
+**Numeração global e sequencial.** A próxima migration recebe a **maior versão existente + 1**, **qualquer que seja a pasta**. Hoje a maior é `V106`, então a próxima é `V107`, depois `V108`, e assim por diante.
 
 - **A pasta define em quais perfis a migration roda.** `schema` e `reference` rodam em `dev` e `prod`; `data` roda só em `dev`.
 - **O número define a ordem.** O Flyway junta as pastas e ordena só pela versão.
 - **Não use `outOfOrder`.** A configuração do projeto não o ativa, e ele não deve ser ativado para contornar a numeração.
 
-**Por quê.** Um banco já migrado anota no histórico do Flyway a maior versão aplicada (hoje V105 em `dev` e V104 em `prod`). Uma migration nova com número menor, como uma `V012` em `schema`, fica "fora de ordem", e o Flyway recusa a subida com `Detected resolved migration not applied to database`. Com a regra "maior + 1", toda migration nova é sempre a última, em qualquer ambiente. A faixa `V001`–`V011` de `schema` e a faixa `V100`–`V105` de `data` são históricas e não indicam onde numerar a próxima.
+**Por quê.** Um banco já migrado anota no histórico do Flyway a maior versão aplicada (hoje V106 em `dev` e em `prod`, porque a V106 fica em `schema` e roda nos dois perfis). Uma migration nova com número menor, como uma `V012` em `schema`, fica "fora de ordem", e o Flyway recusa a subida com `Detected resolved migration not applied to database`. Com a regra "maior + 1", toda migration nova é sempre a última, em qualquer ambiente. A faixa `V001`–`V011` de `schema` e a faixa `V100`–`V105` de `data` são históricas e não indicam onde numerar a próxima.
 
 Passo a passo para criar uma migration: [DATABASE-MIGRATIONS.md](DATABASE-MIGRATIONS.md#6-criar-uma-migration-nova).
 

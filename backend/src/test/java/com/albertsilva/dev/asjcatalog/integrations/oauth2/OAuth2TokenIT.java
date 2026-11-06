@@ -1,16 +1,18 @@
 package com.albertsilva.dev.asjcatalog.integrations.oauth2;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.albertsilva.dev.asjcatalog.factory.RoleFactory.ADMIN_AUTHORITY;
+import static com.albertsilva.dev.asjcatalog.factory.RoleFactory.OPERATOR_AUTHORITY;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.ADMIN_USER_ID;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.EXISTING_EMAIL;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.SEED_PASSWORD;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,12 +28,24 @@ import org.springframework.util.MultiValueMap;
 import com.albertsilva.dev.asjcatalog.integrations.common.AbstractIT;
 
 /**
+ * Login ({@code grant_type=password}), claims do JWT e rotação do refresh token
+ * no {@code POST /oauth2/token}.
+ *
+ * <p>
  * Estende {@link AbstractIT} (contexto, perfil test e MockMvc), mas mantém um
  * helper próprio: o {@code TokenUtil} devolve só o access token, e estes testes
  * precisam também do refresh token e da resposta completa do endpoint.
+ * </p>
+ *
+ * <p>
+ * Dependem do seed ({@code import.sql}): o login de {@code maria@gmail.com}
+ * com a senha do seed, o id e as roles dela (#21).
+ * </p>
  */
-@DisplayName("OAuth2 Token Integration Tests")
+@DisplayName("Integration tests for the OAuth2 token endpoint")
 class OAuth2TokenIT extends AbstractIT {
+
+  private static final String TOKEN_URL = "/oauth2/token";
 
   @Autowired
   private JwtDecoder jwtDecoder;
@@ -43,74 +57,45 @@ class OAuth2TokenIT extends AbstractIT {
   private String clientSecret;
 
   @Test
-  @DisplayName("POST /oauth2/token with password grant should issue access and refresh tokens with user claims")
-  void passwordGrantShouldIssueAccessAndRefreshTokenWithUserClaims() throws Exception {
+  @DisplayName("password grant should issue access and refresh tokens with user claims when credentials are valid")
+  void passwordGrantShouldIssueAccessAndRefreshTokensWithUserClaimsWhenCredentialsAreValid() throws Exception {
 
     // Act
-    Map<String, String> tokens = obtainTokens("maria@gmail.com", "123456");
-    String accessToken = tokens.get("access_token");
-    String refreshToken = tokens.get("refresh_token");
+    Map<String, String> tokens = obtainTokens(EXISTING_EMAIL, SEED_PASSWORD);
 
     // Assert
-    assertNotNull(accessToken);
-    assertNotNull(refreshToken);
-    assertFalse(accessToken.isBlank());
-    assertFalse(refreshToken.isBlank());
-
-    Jwt jwt = jwtDecoder.decode(accessToken);
-
-    assertEquals("maria@gmail.com", jwt.getClaimAsString("username"));
-    assertEquals(2, ((Number) jwt.getClaim("userId")).intValue());
-    assertTrue(jwt.getClaimAsStringList("authorities").contains("ROLE_ADMIN"));
-    assertTrue(jwt.getClaimAsStringList("authorities").contains("ROLE_OPERATOR"));
+    assertThat(tokens.get("access_token")).isNotBlank();
+    assertThat(tokens.get("refresh_token")).isNotBlank();
+    assertUserClaims(jwtDecoder.decode(tokens.get("access_token")));
   }
 
   @Test
-  @DisplayName("POST /oauth2/token with refresh token should rotate the token pair and keep the user claims")
-  void refreshTokenGrantShouldIssueNewAccessTokenAndRotateRefreshToken() throws Exception {
+  @DisplayName("refresh token grant should rotate the token pair and keep user claims when refresh token is valid")
+  void refreshTokenGrantShouldRotateTokenPairAndKeepUserClaimsWhenRefreshTokenIsValid() throws Exception {
 
     // Arrange
-    Map<String, String> initialTokens = obtainTokens("maria@gmail.com", "123456");
-    String originalAccessToken = initialTokens.get("access_token");
-    String originalRefreshToken = initialTokens.get("refresh_token");
+    Map<String, String> initialTokens = obtainTokens(EXISTING_EMAIL, SEED_PASSWORD);
 
     // Act
-    Map<String, String> refreshedTokens = requestTokens(buildRefreshTokenParams(originalRefreshToken));
-    String refreshedAccessToken = refreshedTokens.get("access_token");
-    String refreshedRefreshToken = refreshedTokens.get("refresh_token");
+    Map<String, String> refreshedTokens = requestTokens(refreshTokenParams(initialTokens.get("refresh_token")));
 
     // Assert
-    assertNotNull(refreshedAccessToken);
-    assertNotNull(refreshedRefreshToken);
-    assertNotEquals(originalAccessToken, refreshedAccessToken);
-    assertNotEquals(originalRefreshToken, refreshedRefreshToken);
-
-    Jwt jwt = jwtDecoder.decode(refreshedAccessToken);
-    assertEquals("maria@gmail.com", jwt.getClaimAsString("username"));
-    assertEquals(2, ((Number) jwt.getClaim("userId")).intValue());
-    assertTrue(jwt.getClaimAsStringList("authorities").contains("ROLE_ADMIN"));
+    assertThat(refreshedTokens.get("access_token")).isNotBlank().isNotEqualTo(initialTokens.get("access_token"));
+    assertThat(refreshedTokens.get("refresh_token")).isNotBlank().isNotEqualTo(initialTokens.get("refresh_token"));
+    assertUserClaims(jwtDecoder.decode(refreshedTokens.get("access_token")));
   }
 
   @Test
-  @DisplayName("POST /oauth2/token should reject reuse of the old refresh token after rotation")
-  void refreshTokenGrantShouldRejectReuseOfTheOldRefreshTokenAfterRotation() throws Exception {
+  @DisplayName("refresh token grant should return invalid_grant when old refresh token is reused after rotation")
+  void refreshTokenGrantShouldReturnInvalidGrantWhenOldRefreshTokenIsReusedAfterRotation() throws Exception {
 
     // Arrange
-    Map<String, String> initialTokens = obtainTokens("maria@gmail.com", "123456");
-    String originalRefreshToken = initialTokens.get("refresh_token");
-
-    Map<String, String> refreshedTokens = requestTokens(buildRefreshTokenParams(originalRefreshToken));
-    String rotatedRefreshToken = refreshedTokens.get("refresh_token");
-
-    assertNotNull(originalRefreshToken);
-    assertNotNull(rotatedRefreshToken);
-    assertNotEquals(originalRefreshToken, rotatedRefreshToken);
+    String originalRefreshToken = obtainTokens(EXISTING_EMAIL, SEED_PASSWORD).get("refresh_token");
+    String rotatedRefreshToken = requestTokens(refreshTokenParams(originalRefreshToken)).get("refresh_token");
+    assertThat(rotatedRefreshToken).isNotBlank().isNotEqualTo(originalRefreshToken);
 
     // Act
-    ResultActions result = mockMvc.perform(post("/oauth2/token")
-        .params(buildRefreshTokenParams(originalRefreshToken))
-        .with(httpBasic(clientId, clientSecret))
-        .accept("application/json;charset=UTF-8"));
+    ResultActions result = postToken(refreshTokenParams(originalRefreshToken));
 
     // Assert
     result
@@ -119,25 +104,23 @@ class OAuth2TokenIT extends AbstractIT {
   }
 
   @Test
-  @DisplayName("POST /oauth2/token with an invalid refresh token should fail with invalid_grant")
-  void refreshTokenGrantShouldRejectInvalidRefreshToken() throws Exception {
-
-    // Arrange
-    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-    params.add("grant_type", "refresh_token");
-    params.add("refresh_token", "invalid-refresh-token");
-    params.add("client_id", clientId);
+  @DisplayName("refresh token grant should return invalid_grant when refresh token does not exist")
+  void refreshTokenGrantShouldReturnInvalidGrantWhenRefreshTokenDoesNotExist() throws Exception {
 
     // Act
-    ResultActions result = mockMvc.perform(post("/oauth2/token")
-        .params(params)
-        .with(httpBasic(clientId, clientSecret))
-        .accept("application/json;charset=UTF-8"));
+    ResultActions result = postToken(refreshTokenParams("invalid-refresh-token"));
 
     // Assert
     result
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.error").value("invalid_grant"));
+  }
+
+  private void assertUserClaims(Jwt jwt) {
+    assertThat(jwt.getClaimAsString("username")).isEqualTo(EXISTING_EMAIL);
+    assertThat(((Number) jwt.getClaim("userId")).longValue()).isEqualTo(ADMIN_USER_ID);
+    assertThat(jwt.getClaimAsStringList("authorities"))
+        .containsExactlyInAnyOrder(OPERATOR_AUTHORITY, ADMIN_AUTHORITY);
   }
 
   private Map<String, String> obtainTokens(String username, String password) throws Exception {
@@ -150,22 +133,23 @@ class OAuth2TokenIT extends AbstractIT {
     return requestTokens(params);
   }
 
-  @SuppressWarnings("unchecked")
-  private Map<String, String> requestTokens(MultiValueMap<String, String> params) throws Exception {
-    ResultActions result = mockMvc.perform(post("/oauth2/token")
+  private ResultActions postToken(MultiValueMap<String, String> params) throws Exception {
+    return mockMvc.perform(post(TOKEN_URL)
         .params(params)
         .with(httpBasic(clientId, clientSecret))
-        .accept("application/json;charset=UTF-8"))
-        .andExpect(status().isOk());
-
-    String response = result.andReturn().getResponse().getContentAsString();
-    JacksonJsonParser jsonParser = new JacksonJsonParser();
-    Map<String, Object> parsed = jsonParser.parseMap(response);
-    return parsed.entrySet().stream()
-        .collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, entry -> String.valueOf(entry.getValue())));
+        .accept("application/json;charset=UTF-8"));
   }
 
-  private MultiValueMap<String, String> buildRefreshTokenParams(String refreshToken) {
+  private Map<String, String> requestTokens(MultiValueMap<String, String> params) throws Exception {
+    ResultActions result = postToken(params).andExpect(status().isOk());
+
+    String response = result.andReturn().getResponse().getContentAsString();
+    Map<String, Object> parsed = new JacksonJsonParser().parseMap(response);
+    return parsed.entrySet().stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, entry -> String.valueOf(entry.getValue())));
+  }
+
+  private MultiValueMap<String, String> refreshTokenParams(String refreshToken) {
     MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
     params.add("grant_type", "refresh_token");
     params.add("refresh_token", refreshToken);

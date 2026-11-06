@@ -144,11 +144,11 @@ Em `PUT /users/{id}`, a mesma regra é aplicada pelo `@UserUpdateValid`, só qua
 `@ValidEmail` faz duas verificações, depois de retirar espaços e passar o e-mail para minúsculas:
 
 1. **Formato**, com a expressão `^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$`.
-2. **Registro MX do domínio.** Um registro **MX** (*Mail Exchanger*) é a informação do DNS que diz qual servidor recebe e-mails de um domínio. O validador consulta o DNS (pela API JNDI do Java) e aceita o e-mail só se o domínio tiver pelo menos um registro MX.
+2. **Registro MX do domínio.** Um registro **MX** (*Mail Exchanger*) é a informação do DNS que diz qual servidor recebe e-mails de um domínio. O validador consulta o DNS (pela API JNDI do Java, no componente `JndiMxRecordLookup`, que ele recebe por injeção de dependência como `MxRecordLookup`) e aceita o e-mail só se o domínio tiver pelo menos um registro MX.
 
 Qualquer falha na consulta, como falta de internet, DNS fora do ar ou domínio inexistente, faz o e-mail ser recusado com `user.email.invalid`.
 
-**Consequência: a validação de e-mail depende de internet.** Isso vale para a aplicação e para os testes. `ValidEmailValidatorTest` consulta o DNS real de `gmail.com`, e testes de integração como o `AccountFlowIT` cadastram usuários com e-mails `@gmail.com`. Sem acesso ao DNS, esses testes falham. Veja [TESTING.md](TESTING.md#8-dependências-externas).
+**Consequência: na aplicação, a validação de e-mail depende de internet.** Os testes não dependem: neles, a consulta de MX é substituída por uma implementação controlada. Veja [TESTING.md](TESTING.md#8-dependências-externas).
 
 `@ValidEmail` é usado no cadastro, na criação e na atualização de usuários, no reenvio de ativação e na recuperação de senha. A atualização do próprio usuário (`PUT /accounts/me`) usa o `@Email` padrão do Bean Validation, que confere só o formato.
 

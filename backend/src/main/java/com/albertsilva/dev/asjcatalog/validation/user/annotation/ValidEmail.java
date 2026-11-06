@@ -22,7 +22,8 @@ import jakarta.validation.Payload;
  * domínio deve ter ao menos um registro MX na consulta DNS. Qualquer falha na
  * consulta DNS resulta em e-mail <b>inválido</b>. {@code null} e valores em
  * branco são válidos (a obrigatoriedade é de {@code @NotBlank}). <b>Depende de
- * rede (DNS)</b>; não consulta o banco.
+ * rede (DNS)</b> em produção, pela consulta de {@code JndiMxRecordLookup}; nos
+ * testes, essa consulta é substituída. Não consulta o banco.
  * </p>
  *
  * <p>

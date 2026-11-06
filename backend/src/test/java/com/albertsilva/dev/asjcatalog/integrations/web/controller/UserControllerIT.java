@@ -1,14 +1,17 @@
 package com.albertsilva.dev.asjcatalog.integrations.web.controller;
 
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.EXISTING_EMAIL;
 import static com.albertsilva.dev.asjcatalog.factory.UserFactory.EXISTING_ID;
 import static com.albertsilva.dev.asjcatalog.factory.UserFactory.NON_EXISTING_ID;
 import static com.albertsilva.dev.asjcatalog.factory.UserFactory.OPERATOR_USER_ID;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.PASSWORD;
+import static com.albertsilva.dev.asjcatalog.factory.UserFactory.SEED_PASSWORD;
+import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectNotFound;
+import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectValidationError;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -33,12 +36,23 @@ import org.springframework.transaction.annotation.Transactional;
 import com.albertsilva.dev.asjcatalog.domain.user.User;
 import com.albertsilva.dev.asjcatalog.dto.user.request.UserCreateRequest;
 import com.albertsilva.dev.asjcatalog.dto.user.request.UserUpdateRequest;
+import com.albertsilva.dev.asjcatalog.factory.RoleFactory;
 import com.albertsilva.dev.asjcatalog.factory.UserFactory;
 import com.albertsilva.dev.asjcatalog.integrations.common.AbstractIT;
 import com.albertsilva.dev.asjcatalog.repository.UserRepository;
 
+/**
+ * Testes de integração dos endpoints de {@code /api/v1/users}, com o contexto
+ * completo, o banco H2 e o token de uma usuária ADMIN.
+ *
+ * <p>
+ * Dependem do seed ({@code import.sql}): o login de {@code maria@gmail.com}
+ * com a senha do seed, os dois usuários Albert ({@code OPERATOR_USER_ID}) e
+ * Maria e os primeiros nomes esperados na ordenação (#21).
+ * </p>
+ */
 @Transactional
-@DisplayName("UserController Integration Tests")
+@DisplayName("Integration tests for UserController")
 class UserControllerIT extends AbstractIT {
 
   private static final String BASE_URL = "/api/v1/users";
@@ -46,145 +60,149 @@ class UserControllerIT extends AbstractIT {
   @Autowired
   private UserRepository userRepository;
 
-  private String adminUsername;
-  private String adminPassword;
   private long totalUsersCount;
 
   @BeforeEach
   void setUp() throws Exception {
     totalUsersCount = userRepository.count();
-
-    adminUsername = "maria@gmail.com";
-    adminPassword = "123456";
-    bearerToken = tokenUtil.obtainAccessToken(mockMvc, adminUsername, adminPassword);
+    bearerToken = tokenUtil.obtainAccessToken(mockMvc, EXISTING_EMAIL, SEED_PASSWORD);
   }
 
   @Nested
-  @DisplayName("READ Operations")
-  class ReadOperations {
+  @DisplayName("GET /users")
+  class FindAllOperations {
 
-    @Nested
-    @DisplayName("FindAll Operations")
-    class FindAllOperations {
+    @Test
+    @DisplayName("GET /users should return users sorted by firstName descending when sort is firstName descending")
+    void findAllShouldReturnUsersSortedByFirstNameDescendingWhenSortIsFirstNameDescending() throws Exception {
 
-      @Test
-      @DisplayName("GET /users should return paged users sorted by firstName descending")
-      void findAllShouldReturnPagedUsersSortedByFirstNameDescending() throws Exception {
+      // Act
+      ResultActions resultActions = mockMvc.perform(get(BASE_URL)
+          .with(bearerToken())
+          .accept(MediaType.APPLICATION_JSON)
+          .param("page", "0")
+          .param("size", "12")
+          .param("sort", "firstName,desc"));
 
-        // Act
-        ResultActions resultActions = mockMvc.perform(get(BASE_URL)
-            .with(bearerToken())
-            .accept(MediaType.APPLICATION_JSON)
-            .param("page", "0")
-            .param("size", "12")
-            .param("sort", "firstName,desc"));
-
-        // Assert
-        resultActions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.totalElements").value(totalUsersCount))
-            .andExpect(jsonPath("$.content[0].firstName").value("Maria"))
-            .andExpect(jsonPath("$.content[1].firstName").value("Albert"))
-            .andExpect(jsonPath("$.number").value(0))
-            .andExpect(jsonPath("$.size").value(12));
-      }
-
-      @Test
-      @DisplayName("GET /users with firstName filter should return only users whose firstName contains the filter")
-      void findAllShouldReturnFilteredUsersWhenFirstNameParameterIsInformed() throws Exception {
-
-        // Act
-        ResultActions resultActions = mockMvc.perform(get(BASE_URL)
-            .with(bearerToken())
-            .param("firstName", "mar")
-            .param("page", "0")
-            .param("size", "10")
-            .accept(MediaType.APPLICATION_JSON));
-
-        // Assert
-        resultActions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content").isNotEmpty())
-            .andExpect(jsonPath("$.content[*].firstName").value(everyItem(containsStringIgnoringCase("mar"))));
-      }
+      // Assert
+      resultActions
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.totalElements").value(totalUsersCount))
+          .andExpect(jsonPath("$.content[0].firstName").value("Maria"))
+          .andExpect(jsonPath("$.content[1].firstName").value("Albert"))
+          .andExpect(jsonPath("$.number").value(0))
+          .andExpect(jsonPath("$.size").value(12));
     }
 
-    @Nested
-    @DisplayName("FindById Operations")
-    class FindByIdOperations {
+    @Test
+    @DisplayName("GET /users should return only matching users when firstName is informed")
+    void findAllShouldReturnOnlyMatchingUsersWhenFirstNameIsInformed() throws Exception {
 
-      @Test
-      @DisplayName("GET /users/{id} should return user details when id exists")
-      void findByIdShouldReturnUserWhenIdExists() throws Exception {
+      // Arrange
+      User created = userRepository.saveAndFlush(
+          new User(null, "Marcos", "Souza", "marcos@gmail.com", "encoded-password", true));
 
-        ResultActions resultActions = mockMvc.perform(get(BASE_URL + "/{id}", EXISTING_ID)
-            .with(bearerToken())
-            .accept(MediaType.APPLICATION_JSON));
+      // Act
+      ResultActions resultActions = mockMvc.perform(get(BASE_URL)
+          .with(bearerToken())
+          .param("firstName", "mar")
+          .param("page", "0")
+          .param("size", "10")
+          .accept(MediaType.APPLICATION_JSON));
 
-        resultActions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(EXISTING_ID))
-            .andExpect(jsonPath("$.firstName").isNotEmpty())
-            .andExpect(jsonPath("$.lastName").isNotEmpty())
-            .andExpect(jsonPath("$.email").isNotEmpty());
-      }
-
-      @Test
-      @DisplayName("GET /users/{id} should return 404 with RESOURCE_NOT_FOUND code and translated message when id does not exist")
-      void findByIdShouldReturnNotFoundWhenIdDoesNotExist() throws Exception {
-
-        ResultActions resultActions = mockMvc.perform(get(BASE_URL + "/{id}", NON_EXISTING_ID)
-            .with(bearerToken())
-            .header(HttpHeaders.ACCEPT_LANGUAGE, "en")
-            .accept(MediaType.APPLICATION_JSON));
-
-        resultActions
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
-            .andExpect(jsonPath("$.message").value("User not found."));
-      }
+      // Assert
+      resultActions
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.content[*].firstName").value(hasItem(created.getFirstName())))
+          .andExpect(jsonPath("$.content[*].firstName").value(everyItem(containsStringIgnoringCase("mar"))));
     }
   }
 
   @Nested
-  @DisplayName("CREATE Operations")
+  @DisplayName("GET /users/{id}")
+  class FindByIdOperations {
+
+    @Test
+    @DisplayName("GET /users/{id} should return user details when id exists")
+    void findByIdShouldReturnUserDetailsWhenIdExists() throws Exception {
+
+      // Arrange
+      User expected = userRepository.findById(EXISTING_ID).orElseThrow();
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(get(BASE_URL + "/{id}", EXISTING_ID)
+          .with(bearerToken())
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      resultActions
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.id").value(EXISTING_ID))
+          .andExpect(jsonPath("$.firstName").value(expected.getFirstName()))
+          .andExpect(jsonPath("$.lastName").value(expected.getLastName()))
+          .andExpect(jsonPath("$.email").value(expected.getEmail()));
+    }
+
+    @Test
+    @DisplayName("GET /users/{id} should return 404 with translated message when id does not exist")
+    void findByIdShouldReturnNotFoundWithTranslatedMessageWhenIdDoesNotExist() throws Exception {
+
+      // Act
+      ResultActions resultActions = mockMvc.perform(get(BASE_URL + "/{id}", NON_EXISTING_ID)
+          .with(bearerToken())
+          .header(HttpHeaders.ACCEPT_LANGUAGE, "en")
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      expectNotFound(resultActions, BASE_URL + "/" + NON_EXISTING_ID);
+      resultActions.andExpect(jsonPath("$.message").value("User not found."));
+    }
+  }
+
+  @Nested
+  @DisplayName("POST /users")
   class CreateOperations {
 
     @Test
-    @DisplayName("POST /users should create user and return 201")
-    void createShouldCreateUserAndReturnCreated() throws Exception {
+    @DisplayName("POST /users should return 201 with location and persist user when request is valid")
+    void createShouldReturnCreatedWithLocationAndPersistUserWhenRequestIsValid() throws Exception {
 
       // Arrange
       UserCreateRequest request = UserFactory.createUserCreateRequest();
-      String jsonRequest = asJson(request);
       long initialCount = userRepository.count();
 
       // Act
       ResultActions resultActions = mockMvc.perform(post(BASE_URL)
           .with(bearerToken())
-          .content(jsonRequest)
+          .content(asJson(request))
           .contentType(MediaType.APPLICATION_JSON)
           .accept(MediaType.APPLICATION_JSON));
 
       // Assert
       resultActions
           .andExpect(status().isCreated())
-          .andExpect(header().exists("Location"))
-          .andExpect(jsonPath("$.id").isNotEmpty())
+          .andExpect(jsonPath("$.id").isNumber())
           .andExpect(jsonPath("$.firstName").value(request.firstName()))
           .andExpect(jsonPath("$.lastName").value(request.lastName()))
           .andExpect(jsonPath("$.email").value(request.email()));
 
-      assertEquals(initialCount + 1, userRepository.count());
+      Long id = objectMapper.readTree(resultActions.andReturn().getResponse().getContentAsString()).get("id")
+          .asLong();
+      resultActions.andExpect(header().string("Location", "http://localhost" + BASE_URL + "/" + id));
+
+      assertThat(userRepository.count()).isEqualTo(initialCount + 1);
+      assertThat(userRepository.findById(id).orElseThrow())
+          .extracting(User::getFirstName, User::getLastName, User::getEmail)
+          .containsExactly(request.firstName(), request.lastName(), request.email());
     }
 
     @Test
-    @DisplayName("POST /users should return 422 with the translated field error when firstName is blank and create nothing")
-    void createShouldReturnUnprocessableEntityWhenFirstNameIsBlank() throws Exception {
+    @DisplayName("POST /users should return 422 with translated field error and create nothing when firstName is blank")
+    void createShouldReturnUnprocessableEntityAndCreateNothingWhenFirstNameIsBlank() throws Exception {
 
       // Arrange
-      UserCreateRequest request = new UserCreateRequest("", "Santos", "pedro@gmail.com", "JAVA!@#ResTIc18",
-          Set.of(1L));
+      UserCreateRequest request = new UserCreateRequest("", "Santos", "pedro@gmail.com", PASSWORD,
+          Set.of(RoleFactory.OPERATOR_ROLE_ID));
       long initialCount = userRepository.count();
 
       // Act
@@ -196,35 +214,29 @@ class UserControllerIT extends AbstractIT {
           .accept(MediaType.APPLICATION_JSON));
 
       // Assert
-      resultActions
-          .andExpect(status().isUnprocessableEntity())
-          .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-          .andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'firstName')].message")
-              .value(hasItem("First name is required.")));
+      expectValidationError(resultActions, BASE_URL, "firstName");
+      resultActions.andExpect(jsonPath("$.fieldErrors[?(@.fieldName == 'firstName')].message")
+          .value(hasItem("First name is required.")));
 
-      assertEquals(initialCount, userRepository.count());
+      assertThat(userRepository.count()).isEqualTo(initialCount);
     }
   }
 
   @Nested
-  @DisplayName("UPDATE Operations")
+  @DisplayName("PUT /users/{id}")
   class UpdateOperations {
 
     @Test
-    @DisplayName("PUT /users/{id} should update user when id exists")
-    void updateShouldReturnUserResponseWhenIdExists() throws Exception {
+    @DisplayName("PUT /users/{id} should return 200 and persist changes when id exists")
+    void updateShouldReturnOkAndPersistChangesWhenIdExists() throws Exception {
 
       // Arrange
       UserUpdateRequest request = UserFactory.createUserUpdateRequest();
-      String jsonRequest = asJson(request);
-
-      String expectedFirstName = request.firstName();
-      String expectedLastName = request.lastName();
 
       // Act
       ResultActions resultActions = mockMvc.perform(put(BASE_URL + "/{id}", EXISTING_ID)
           .with(bearerToken())
-          .content(jsonRequest)
+          .content(asJson(request))
           .contentType(MediaType.APPLICATION_JSON)
           .accept(MediaType.APPLICATION_JSON));
 
@@ -232,8 +244,13 @@ class UserControllerIT extends AbstractIT {
       resultActions
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.id").value(EXISTING_ID))
-          .andExpect(jsonPath("$.firstName").value(expectedFirstName))
-          .andExpect(jsonPath("$.lastName").value(expectedLastName));
+          .andExpect(jsonPath("$.firstName").value(request.firstName()))
+          .andExpect(jsonPath("$.lastName").value(request.lastName()))
+          .andExpect(jsonPath("$.email").value(request.email()));
+
+      assertThat(userRepository.findById(EXISTING_ID).orElseThrow())
+          .extracting(User::getFirstName, User::getLastName, User::getEmail)
+          .containsExactly(request.firstName(), request.lastName(), request.email());
     }
 
     @Test
@@ -242,27 +259,26 @@ class UserControllerIT extends AbstractIT {
 
       // Arrange
       UserUpdateRequest request = UserFactory.createUserUpdateRequest();
-      String jsonRequest = asJson(request);
 
       // Act
       ResultActions resultActions = mockMvc.perform(put(BASE_URL + "/{id}", NON_EXISTING_ID)
           .with(bearerToken())
-          .content(jsonRequest)
+          .content(asJson(request))
           .contentType(MediaType.APPLICATION_JSON)
           .accept(MediaType.APPLICATION_JSON));
 
       // Assert
-      resultActions.andExpect(status().isNotFound());
+      expectNotFound(resultActions, BASE_URL + "/" + NON_EXISTING_ID);
     }
   }
 
   @Nested
-  @DisplayName("ACTIVATE Operations")
+  @DisplayName("PATCH /users/{id}/activate")
   class ActivateOperations {
 
     @Test
-    @DisplayName("PATCH /users/{id}/activate should activate an inactive user")
-    void activateShouldActivateUserWhenUserIsInactive() throws Exception {
+    @DisplayName("PATCH /users/{id}/activate should return 204 and activate user when user is inactive")
+    void activateShouldReturnNoContentAndActivateUserWhenUserIsInactive() throws Exception {
 
       // Arrange
       User user = userRepository.findById(OPERATOR_USER_ID).orElseThrow();
@@ -276,7 +292,7 @@ class UserControllerIT extends AbstractIT {
       // Assert
       resultActions.andExpect(status().isNoContent());
 
-      assertTrue(userRepository.findById(OPERATOR_USER_ID).orElseThrow().isActive());
+      assertThat(userRepository.findById(OPERATOR_USER_ID).orElseThrow().isActive()).isTrue();
     }
 
     @Test
@@ -288,20 +304,20 @@ class UserControllerIT extends AbstractIT {
           .with(bearerToken()));
 
       // Assert
-      resultActions.andExpect(status().isNotFound());
+      expectNotFound(resultActions, BASE_URL + "/" + NON_EXISTING_ID + "/activate");
     }
   }
 
   @Nested
-  @DisplayName("DEACTIVATE Operations")
+  @DisplayName("PATCH /users/{id}/deactivate")
   class DeactivateOperations {
 
     @Test
-    @DisplayName("PATCH /users/{id}/deactivate should deactivate an active user")
-    void deactivateShouldDeactivateUserWhenUserIsActive() throws Exception {
+    @DisplayName("PATCH /users/{id}/deactivate should return 204 and deactivate user when user is active")
+    void deactivateShouldReturnNoContentAndDeactivateUserWhenUserIsActive() throws Exception {
 
       // Arrange
-      assertTrue(userRepository.findById(OPERATOR_USER_ID).orElseThrow().isActive());
+      assertThat(userRepository.findById(OPERATOR_USER_ID).orElseThrow().isActive()).isTrue();
 
       // Act
       ResultActions resultActions = mockMvc.perform(patch(BASE_URL + "/{id}/deactivate", OPERATOR_USER_ID)
@@ -310,7 +326,7 @@ class UserControllerIT extends AbstractIT {
       // Assert
       resultActions.andExpect(status().isNoContent());
 
-      assertFalse(userRepository.findById(OPERATOR_USER_ID).orElseThrow().isActive());
+      assertThat(userRepository.findById(OPERATOR_USER_ID).orElseThrow().isActive()).isFalse();
     }
 
     @Test
@@ -322,30 +338,30 @@ class UserControllerIT extends AbstractIT {
           .with(bearerToken()));
 
       // Assert
-      resultActions.andExpect(status().isNotFound());
+      expectNotFound(resultActions, BASE_URL + "/" + NON_EXISTING_ID + "/deactivate");
     }
   }
 
   @Nested
-  @DisplayName("DELETE Operations")
+  @DisplayName("DELETE /users/{id}")
   class DeleteOperations {
 
     @Test
-    @DisplayName("DELETE /users/{id} should delete user when id exists")
-    void deleteShouldRemoveUserWhenIdExists() throws Exception {
+    @DisplayName("DELETE /users/{id} should return 204 and remove user when id exists")
+    void deleteShouldReturnNoContentAndRemoveUserWhenIdExists() throws Exception {
 
       // Arrange
       long initialCount = userRepository.count();
 
       // Act
-      ResultActions resultActions = mockMvc.perform(delete(BASE_URL + "/{id}", 1L)
+      ResultActions resultActions = mockMvc.perform(delete(BASE_URL + "/{id}", OPERATOR_USER_ID)
           .with(bearerToken()));
 
       // Assert
       resultActions.andExpect(status().isNoContent());
 
-      assertEquals(initialCount - 1, userRepository.count());
-      assertFalse(userRepository.existsById(1L));
+      assertThat(userRepository.count()).isEqualTo(initialCount - 1);
+      assertThat(userRepository.existsById(OPERATOR_USER_ID)).isFalse();
     }
 
     @Test
@@ -357,7 +373,7 @@ class UserControllerIT extends AbstractIT {
           .with(bearerToken()));
 
       // Assert
-      resultActions.andExpect(status().isNotFound());
+      expectNotFound(resultActions, BASE_URL + "/" + NON_EXISTING_ID);
     }
   }
 }

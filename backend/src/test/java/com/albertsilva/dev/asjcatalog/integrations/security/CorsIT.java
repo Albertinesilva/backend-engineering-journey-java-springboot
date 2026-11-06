@@ -18,7 +18,7 @@ import com.albertsilva.dev.asjcatalog.integrations.common.AbstractIT;
  * {@code ResourceServerConfig}. A origem permitida é lida de
  * {@code cors.origins}, para não depender de um valor fixo no teste.
  */
-@DisplayName("CORS Integration Tests")
+@DisplayName("Integration tests for CORS")
 class CorsIT extends AbstractIT {
 
   private static final String PRODUCTS_URL = "/api/v1/products";
@@ -28,8 +28,8 @@ class CorsIT extends AbstractIT {
   private String corsOrigins;
 
   @Test
-  @DisplayName("preflight from an allowed origin should be accepted with the expected CORS headers")
-  void preflightFromAllowedOriginShouldBeAccepted() throws Exception {
+  @DisplayName("preflight should return 200 with CORS headers when origin is allowed")
+  void preflightShouldReturnOkWithCorsHeadersWhenOriginIsAllowed() throws Exception {
 
     // Arrange
     String allowedOrigin = corsOrigins.split(",")[0].trim();
@@ -50,8 +50,8 @@ class CorsIT extends AbstractIT {
   }
 
   @Test
-  @DisplayName("preflight from an origin that is not allowed should be rejected without CORS headers")
-  void preflightFromNotAllowedOriginShouldBeRejected() throws Exception {
+  @DisplayName("preflight should return 403 without CORS headers when origin is not allowed")
+  void preflightShouldReturnForbiddenWithoutCorsHeadersWhenOriginIsNotAllowed() throws Exception {
 
     // Act
     ResultActions result = mockMvc.perform(options(PRODUCTS_URL)

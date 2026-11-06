@@ -1,13 +1,11 @@
 package com.albertsilva.dev.asjcatalog.validation.category.validator;
 
+import static com.albertsilva.dev.asjcatalog.factory.CategoryFactory.NAME_FILTER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,6 +26,7 @@ import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder.
 class CategoryCreateValidatorTest {
 
   private static final String UNIQUE_MESSAGE = "{category.name.unique}";
+  private static final String NORMALIZED_NAME = NAME_FILTER.trim().toLowerCase();
 
   @InjectMocks
   private CategoryCreateValidator validator;
@@ -44,50 +43,71 @@ class CategoryCreateValidatorTest {
   @Mock
   private NodeBuilderCustomizableContext nodeBuilder;
 
-  @BeforeEach
-  void setUp() {
-    lenient().when(context.buildConstraintViolationWithTemplate(anyString())).thenReturn(violationBuilder);
-    lenient().when(violationBuilder.addPropertyNode("name")).thenReturn(nodeBuilder);
-    lenient().when(nodeBuilder.addConstraintViolation()).thenReturn(context);
+  /** Prepara o contexto para registrar uma violação no campo {@code name}. */
+  private void givenNameViolation() {
+    when(context.buildConstraintViolationWithTemplate(UNIQUE_MESSAGE)).thenReturn(violationBuilder);
+    when(violationBuilder.addPropertyNode("name")).thenReturn(nodeBuilder);
   }
 
   @Nested
-  @DisplayName("valid values")
-  class ValidValuesTests {
+  @DisplayName("IsValid Operations")
+  class IsValidOperations {
 
     @Test
-    @DisplayName("isValid should accept an available normalized name")
-    void isValidShouldAcceptAvailableNormalizedName() {
-      when(repository.existsByNameIgnoreCase("electronics")).thenReturn(false);
+    @DisplayName("isValid should accept name when normalized name is available")
+    void isValidShouldAcceptNameWhenNormalizedNameIsAvailable() {
 
-      boolean result = validator.isValid(new CategoryCreateRequest("  Electronics  ", null), context);
+      // Arrange
+      when(repository.existsByNameIgnoreCase(NORMALIZED_NAME)).thenReturn(false);
 
+      // Act
+      boolean result = validator.isValid(new CategoryCreateRequest("  " + NAME_FILTER + "  ", null), context);
+
+      // Assert
       assertThat(result).isTrue();
-      verify(repository).existsByNameIgnoreCase("electronics");
+      verify(repository).existsByNameIgnoreCase(NORMALIZED_NAME);
       verifyNoInteractions(context);
     }
 
     @Test
-    @DisplayName("isValid should skip blank names")
-    void isValidShouldSkipBlankNames() {
+    @DisplayName("isValid should skip repository when name is blank")
+    void isValidShouldSkipRepositoryWhenNameIsBlank() {
+
+      // Act
       boolean result = validator.isValid(new CategoryCreateRequest("   ", null), context);
 
+      // Assert
       assertThat(result).isTrue();
       verifyNoInteractions(repository, context);
     }
-  }
 
-  @Test
-  @DisplayName("isValid should reject an existing name and attach the error to name")
-  void isValidShouldRejectExistingName() {
-    when(repository.existsByNameIgnoreCase("electronics")).thenReturn(true);
+    @Test
+    @DisplayName("isValid should skip repository when name is null")
+    void isValidShouldSkipRepositoryWhenNameIsNull() {
 
-    boolean result = validator.isValid(new CategoryCreateRequest("Electronics", null), context);
+      // Act
+      boolean result = validator.isValid(new CategoryCreateRequest(null, null), context);
 
-    assertThat(result).isFalse();
-    verify(context).disableDefaultConstraintViolation();
-    verify(context).buildConstraintViolationWithTemplate(UNIQUE_MESSAGE);
-    verify(violationBuilder).addPropertyNode("name");
-    verify(nodeBuilder).addConstraintViolation();
+      // Assert
+      assertThat(result).isTrue();
+      verifyNoInteractions(repository, context);
+    }
+
+    @Test
+    @DisplayName("isValid should reject name and attach error to name when name already exists")
+    void isValidShouldRejectNameAndAttachErrorToNameWhenNameAlreadyExists() {
+
+      // Arrange
+      givenNameViolation();
+      when(repository.existsByNameIgnoreCase(NORMALIZED_NAME)).thenReturn(true);
+
+      // Act
+      boolean result = validator.isValid(new CategoryCreateRequest(NAME_FILTER, null), context);
+
+      // Assert
+      assertThat(result).isFalse();
+      verify(context).disableDefaultConstraintViolation();
+      verify(nodeBuilder).addConstraintViolation();
+    }
   }
 }

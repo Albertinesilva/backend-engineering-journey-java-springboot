@@ -1,5 +1,10 @@
 package com.albertsilva.dev.asjcatalog.service;
 
+import static com.albertsilva.dev.asjcatalog.factory.TokenFactory.ACTIVATION_EXPIRATION_HOURS;
+import static com.albertsilva.dev.asjcatalog.factory.TokenFactory.ACTIVATION_TOKEN;
+import static com.albertsilva.dev.asjcatalog.factory.TokenFactory.NON_EXISTING_TOKEN;
+import static com.albertsilva.dev.asjcatalog.factory.TokenFactory.PASSWORD_RECOVERY_EXPIRATION_MINUTES;
+import static com.albertsilva.dev.asjcatalog.factory.TokenFactory.PASSWORD_RECOVERY_TOKEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -7,9 +12,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,6 +30,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.albertsilva.dev.asjcatalog.domain.recovery.Token;
 import com.albertsilva.dev.asjcatalog.domain.recovery.enums.TokenType;
 import com.albertsilva.dev.asjcatalog.domain.user.User;
+import com.albertsilva.dev.asjcatalog.factory.TokenFactory;
 import com.albertsilva.dev.asjcatalog.factory.UserFactory;
 import com.albertsilva.dev.asjcatalog.repository.TokenRepository;
 import com.albertsilva.dev.asjcatalog.service.exception.InvalidTokenException;
@@ -37,69 +46,82 @@ class TokenServiceTest {
   @Mock
   private TokenRepository tokenRepository;
 
+  private User user;
+
+  @BeforeEach
+  void setUp() {
+    ReflectionTestUtils.setField(service, "activationTokenExpirationHours", ACTIVATION_EXPIRATION_HOURS);
+    ReflectionTestUtils.setField(service, "passwordRecoveryTokenExpirationMinutes",
+        PASSWORD_RECOVERY_EXPIRATION_MINUTES);
+    user = UserFactory.createUser();
+  }
+
   @Nested
-  @DisplayName("Creation Operations")
-  class CreationOperations {
+  @DisplayName("CreateActivationToken Operations")
+  class CreateActivationTokenOperations {
 
     @Test
-    @DisplayName("createActivationToken should save an activation token with valid metadata")
-    void createActivationTokenShouldSaveActivationTokenWithValidMetadata() {
-      // Arrange
-      ReflectionTestUtils.setField(service, "activationTokenExpirationHours", 24L);
-      User user = UserFactory.createUser();
-      user.setId(10L);
+    @DisplayName("createActivationToken should save unused token when user is given")
+    void createActivationTokenShouldSaveUnusedTokenWhenUserIsGiven() {
 
+      // Arrange
       when(tokenRepository.save(any(Token.class))).thenAnswer(invocation -> invocation.getArgument(0));
+      Instant before = Instant.now();
 
       // Act
       Token result = service.createActivationToken(user);
+      Instant after = Instant.now();
 
       // Assert
-      assertThat(result).isNotNull();
       assertThat(result.getUser()).isEqualTo(user);
       assertThat(result.getType()).isEqualTo(TokenType.ACTIVATION);
-      assertThat(result.getToken()).isNotBlank();
+      assertThat(UUID.fromString(result.getToken())).hasToString(result.getToken());
       assertThat(result.getDisabled()).isFalse();
-      assertThat(result.getExpireDate()).isAfter(Instant.now());
-      verify(tokenRepository).save(any(Token.class));
-    }
-
-    @Test
-    @DisplayName("createPasswordRecoveryToken should save a recovery token with valid metadata")
-    void createPasswordRecoveryTokenShouldSavePasswordRecoveryTokenWithValidMetadata() {
-      // Arrange
-      ReflectionTestUtils.setField(service, "passwordRecoveryTokenExpirationMinutes", 30L);
-      User user = UserFactory.createUser();
-      user.setId(11L);
-
-      when(tokenRepository.save(any(Token.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-      // Act
-      Token result = service.createPasswordRecoveryToken(user);
-
-      // Assert
-      assertThat(result).isNotNull();
-      assertThat(result.getUser()).isEqualTo(user);
-      assertThat(result.getType()).isEqualTo(TokenType.PASSWORD_RECOVERY);
-      assertThat(result.getToken()).isNotBlank();
-      assertThat(result.getDisabled()).isFalse();
-      assertThat(result.getExpireDate()).isAfter(Instant.now());
-      verify(tokenRepository).save(any(Token.class));
+      assertThat(result.getExpireDate()).isBetween(before.plus(ACTIVATION_EXPIRATION_HOURS, ChronoUnit.HOURS),
+          after.plus(ACTIVATION_EXPIRATION_HOURS, ChronoUnit.HOURS));
+      verify(tokenRepository).save(result);
     }
   }
 
   @Nested
-  @DisplayName("Disable Operations")
-  class DisableOperations {
+  @DisplayName("CreatePasswordRecoveryToken Operations")
+  class CreatePasswordRecoveryTokenOperations {
+
+    @Test
+    @DisplayName("createPasswordRecoveryToken should save unused token when user is given")
+    void createPasswordRecoveryTokenShouldSaveUnusedTokenWhenUserIsGiven() {
+
+      // Arrange
+      when(tokenRepository.save(any(Token.class))).thenAnswer(invocation -> invocation.getArgument(0));
+      Instant before = Instant.now();
+
+      // Act
+      Token result = service.createPasswordRecoveryToken(user);
+      Instant after = Instant.now();
+
+      // Assert
+      assertThat(result.getUser()).isEqualTo(user);
+      assertThat(result.getType()).isEqualTo(TokenType.PASSWORD_RECOVERY);
+      assertThat(UUID.fromString(result.getToken())).hasToString(result.getToken());
+      assertThat(result.getDisabled()).isFalse();
+      assertThat(result.getExpireDate()).isBetween(
+          before.plus(PASSWORD_RECOVERY_EXPIRATION_MINUTES, ChronoUnit.MINUTES),
+          after.plus(PASSWORD_RECOVERY_EXPIRATION_MINUTES, ChronoUnit.MINUTES));
+      verify(tokenRepository).save(result);
+    }
+  }
+
+  @Nested
+  @DisplayName("DisableAllActivationTokens Operations")
+  class DisableAllActivationTokensOperations {
 
     @Test
     @DisplayName("disableAllActivationTokens should disable all active activation tokens for the user")
     void disableAllActivationTokensShouldDisableAllActiveActivationTokensForUser() {
+
       // Arrange
-      User user = UserFactory.createUser();
-      user.setId(12L);
-      Token first = new Token("activation-1", user, Instant.now().plusSeconds(3600), TokenType.ACTIVATION);
-      Token second = new Token("activation-2", user, Instant.now().plusSeconds(3600), TokenType.ACTIVATION);
+      Token first = TokenFactory.createActivationToken(user);
+      Token second = TokenFactory.createActivationToken(user);
 
       when(tokenRepository.findByUserAndTypeAndDisabledFalse(user, TokenType.ACTIVATION))
           .thenReturn(List.of(first, second));
@@ -110,17 +132,20 @@ class TokenServiceTest {
       // Assert
       assertThat(first.getDisabled()).isTrue();
       assertThat(second.getDisabled()).isTrue();
-      verify(tokenRepository).findByUserAndTypeAndDisabledFalse(user, TokenType.ACTIVATION);
     }
+  }
+
+  @Nested
+  @DisplayName("DisableAllPasswordRecoveryTokens Operations")
+  class DisableAllPasswordRecoveryTokensOperations {
 
     @Test
     @DisplayName("disableAllPasswordRecoveryTokens should disable all active recovery tokens for the user")
     void disableAllPasswordRecoveryTokensShouldDisableAllActiveRecoveryTokensForUser() {
+
       // Arrange
-      User user = UserFactory.createUser();
-      user.setId(13L);
-      Token first = new Token("recovery-1", user, Instant.now().plusSeconds(1800), TokenType.PASSWORD_RECOVERY);
-      Token second = new Token("recovery-2", user, Instant.now().plusSeconds(1800), TokenType.PASSWORD_RECOVERY);
+      Token first = TokenFactory.createPasswordRecoveryToken(user);
+      Token second = TokenFactory.createPasswordRecoveryToken(user);
 
       when(tokenRepository.findByUserAndTypeAndDisabledFalse(user, TokenType.PASSWORD_RECOVERY))
           .thenReturn(List.of(first, second));
@@ -131,55 +156,53 @@ class TokenServiceTest {
       // Assert
       assertThat(first.getDisabled()).isTrue();
       assertThat(second.getDisabled()).isTrue();
-      verify(tokenRepository).findByUserAndTypeAndDisabledFalse(user, TokenType.PASSWORD_RECOVERY);
     }
   }
 
   @Nested
-  @DisplayName("Validation Operations")
-  class ValidationOperations {
+  @DisplayName("FindAndValidateToken Operations")
+  class FindAndValidateTokenOperations {
 
     @Test
-    @DisplayName("findAndValidateToken should return token when valid")
-    void findAndValidateTokenShouldReturnTokenWhenValid() {
-      // Arrange
-      User user = UserFactory.createUser();
-      user.setId(14L);
-      Token token = new Token("valid-token", user, Instant.now().plusSeconds(3600), TokenType.ACTIVATION);
+    @DisplayName("findAndValidateToken should return token when token is valid")
+    void findAndValidateTokenShouldReturnTokenWhenTokenIsValid() {
 
-      when(tokenRepository.findByToken("valid-token")).thenReturn(Optional.of(token));
+      // Arrange
+      Token token = TokenFactory.createActivationToken(user);
+
+      when(tokenRepository.findByToken(ACTIVATION_TOKEN)).thenReturn(Optional.of(token));
 
       // Act
-      Token result = service.findAndValidateToken("valid-token", TokenType.ACTIVATION);
+      Token result = service.findAndValidateToken(ACTIVATION_TOKEN, TokenType.ACTIVATION);
 
       // Assert
-      assertThat(result).isEqualTo(token);
+      assertThat(result).isSameAs(token);
     }
 
     @Test
     @DisplayName("findAndValidateToken should throw ResourceNotFoundException when token does not exist")
     void findAndValidateTokenShouldThrowResourceNotFoundExceptionWhenTokenDoesNotExist() {
+
       // Arrange
-      when(tokenRepository.findByToken("missing-token")).thenReturn(Optional.empty());
+      when(tokenRepository.findByToken(NON_EXISTING_TOKEN)).thenReturn(Optional.empty());
 
       // Act & Assert
-      assertThatThrownBy(() -> service.findAndValidateToken("missing-token", TokenType.ACTIVATION))
+      assertThatThrownBy(() -> service.findAndValidateToken(NON_EXISTING_TOKEN, TokenType.ACTIVATION))
           .isInstanceOf(ResourceNotFoundException.class)
           .hasMessage("error.token.notFound");
     }
 
     @Test
     @DisplayName("findAndValidateToken should throw InvalidTokenException when token type does not match")
-    void findAndValidateTokenShouldThrowInvalidTokenExceptionWhenTypeDoesNotMatch() {
-      // Arrange
-      User user = UserFactory.createUser();
-      user.setId(15L);
-      Token token = new Token("type-mismatch-token", user, Instant.now().plusSeconds(3600), TokenType.ACTIVATION);
+    void findAndValidateTokenShouldThrowInvalidTokenExceptionWhenTokenTypeDoesNotMatch() {
 
-      when(tokenRepository.findByToken("type-mismatch-token")).thenReturn(Optional.of(token));
+      // Arrange
+      Token token = TokenFactory.createActivationToken(user);
+
+      when(tokenRepository.findByToken(ACTIVATION_TOKEN)).thenReturn(Optional.of(token));
 
       // Act & Assert
-      assertThatThrownBy(() -> service.findAndValidateToken("type-mismatch-token", TokenType.PASSWORD_RECOVERY))
+      assertThatThrownBy(() -> service.findAndValidateToken(ACTIVATION_TOKEN, TokenType.PASSWORD_RECOVERY))
           .isInstanceOf(InvalidTokenException.class)
           .hasMessage("error.token.type.invalid");
     }
@@ -187,16 +210,15 @@ class TokenServiceTest {
     @Test
     @DisplayName("findAndValidateToken should throw InvalidTokenException when token is disabled")
     void findAndValidateTokenShouldThrowInvalidTokenExceptionWhenTokenIsDisabled() {
+
       // Arrange
-      User user = UserFactory.createUser();
-      user.setId(16L);
-      Token token = new Token("disabled-token", user, Instant.now().plusSeconds(3600), TokenType.ACTIVATION);
+      Token token = TokenFactory.createActivationToken(user);
       token.disable();
 
-      when(tokenRepository.findByToken("disabled-token")).thenReturn(Optional.of(token));
+      when(tokenRepository.findByToken(ACTIVATION_TOKEN)).thenReturn(Optional.of(token));
 
       // Act & Assert
-      assertThatThrownBy(() -> service.findAndValidateToken("disabled-token", TokenType.ACTIVATION))
+      assertThatThrownBy(() -> service.findAndValidateToken(ACTIVATION_TOKEN, TokenType.ACTIVATION))
           .isInstanceOf(InvalidTokenException.class)
           .hasMessage("error.token.disabled");
     }
@@ -204,15 +226,15 @@ class TokenServiceTest {
     @Test
     @DisplayName("findAndValidateToken should throw InvalidTokenException when token is expired")
     void findAndValidateTokenShouldThrowInvalidTokenExceptionWhenTokenIsExpired() {
-      // Arrange
-      User user = UserFactory.createUser();
-      user.setId(17L);
-      Token token = new Token("expired-token", user, Instant.now().minusSeconds(60), TokenType.PASSWORD_RECOVERY);
 
-      when(tokenRepository.findByToken("expired-token")).thenReturn(Optional.of(token));
+      // Arrange
+      Token token = TokenFactory.createPasswordRecoveryToken(user);
+      token.setExpireDate(Instant.now().minus(1, ChronoUnit.MINUTES));
+
+      when(tokenRepository.findByToken(PASSWORD_RECOVERY_TOKEN)).thenReturn(Optional.of(token));
 
       // Act & Assert
-      assertThatThrownBy(() -> service.findAndValidateToken("expired-token", TokenType.PASSWORD_RECOVERY))
+      assertThatThrownBy(() -> service.findAndValidateToken(PASSWORD_RECOVERY_TOKEN, TokenType.PASSWORD_RECOVERY))
           .isInstanceOf(InvalidTokenException.class)
           .hasMessage("error.token.expired");
     }

@@ -102,12 +102,18 @@ Guia relacionado: [ACCOUNT-FLOWS](guides/ACCOUNT-FLOWS.md).
 - [Spring Framework 6.2 — envio de e-mail](https://docs.spring.io/spring-framework/reference/6.2/integration/email.html)
 - [Thymeleaf — documentação](https://www.thymeleaf.org/documentation.html)
 
-## Testes: JUnit 5 e Mockito
+## Testes: JUnit 5, Mockito, AssertJ e JaCoCo
 
-Guia relacionado: [TESTING](guides/TESTING.md).
+Guia relacionado: [TESTING](guides/TESTING.md). Versões usadas no projeto: JUnit Jupiter 5.12.2, Mockito 5.17.0 e AssertJ 3.27.7 (gerenciadas pelo Spring Boot 3.5.13) e JaCoCo 0.8.15 (declarado no `pom.xml`).
 
 - [JUnit 5.12 — User Guide](https://docs.junit.org/5.12.2/user-guide/)
+- [JUnit 5.12 — Testes parametrizados](https://docs.junit.org/5.12.2/user-guide/#writing-tests-parameterized-tests)
 - [Mockito — site oficial](https://site.mockito.org/)
+- [AssertJ — documentação](https://assertj.github.io/doc/)
+- [JaCoCo — documentação](https://www.jacoco.org/jacoco/trunk/doc/)
+- [JaCoCo — contadores de cobertura (instruções, branches, linhas, métodos e complexidade)](https://www.jacoco.org/jacoco/trunk/doc/counters.html)
+- [JaCoCo — plugin do Maven (`prepare-agent`, `report`, `merge` e `check`)](https://www.jacoco.org/jacoco/trunk/doc/maven.html)
+- [JaCoCo — goal `check`](https://www.jacoco.org/jacoco/trunk/doc/check-mojo.html)
 
 ---
 

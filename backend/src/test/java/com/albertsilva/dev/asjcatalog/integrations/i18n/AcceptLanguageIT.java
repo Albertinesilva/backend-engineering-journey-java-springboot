@@ -31,7 +31,7 @@ import com.albertsilva.dev.asjcatalog.integrations.common.AbstractIT;
  * (nem deve haver) um {@code messages_fr.properties}.
  * </p>
  */
-@DisplayName("Accept-Language Integration Tests")
+@DisplayName("Integration tests for Accept-Language")
 class AcceptLanguageIT extends AbstractIT {
 
   private static final String CATEGORY_URL = "/api/v1/categories/{id}";

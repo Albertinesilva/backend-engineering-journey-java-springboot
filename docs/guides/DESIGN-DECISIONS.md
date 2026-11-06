@@ -31,6 +31,10 @@ O campo **Alternativas possíveis** lista opções reais do ecossistema. Ele nã
 | [D-17 — Idioma escolhido pelo `Accept-Language`](#d-17--idioma-escolhido-pelo-accept-language) | [INTERNATIONALIZATION](INTERNATIONALIZATION.md) | Documentado |
 | [D-18 — E-mail validado pelo registro MX e senha de até 72 caracteres](#d-18--e-mail-validado-pelo-registro-mx-e-senha-de-até-72-caracteres) | [VALIDATION](VALIDATION.md) | A preencher |
 | [D-19 — Testes de integração no Maven Failsafe](#d-19--testes-de-integração-no-maven-failsafe) | [TESTING](TESTING.md) | Documentado |
+| [D-20 — Cobertura medida com JaCoCo, com o limite sobre o relatório consolidado](#d-20--cobertura-medida-com-jacoco-com-o-limite-sobre-o-relatório-consolidado) | [TESTING](TESTING.md) | Documentado |
+| [D-21 — Limites no projeto inteiro, com exclusões e 3 pontos de folga](#d-21--limites-no-projeto-inteiro-com-exclusões-e-3-pontos-de-folga) | [TESTING](TESTING.md) | Documentado |
+| [D-22 — Consulta de MX atrás da interface `MxRecordLookup`](#d-22--consulta-de-mx-atrás-da-interface-mxrecordlookup) | [TESTING](TESTING.md) | Documentado |
+| [D-23 — Padrão de qualidade dos testes, com AssertJ e cenários pendentes](#d-23--padrão-de-qualidade-dos-testes-com-assertj-e-cenários-pendentes) | [TESTING](TESTING.md) | Documentado |
 
 ## Decisões
 
@@ -213,7 +217,7 @@ O campo **Alternativas possíveis** lista opções reais do ecossistema. Ele nã
   - **Pergunta:** Por que o `@ValidEmail` consulta o registro MX do domínio no DNS, além de conferir o formato, se a ativação por e-mail já confirma que o endereço existe?
   - **Resposta:** _a preencher pelo autor_
 - **Alternativas possíveis:** conferir só o formato com o `@Email` padrão e deixar a confirmação para o e-mail de ativação.
-- **Consequências:** e-mails de domínios sem servidor de e-mail são recusados já no cadastro. A validação depende de internet: uma falha de DNS recusa e-mails válidos, e os testes que usam `@ValidEmail` falham sem acesso ao DNS. `PUT /accounts/me` usa só o `@Email`, então aceita e-mails que o cadastro recusaria.
+- **Consequências:** e-mails de domínios sem servidor de e-mail são recusados já no cadastro. A validação depende de internet: uma falha de DNS recusa e-mails válidos. Nos testes, a consulta de MX é substituída e não há essa dependência (#20). `PUT /accounts/me` usa só o `@Email`, então aceita e-mails que o cadastro recusaria.
 - **Guia relacionado:** [VALIDATION.md](VALIDATION.md#6-validação-de-e-mail)
 
 ### D-19 — Testes de integração no Maven Failsafe
@@ -224,6 +228,47 @@ O campo **Alternativas possíveis** lista opções reais do ecossistema. Ele nã
 - **Alternativas possíveis:** incluir os `*IT` no Surefire com `includes`; um perfil Maven separado para os testes de integração.
 - **Consequências:** `./mvnw test` roda só o Surefire, e `./mvnw verify` roda os dois. O nome da classe, e não o tipo do teste, decide o plugin.
 - **Guia relacionado:** [TESTING.md](TESTING.md)
+
+### D-20 — Cobertura medida com JaCoCo, com o limite sobre o relatório consolidado
+
+- **Contexto:** no início do capítulo 05, o projeto tinha 301 testes de unidade e 150 de integração, mas não media quanto do código eles executavam.
+- **Decisão:** acrescentar o `jacoco-maven-plugin` 0.8.15 ao `pom.xml` (commit `b1cb5cf`), com um relatório de unidade, um de integração e um consolidado, que junta os dois. O limite mínimo (`check`, commit `78db253`) é avaliado sobre o consolidado.
+- **Por quê?**
+  - **JaCoCo:** é a ferramenta de cobertura padrão no ecossistema Java, gratuita e de código aberto, integrada ao Maven, e tem relatórios visuais que mostram linha a linha o que foi coberto.
+  - **Limite sobre o consolidado:** os testes de unidade e de integração cobrem partes diferentes do código, e só o consolidado mostra a cobertura real. Por exemplo, no início do capítulo os mappers eram executados só pelos ITs: tinham de 2% a 5% de linhas no relatório de unidade e de 81% a 90% no consolidado.
+- **Alternativas possíveis:** OpenClover; a cobertura da própria IDE (IntelliJ IDEA ou VS Code), sem limite no build; um limite só sobre o relatório de unidade; um serviço externo de cobertura (Codecov, SonarQube).
+- **Consequências:** o `./mvnw verify` gera os três relatórios em `target/site/` e falha se a cobertura do consolidado cair abaixo do limite. Como o Failsafe só roda depois do Surefire, o consolidado só existe num build com os dois. Os nomes das sessões são fixos (`asjcatalog-unit` e `asjcatalog-it`), para que o nome da máquina não apareça num relatório publicado.
+- **Guia relacionado:** [TESTING.md](TESTING.md#9-cobertura-com-jacoco)
+
+### D-21 — Limites no projeto inteiro, com exclusões e 3 pontos de folga
+
+- **Contexto:** o `check` do JaCoCo precisa de um limite mínimo e de um escopo (projeto, pacote ou classe), e parte do código não tem lógica para testar.
+- **Decisão:** limites de linhas e de branches no elemento `BUNDLE` (o projeto inteiro), nas propriedades `jacoco.minimum.line.coverage` e `jacoco.minimum.branch.coverage`. Na Etapa 2 eles ficaram em 0,85 e 0,68 e, no fim do capítulo, em 0,93 e 0,89: o valor medido menos 0,03, arredondado para baixo (commit `b0231a0`). A classe principal, os DTOs, as projections, duas configurações e duas respostas de erro sem lógica ficam fora do cálculo.
+- **Por quê?**
+  - **`BUNDLE`:** vários pacotes têm poucas linhas (de 2 a 20), e um limite por classe ou pacote faria o build falhar com a mudança de um único teste.
+  - **3 pontos de folga:** deixam espaço para código novo ainda sem teste completo, sem permitir uma queda grande. Fonte: o item 11 da Etapa 3b, no `CLAUDE.md`.
+  - **Exclusões:** cada uma tem o motivo num comentário do `pom.xml` (classes sem lógica ou sem desvios).
+- **Alternativas possíveis:** limites por pacote ou por classe (`<element>PACKAGE</element>` ou `CLASS`); limites sobre instruções ou métodos; nenhuma exclusão.
+- **Consequências:** uma classe nova sem teste não derruba o build se o total continuar acima do limite; por isso o relatório precisa ser lido, e não só o resultado do `check`. Os limites podem ser trocados por `-D` numa execução, sem alterar o `pom.xml`.
+- **Guia relacionado:** [TESTING.md](TESTING.md#95-limite-mínimo-check)
+
+### D-22 — Consulta de MX atrás da interface `MxRecordLookup`
+
+- **Contexto:** o `@ValidEmail` consultava o registro MX direto no DNS, pelo JNDI, dentro do `ValidEmailValidator`. Sem internet, 19 testes falhavam (8 de unidade e 11 de integração), o que impedia rodar a suíte de forma confiável num CI (#20).
+- **Decisão:** extrair a consulta para a interface `MxRecordLookup` (pacote `validation.user.dns`), com a implementação de produção `JndiMxRecordLookup`. Nos testes, o `MxRecordLookupTestConfig` registra uma implementação que considera que todo domínio tem MX.
+- **Por quê?** Para que os testes não dependam de rede sem mudar o comportamento em produção. Fontes: a #20 e a Etapa 3a do capítulo 05, no `CLAUDE.md`, que a trata como pré-requisito do CI.
+- **Alternativas possíveis:** desligar a consulta de MX no perfil `test` por uma propriedade; simular o DNS com um servidor local; mockar a classe do JNDI nos testes.
+- **Consequências:** o formato do e-mail continua validado pela expressão regular real nos testes; só a consulta de MX é substituída. A consulta real fica coberta pelo `JndiMxRecordLookupTest`, com um `DirContext` falso, e pelo `JndiMxRecordLookupDnsTest`, com o DNS real, que tem a tag `dns` e fica fora do build padrão.
+- **Guia relacionado:** [TESTING.md](TESTING.md#8-dependências-externas)
+
+### D-23 — Padrão de qualidade dos testes, com AssertJ e cenários pendentes
+
+- **Contexto:** a auditoria dos testes da Etapa 3b encontrou nomes sem o método testado, asserções que só conferiam se um valor existia, valores escritos à mão, dois estilos de asserção misturados e testes que confirmavam comportamentos com issue aberta.
+- **Decisão:** um padrão único, na seção 7 do TESTING.md: nomes `<método>Should<resultado>When<condição>`, `@Nested` por método ou endpoint, Arrange/Act/Assert, dados das fábricas, AssertJ nos testes novos e retrabalhados (sem misturar estilos na mesma classe) e cenários sem teste por issue aberta registrados em "Cenários pendentes".
+- **Por quê?** Fontes: a seção 7 do TESTING.md. O AssertJ já vem no `spring-boot-starter-test`. A regra das issues abertas evita que um teste passe a defender o comportamento que a issue quer corrigir, e a seção "Cenários pendentes" mostra a quem lê o teste que a lacuna é intencional e onde ela será resolvida.
+- **Alternativas possíveis:** manter as `Assertions` do JUnit; migrar todas as classes de uma vez; deixar os cenários pendentes só nas issues, sem registro nos testes.
+- **Consequências:** as classes foram retrabalhadas uma a uma, com um commit por item. Uma asserção que afirmava um valor que uma issue diz estar errado foi removida (por exemplo, o link de recuperação da #46), e o cenário volta a ter teste quando a issue for resolvida.
+- **Guia relacionado:** [TESTING.md](TESTING.md#7-padrão-de-qualidade-dos-testes)
 
 ## Trade-offs reconhecidos
 
@@ -240,9 +285,10 @@ Efeitos das decisões acima que o projeto conhece e mantém por enquanto. Os det
 | Projection com só id e nome | A listagem de produtos só ordena por `id` e `name` | D-05 | [DATA-ACCESS.md](DATA-ACCESS.md#8-limitações-conhecidas) |
 | E-mail comparado com `=` no login | `Maria@gmail.com` não encontra `maria@gmail.com` | D-05 | [DATA-ACCESS.md](DATA-ACCESS.md#8-limitações-conhecidas) |
 | `Page` serializado diretamente | O formato do JSON paginado não é garantido entre versões do Spring Data | — | [DATA-ACCESS.md](DATA-ACCESS.md#8-limitações-conhecidas) |
-| Migrations não testadas | Um erro numa migration só aparece em `dev` ou `prod` | D-09 | [TESTING.md](TESTING.md#9-limitações-conhecidas) |
-| Validação de e-mail dependente de DNS | Sem internet, e-mails válidos são recusados e testes falham | D-18 | [VALIDATION.md](VALIDATION.md#7-limitações-conhecidas) |
-| Preço em `Double` | Nem todo valor decimal é representado de forma exata | — | [DOMAIN-MODEL.md](DOMAIN-MODEL.md#9-limitações-conhecidas) |
+| Migrations não testadas | Um erro numa migration só aparece em `dev` ou `prod` | D-09 | [TESTING.md](TESTING.md#10-limitações-conhecidas) |
+| Limite de cobertura no projeto inteiro | Uma classe nova sem teste não derruba o build enquanto o total ficar acima do limite | D-21 | [TESTING.md](TESTING.md#95-limite-mínimo-check) |
+| Cobertura mede execução, e não conferência | Código coberto pode ter cenários sem teste, como o preço nulo da #44 | D-20 | [TESTING.md](TESTING.md#10-limitações-conhecidas) |
+| Validação de e-mail dependente de DNS | Sem internet, e-mails válidos são recusados (os testes não dependem de DNS desde o capítulo 05) | D-18 | [VALIDATION.md](VALIDATION.md#7-limitações-conhecidas) |
 | `equals` e `hashCode` por id | Duas entidades ainda não salvas são consideradas iguais | — | [DOMAIN-MODEL.md](DOMAIN-MODEL.md#9-limitações-conhecidas) |
 | Segredos padrão versionados | Os valores de desenvolvimento ficam públicos no repositório; em `prod`, as variáveis são obrigatórias | D-08 | [CONFIGURATION.md](CONFIGURATION.md#7-limitações-conhecidas) |
 

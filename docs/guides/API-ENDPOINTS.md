@@ -210,7 +210,7 @@ curl.exe -s http://localhost:8080/api/v1/categories/999999
 ```
 
 ```json
-{"timestamp":"2026-09-29T21:02:30.319566500Z","status":404,"code":"RESOURCE_NOT_FOUND","error":"Recurso não encontrado","message":"Categoria não encontrada","path":"/api/v1/categories/999999"}
+{"timestamp":"2026-09-29T21:02:30.319566500Z","status":404,"code":"RESOURCE_NOT_FOUND","error":"Recurso não encontrado","message":"Categoria não encontrada.","path":"/api/v1/categories/999999"}
 ```
 
 ## 9. Limitações conhecidas

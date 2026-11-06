@@ -15,8 +15,11 @@ import com.albertsilva.dev.asjcatalog.domain.user.Role;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@DisplayName("RoleRepository Tests")
+@DisplayName("Tests for RoleRepository")
 class RoleRepositoryTest {
+
+  private static final String TEST_AUTHORITY = "ROLE_TEST";
+  private static final String MISSING_AUTHORITY = "ROLE_MISSING";
 
   @Autowired
   private RoleRepository roleRepository;
@@ -26,25 +29,25 @@ class RoleRepositoryTest {
   class FindByAuthorityOperations {
 
     @Test
-    @DisplayName("should return role when authority exists")
-    void shouldReturnRoleWhenAuthorityExists() {
+    @DisplayName("findByAuthority should return role when authority exists")
+    void findByAuthorityShouldReturnRoleWhenAuthorityExists() {
       // Arrange
-      Role savedRole = roleRepository.saveAndFlush(new Role(null, "ROLE_TEST"));
+      Role savedRole = roleRepository.saveAndFlush(new Role(null, TEST_AUTHORITY));
 
       // Act
-      Optional<Role> result = roleRepository.findByAuthority("ROLE_TEST");
+      Optional<Role> result = roleRepository.findByAuthority(TEST_AUTHORITY);
 
       // Assert
       assertThat(result).isPresent();
       assertThat(result.get().getId()).isEqualTo(savedRole.getId());
-      assertThat(result.get().getAuthority()).isEqualTo("ROLE_TEST");
+      assertThat(result.get().getAuthority()).isEqualTo(TEST_AUTHORITY);
     }
 
     @Test
-    @DisplayName("should return empty when authority does not exist")
-    void shouldReturnEmptyWhenAuthorityDoesNotExist() {
+    @DisplayName("findByAuthority should return empty when authority does not exist")
+    void findByAuthorityShouldReturnEmptyWhenAuthorityDoesNotExist() {
       // Act
-      Optional<Role> result = roleRepository.findByAuthority("ROLE_MISSING");
+      Optional<Role> result = roleRepository.findByAuthority(MISSING_AUTHORITY);
 
       // Assert
       assertThat(result).isEmpty();

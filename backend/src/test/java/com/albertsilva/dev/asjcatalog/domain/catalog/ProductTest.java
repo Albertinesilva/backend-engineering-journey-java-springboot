@@ -1,130 +1,59 @@
 package com.albertsilva.dev.asjcatalog.domain.catalog;
 
-import org.junit.jupiter.api.Assertions;
+import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NAME_FILTER;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.albertsilva.dev.asjcatalog.factory.CategoryFactory;
 import com.albertsilva.dev.asjcatalog.factory.ProductFactory;
 
-@DisplayName("Tests for Product Entity")
-public class ProductTest {
+/**
+ * Testes de {@code Product}. O {@code equals} e o {@code hashCode} ficam no
+ * {@code EntityIdentityContractTest}; os callbacks de auditoria, que são
+ * privados, são testados no {@code ProductRepositoryTest}.
+ */
+@DisplayName("Tests for Product")
+class ProductTest {
 
-  @Test
-  @DisplayName("Product should instantiate correctly")
-  void productShouldInstantiateCorrectly() {
+  private static final String DESCRIPTION = "TV 50 polegadas";
+  private static final BigDecimal PRICE = new BigDecimal("2190.00");
+  private static final String IMG_URL = "https://img.com/tv.png";
 
-    // Arrange
-    Product product = ProductFactory.createProduct();
+  @Nested
+  @DisplayName("Constructor Operations")
+  class ConstructorOperations {
 
-    // Act
-    // Apenas instanciação
+    @Test
+    @DisplayName("constructor should set fields and empty categories when values are given")
+    void constructorShouldSetFieldsAndEmptyCategoriesWhenValuesAreGiven() {
 
-    // Assert
-    Assertions.assertNotNull(product);
-    Assertions.assertNotNull(product.getName());
-    Assertions.assertNotNull(product.getDescription());
-    Assertions.assertNotNull(product.getPrice());
-    Assertions.assertNotNull(product.getImgUrl());
+      // Act
+      Product product = new Product(NAME_FILTER, DESCRIPTION, PRICE, IMG_URL, false);
+
+      // Assert
+      assertThat(product.getId()).isNull();
+      assertThat(product.getName()).isEqualTo(NAME_FILTER);
+      assertThat(product.getDescription()).isEqualTo(DESCRIPTION);
+      assertThat(product.getPrice()).isEqualTo(PRICE);
+      assertThat(product.getImgUrl()).isEqualTo(IMG_URL);
+      assertThat(product.isActive()).isFalse();
+      assertThat(product.getCategories()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("constructor should leave audit dates null when product is not persisted")
+    void constructorShouldLeaveAuditDatesNullWhenProductIsNotPersisted() {
+
+      // Act
+      Product product = ProductFactory.createProduct();
+
+      // Assert
+      assertThat(product.getCreatedAt()).isNull();
+      assertThat(product.getUpdatedAt()).isNull();
+    }
   }
-
-  @Test
-  @DisplayName("Product audit dates should be null before persistence")
-  void productAuditDatesShouldBeNullBeforePersistence() {
-
-    // Arrange
-    Product product = ProductFactory.createProduct();
-
-    // Act
-    // Apenas instanciação: createdAt/updatedAt são preenchidos pelo callback JPA
-    // (@PrePersist), exercitado em ProductRepositoryTest
-
-    // Assert
-    Assertions.assertNull(product.getCreatedAt());
-    Assertions.assertNull(product.getUpdatedAt());
-  }
-
-  @Test
-  @DisplayName("Product should add categories correctly")
-  void productShouldAddCategoriesCorrectly() {
-
-    // Arrange
-    Product product = ProductFactory.createProduct();
-    Category category = CategoryFactory.createCategory();
-
-    // Act
-    product.getCategories().add(category);
-
-    // Assert
-    Assertions.assertFalse(product.getCategories().isEmpty());
-    Assertions.assertTrue(product.getCategories().contains(category));
-  }
-
-  @Test
-  @DisplayName("Product equals should return true for same id")
-  void productEqualsShouldReturnTrueWhenIdsAreEqual() {
-
-    // Arrange
-    Product product1 = new Product();
-    product1.setId(1L);
-
-    Product product2 = new Product();
-    product2.setId(1L);
-
-    // Act
-    boolean result = product1.equals(product2);
-
-    // Assert
-    Assertions.assertTrue(result);
-  }
-
-  @Test
-  @DisplayName("Product equals should return false for different ids")
-  void productEqualsShouldReturnFalseWhenIdsAreDifferent() {
-
-    // Arrange
-    Product product1 = new Product();
-    product1.setId(1L);
-
-    Product product2 = new Product();
-    product2.setId(2L);
-
-    // Act
-    boolean result = product1.equals(product2);
-
-    // Assert
-    Assertions.assertFalse(result);
-  }
-
-  @Test
-  @DisplayName("Product hashCode should be based on id")
-  void productHashCodeShouldBeBasedOnId() {
-
-    // Arrange
-    Product product = new Product();
-    product.setId(1L);
-
-    int expected = 31 * 1 + Long.valueOf(1L).hashCode();
-
-    // Act
-    int hashCode = product.hashCode();
-
-    // Assert
-    Assertions.assertEquals(expected, hashCode);
-  }
-
-  @Test
-  @DisplayName("Product active flag should be mutable")
-  void productActiveFlagShouldBeMutable() {
-
-    // Arrange
-    Product product = ProductFactory.createProduct();
-
-    // Act
-    product.setActive(false);
-
-    // Assert
-    Assertions.assertFalse(product.isActive());
-  }
-
 }

@@ -13,7 +13,7 @@ O README da raiz do repositório apresenta o capítulo atual do projeto. Esta pa
 
 O ASJCatalog nasceu da base do **DSCatalog**, projeto do curso da DevSuperior. O nome vem das iniciais do autor, **Albert Silva de Jesus**, e o projeto evoluiu de forma independente até se tornar praticamente outro projeto. O frontend também é independente e fica em outro repositório: [asjcatalog-frontend](https://github.com/Albertinesilva/asjcatalog-frontend).
 
-A evolução do backend é contada em capítulos, um por branch, cada um publicado no LinkedIn: [`chapter-01-crud`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-01-crud), [`chapter-02-tests`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-02-tests), [`chapter-03-validation-security`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-03-validation-security) e [`chapter-04-domain-orm`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-04-domain-orm). Faltam dois capítulos para encerrar essa evolução.
+A evolução do backend é contada em capítulos, um por branch, cada um publicado no LinkedIn: [`chapter-01-crud`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-01-crud), [`chapter-02-tests`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-02-tests), [`chapter-03-validation-security`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-03-validation-security), [`chapter-04-domain-orm`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-04-domain-orm) e [`chapter-05-jacoco`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-05-jacoco). Falta um capítulo para encerrar essa evolução: Docker e CI/CD.
 
 É um projeto open source e sem fins comerciais: um laboratório de aprendizado, uma fonte de consulta para o futuro e um material para ajudar desenvolvedores júnior.
 
@@ -35,7 +35,7 @@ A ordem da tabela é a ordem sugerida de leitura, do primeiro contato com o proj
 | [INTERNATIONALIZATION](guides/INTERNATIONALIZATION.md) | Mensagens da API em português, inglês e espanhol, escolhidas pelo cabeçalho `Accept-Language`. | Disponível |
 | [AUTHENTICATION](guides/AUTHENTICATION.md) | Como obter e renovar tokens, como funcionam as roles e como chamar rotas protegidas. | Disponível |
 | [ACCOUNT-FLOWS](guides/ACCOUNT-FLOWS.md) | Cadastro, ativação de conta, recuperação e troca de senha e envio de e-mails. | Disponível |
-| [TESTING](guides/TESTING.md) | Testes de unidade e de integração, como rodá-los e como estão organizados. | Disponível |
+| [TESTING](guides/TESTING.md) | Testes de unidade e de integração, como rodá-los, como estão organizados, o padrão de qualidade e a cobertura com JaCoCo. | Disponível |
 | [CONVENTIONS](guides/CONVENTIONS.md) | Convenções de código, de commits, de branches e de numeração de migrations. | Disponível |
 | [DESIGN-DECISIONS](guides/DESIGN-DECISIONS.md) | Principais decisões técnicas: contexto, motivo, alternativas, consequências e trade-offs reconhecidos. | Disponível |
 
