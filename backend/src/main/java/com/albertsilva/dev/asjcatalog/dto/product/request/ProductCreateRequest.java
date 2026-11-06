@@ -6,8 +6,10 @@ import java.util.List;
 
 import com.albertsilva.dev.asjcatalog.validation.product.annotation.ProductCreateValid;
 
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
@@ -33,17 +35,26 @@ import jakarta.validation.constraints.Size;
  *
  * <p>
  * <b>Validação estrutural (Bean Validation):</b> nome obrigatório (3 a 100
- * caracteres; letras, dígitos, espaços, hífen e parênteses); demais campos
- * opcionais, mas, quando presentes, com formato exigido. Note que
- * {@code @Positive}, {@code @Size}, {@code @Pattern} e {@code @PastOrPresent}
- * aceitam {@code null}: <b>o preço não é obrigatório neste DTO</b>. A
- * unicidade do nome e a existência das categorias são verificadas por
- * {@link ProductCreateValid}.
+ * caracteres; letras, dígitos, espaços, hífen e parênteses), preço obrigatório
+ * e {@code categoryIds} não vazio; os demais campos são opcionais, mas, quando
+ * presentes, com formato exigido ({@code @Size}, {@code @Pattern} e
+ * {@code @PastOrPresent} aceitam {@code null}). A unicidade do nome e a
+ * existência das categorias são verificadas por {@link ProductCreateValid}.
+ * </p>
+ *
+ * <p>
+ * <b>Preço:</b> {@code @NotNull} (o Jackson converte {@code "price": ""} em
+ * {@code null}, então a string vazia também é recusada), {@code @Positive} e
+ * {@code @Digits(integer = 8, fraction = 2)}, o mesmo limite da coluna
+ * {@code NUMERIC(10,2)}: no máximo 99.999.999,99. O {@code @Digits} conta a
+ * escala do valor recebido, então zeros à direita além da segunda casa
+ * ({@code 10.000}) também são recusados.
  * </p>
  *
  * @param name        nome do produto (obrigatório; 3 a 100 caracteres)
  * @param description descrição (opcional; se informada, 3 a 200 caracteres)
- * @param price       preço do produto, representado por BigDecimal; se informado, deve ser maior que zero
+ * @param price       preço do produto (obrigatório; maior que zero; no máximo
+ *                    8 dígitos inteiros e 2 casas decimais)
  * @param imgUrl      URL da imagem (opcional; se informada, deve começar com
  *                    {@code http://} ou {@code https://})
  * @param date        data (opcional; {@code null} ou passada/presente).
@@ -61,7 +72,9 @@ public record ProductCreateRequest(
     @Size(min = 3, max = 200, message = "{product.description.size}") 
     String description,
 
-    @Positive(message = "{product.price.positive}") 
+    @NotNull(message = "{product.price.notNull}")
+    @Positive(message = "{product.price.positive}")
+    @Digits(integer = 8, fraction = 2, message = "{product.price.digits}")
     BigDecimal price,
 
     @Pattern(regexp = "^(https?://).+$", message = "{product.imgUrl.pattern}") 

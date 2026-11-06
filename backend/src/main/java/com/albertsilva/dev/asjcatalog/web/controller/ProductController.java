@@ -78,6 +78,7 @@ public class ProductController {
    * <ul>
    * <li><b>Acesso:</b> autenticado (URL) e {@code ADMIN} ou {@code OPERATOR}.</li>
    * <li><b>Entrada:</b> {@link ProductCreateRequest} com {@code @Valid} (nome,
+   * preço obrigatório, positivo e dentro do {@code NUMERIC(10,2)} e
    * {@code categoryIds} não vazio; {@code @ProductCreateValid}: nome único e
    * categorias existentes). O campo {@code date} é validado, mas descartado.</li>
    * <li><b>Fluxo:</b> {@code ProductService.create}.</li>
@@ -197,9 +198,9 @@ public class ProductController {
    * <li><b>Acesso:</b> autenticado (URL) e {@code ADMIN} ou {@code OPERATOR}.</li>
    * <li><b>Entrada:</b> {@code @PathVariable Long id} e {@link ProductUpdateRequest}
    * com {@code @Valid} ({@code @ProductUpdateValid}: nome de outro produto, com o
-   * {@code id} da URL; categorias existentes). Nome e {@code categoryIds} são
-   * obrigatórios; descrição, preço e URL só sobrescrevem se não forem
-   * nulos.</li>
+   * {@code id} da URL; categorias existentes). Nome, preço e {@code categoryIds}
+   * são obrigatórios, com as mesmas regras de preço da criação; descrição e URL
+   * só sobrescrevem se não forem nulas.</li>
    * <li><b>Fluxo:</b> {@code ProductService.update}.</li>
    * <li><b>Sucesso:</b> {@code 200} com {@link ProductResponse}.</li>
    * <li><b>Erros:</b> {@code 422}; {@code 404}; {@code 403}. Um {@code PATCH} para
