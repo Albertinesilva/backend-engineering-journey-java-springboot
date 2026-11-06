@@ -257,6 +257,7 @@ class ProductControllerIT extends AbstractIT {
       assertThat(productRepository.count()).isEqualTo(initialCount + 1);
       assertThat(productRepository.findById(id).orElseThrow())
           .extracting(Product::getName, Product::getDescription, Product::getPrice)
+          .usingComparatorForType(BigDecimal::compareTo, BigDecimal.class)
           .containsExactly(request.name(), request.description(), request.price());
     }
 
@@ -340,6 +341,7 @@ class ProductControllerIT extends AbstractIT {
 
       assertThat(productRepository.findById(EXISTING_ID).orElseThrow())
           .extracting(Product::getName, Product::getDescription, Product::getPrice)
+          .usingComparatorForType(BigDecimal::compareTo, BigDecimal.class)
           .containsExactly(request.name(), request.description(), request.price());
     }
 

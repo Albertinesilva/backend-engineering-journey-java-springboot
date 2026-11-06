@@ -127,13 +127,13 @@ Também existem `main` (a branch padrão do repositório remoto) e `develop`. O 
 
 ## 8. Migrations
 
-**Numeração global e sequencial.** A próxima migration recebe a **maior versão existente + 1**, **qualquer que seja a pasta**. Hoje a maior é `V105`, então a próxima é `V106`, depois `V107`, e assim por diante.
+**Numeração global e sequencial.** A próxima migration recebe a **maior versão existente + 1**, **qualquer que seja a pasta**. Hoje a maior é `V106`, então a próxima é `V107`, depois `V108`, e assim por diante.
 
 - **A pasta define em quais perfis a migration roda.** `schema` e `reference` rodam em `dev` e `prod`; `data` roda só em `dev`.
 - **O número define a ordem.** O Flyway junta as pastas e ordena só pela versão.
 - **Não use `outOfOrder`.** A configuração do projeto não o ativa, e ele não deve ser ativado para contornar a numeração.
 
-**Por quê.** Um banco já migrado anota no histórico do Flyway a maior versão aplicada (hoje V105 em `dev` e V104 em `prod`). Uma migration nova com número menor, como uma `V012` em `schema`, fica "fora de ordem", e o Flyway recusa a subida com `Detected resolved migration not applied to database`. Com a regra "maior + 1", toda migration nova é sempre a última, em qualquer ambiente. A faixa `V001`–`V011` de `schema` e a faixa `V100`–`V105` de `data` são históricas e não indicam onde numerar a próxima.
+**Por quê.** Um banco já migrado anota no histórico do Flyway a maior versão aplicada (hoje V106 em `dev` e em `prod`, porque a V106 fica em `schema` e roda nos dois perfis). Uma migration nova com número menor, como uma `V012` em `schema`, fica "fora de ordem", e o Flyway recusa a subida com `Detected resolved migration not applied to database`. Com a regra "maior + 1", toda migration nova é sempre a última, em qualquer ambiente. A faixa `V001`–`V011` de `schema` e a faixa `V100`–`V105` de `data` são históricas e não indicam onde numerar a próxima.
 
 Passo a passo para criar uma migration: [DATABASE-MIGRATIONS.md](DATABASE-MIGRATIONS.md#6-criar-uma-migration-nova).
 

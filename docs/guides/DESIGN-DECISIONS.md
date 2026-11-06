@@ -289,7 +289,6 @@ Efeitos das decisões acima que o projeto conhece e mantém por enquanto. Os det
 | Limite de cobertura no projeto inteiro | Uma classe nova sem teste não derruba o build enquanto o total ficar acima do limite | D-21 | [TESTING.md](TESTING.md#95-limite-mínimo-check) |
 | Cobertura mede execução, e não conferência | Código coberto pode ter cenários sem teste, como o preço nulo da #44 | D-20 | [TESTING.md](TESTING.md#10-limitações-conhecidas) |
 | Validação de e-mail dependente de DNS | Sem internet, e-mails válidos são recusados (os testes não dependem de DNS desde o capítulo 05) | D-18 | [VALIDATION.md](VALIDATION.md#7-limitações-conhecidas) |
-| Preço em `Double` | Nem todo valor decimal é representado de forma exata | — | [DOMAIN-MODEL.md](DOMAIN-MODEL.md#9-limitações-conhecidas) |
 | `equals` e `hashCode` por id | Duas entidades ainda não salvas são consideradas iguais | — | [DOMAIN-MODEL.md](DOMAIN-MODEL.md#9-limitações-conhecidas) |
 | Segredos padrão versionados | Os valores de desenvolvimento ficam públicos no repositório; em `prod`, as variáveis são obrigatórias | D-08 | [CONFIGURATION.md](CONFIGURATION.md#7-limitações-conhecidas) |
 

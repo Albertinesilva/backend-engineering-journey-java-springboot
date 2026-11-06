@@ -60,8 +60,8 @@ class ProductMapperTest {
    * <b>Cenários pendentes:</b>
    * </p>
    * <ul>
-   * <li>{@code price} nulo: é copiado para a entidade, e o produto fica sem
-   * preço (#44).</li>
+   * <li>{@code price} nulo: é copiado para a entidade, e a gravação é recusada
+   * pelo banco, em que a coluna é {@code NOT NULL} desde a V106 (#44).</li>
    * <li>{@code date} do request: é descartado pelo mapper (#25, item 2).</li>
    * </ul>
    */

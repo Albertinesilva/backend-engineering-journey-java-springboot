@@ -87,7 +87,7 @@ Arquivos de `reference` e `data`:
 - **O número define a ordem** em que ela roda.
 - **Não se usa `outOfOrder`**, a opção do Flyway que aceitaria versões menores que a última aplicada.
 
-**Motivo.** Cada banco guarda a maior versão já aplicada: V105 em `dev` e V104 em `prod`. O Flyway só aceita como pendentes as migrations com versão **maior** que essa. Uma migration nova com número menor, como uma `V012` em `schema`, seria considerada fora de ordem, e a aplicação não subiria (veja [Limitações conhecidas](#8-limitações-conhecidas)). Com "maior + 1", toda migration nova é sempre a última, em qualquer ambiente. As faixas `V001`–`V011` e `V100`–`V105` são históricas e não indicam onde numerar a próxima. A mesma regra está em [CONVENTIONS.md](CONVENTIONS.md#8-migrations).
+**Motivo.** Cada banco guarda a maior versão já aplicada. Hoje, num banco atualizado, é a V106 em `dev` e em `prod`, porque a V106 fica em `schema` e roda nos dois perfis; antes dela, eram a V105 em `dev` e a V104 em `prod`. O Flyway só aceita como pendentes as migrations com versão **maior** que essa. Uma migration nova com número menor, como uma `V012` em `schema`, seria considerada fora de ordem, e a aplicação não subiria (veja [Limitações conhecidas](#8-limitações-conhecidas)). Com "maior + 1", toda migration nova é sempre a última, em qualquer ambiente. As faixas `V001`–`V011` e `V100`–`V105` são históricas e não indicam onde numerar a próxima. A mesma regra está em [CONVENTIONS.md](CONVENTIONS.md#8-migrations).
 
 Os vínculos da V102 e da V105 usam ids fixos (por exemplo `user_id = 1`). Eles dependem de os registros anteriores receberem os ids 1, 2, 3... na ordem de inserção.
 
@@ -139,7 +139,7 @@ O `import.sql` só é executado quando o Hibernate cria as tabelas. Nos perfis `
 
 ## 8. Limitações conhecidas
 
-- **Migration nova de `schema` com versão V012 bloqueia a subida.** Num banco que já aplicou a V105 (ou a V104, em prod), uma migration com versão menor fica fora de ordem. Na configuração atual (sem `outOfOrder`), o Flyway recusa a subida com `Detected resolved migration not applied to database: 012`. É o motivo da regra de numeração global e sequencial da seção 3. (Comportamento confirmado com o Flyway 11.7.2 do projeto contra um banco H2 de teste.)
+- **Migration nova de `schema` com versão V012 bloqueia a subida.** Num banco que já aplicou a V106, uma migration com versão menor fica fora de ordem. Na configuração atual (sem `outOfOrder`), o Flyway recusa a subida com `Detected resolved migration not applied to database: 012`. É o motivo da regra de numeração global e sequencial da seção 3. (Comportamento confirmado com o Flyway 11.7.2 do projeto contra um banco H2 de teste.)
 - **O `import.sql` é mantido à mão.** Nada garante que ele continue igual às pastas `data` e `reference`; ao mudar os dados de exemplo, atualize os dois.
 - **Os vínculos usam ids fixos.** A V102, a V105 e o `import.sql` supõem que categorias, produtos, usuários e roles recebem os ids na ordem de inserção.
 - **Flyway desligado nos testes.** Os testes usam tabelas criadas pelo Hibernate a partir das entidades, e não pelas migrations. Um erro de SQL numa migration não é detectado pelos testes: aparece só ao subir nos perfis `dev` ou `prod`.

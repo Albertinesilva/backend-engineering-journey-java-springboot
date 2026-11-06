@@ -24,7 +24,7 @@ Este guia explica como os testes do ASJCatalog estão organizados, como rodá-lo
 | **Unidade** | Uma classe isolada | As dependências são substituídas por **mocks** (objetos falsos, criados com o Mockito, que devolvem o que o teste mandar) | Rápido |
 | **Integração** | Várias camadas juntas, com o contexto do Spring e o banco H2 | Sobe a aplicação dentro do teste e faz requisições HTTP simuladas com o **MockMvc** | Mais lento |
 
-Hoje são **453 testes** executados na fase de unidade e **150** na fase de integração (resultado do `./mvnw verify`). A cobertura que eles alcançam é medida pelo JaCoCo ([seção 9](#9-cobertura-com-jacoco)).
+Hoje são **457 testes** executados na fase de unidade e **150** na fase de integração (resultado do `./mvnw verify`). A cobertura que eles alcançam é medida pelo JaCoCo ([seção 9](#9-cobertura-com-jacoco)).
 
 ## 2. Surefire e Failsafe
 
@@ -365,7 +365,7 @@ Use esta lista ao escrever ou revisar um teste (inclusive em Pull Requests):
 
 ## 8. Dependências externas
 
-**Servidor SMTP: não é necessário.** O `application.properties` liga `spring.mail.test-connection`, que faz a subida testar a conexão com o servidor de e-mail. O `application-test.properties` desliga esse teste (`spring.mail.test-connection=false`), e nenhum teste envia e-mail de verdade (seção 5). Por isso **os testes não precisam das variáveis `MAIL_USERNAME` e `MAIL_PASSWORD`**: sem elas, `./mvnw verify` passa com 453 e 150 testes, sem erros.
+**Servidor SMTP: não é necessário.** O `application.properties` liga `spring.mail.test-connection`, que faz a subida testar a conexão com o servidor de e-mail. O `application-test.properties` desliga esse teste (`spring.mail.test-connection=false`), e nenhum teste envia e-mail de verdade (seção 5). Por isso **os testes não precisam das variáveis `MAIL_USERNAME` e `MAIL_PASSWORD`**: sem elas, `./mvnw verify` passa com 457 e 150 testes, sem erros.
 
 **DNS (internet): não é necessário.** Em produção, o `@ValidEmail` consulta o registro MX do domínio do e-mail pela internet (veja [VALIDATION.md](VALIDATION.md#6-validação-de-e-mail)). Nos testes, essa consulta é substituída (seção 5), e `./mvnw verify` passa sem acesso à rede.
 
@@ -485,7 +485,7 @@ Se um teste falha, o build para antes do `check`; o JaCoCo só é avaliado quand
 
 ## 10. Limitações conhecidas
 
-- **Cobertura não garante cenários completos.** No início do capítulo 05, com 88,7% de linhas no consolidado, `POST /products` aceitava produto sem preço (#44): o código do cadastro estava coberto, mas nenhum teste enviava o preço nulo. A cobertura mostra o que não foi executado; o que foi executado ainda pode estar sem a conferência certa.
+- **Cobertura não garante cenários completos.** No início do capítulo 05, com 88,7% de linhas no consolidado, `POST /products` aceitava produto sem preço (#44): o código do cadastro estava coberto, mas nenhum teste enviava o preço nulo. A cobertura mostra o que não foi executado; o que foi executado ainda pode estar sem a conferência certa. Desde o PR #50 (migration V106), a coluna `price` é `NOT NULL`, e o banco recusa o produto sem preço; a validação no DTO, com a resposta 422, continua pendente na #44.
 - **Código sem uso e cenários pendentes.** Parte do que aparece sem cobertura é código sem uso (registrado na #25, como `Token.isValid()` e `ProductMapper.toResponsePage`) ou cenário que depende de uma issue aberta (seção 7.7). Esses trechos ficam sem teste de propósito, e por isso a meta não é 100%.
 - **Relatório publicado não é atualizado.** O relatório do Netlify é um retrato do commit `48ba709`; a publicação automática a cada build fica para o capítulo de Docker e CI/CD.
 - **Flyway não é testado.** O perfil `test` cria as tabelas a partir das entidades, e não pelas migrations. Um erro numa migration só aparece ao subir nos perfis `dev` ou `prod`.

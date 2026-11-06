@@ -6,6 +6,8 @@ import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NON_EXISTING
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -257,7 +259,7 @@ class ProductServiceIT {
       // Assert
       assertThat(result.id()).isEqualTo(EXISTING_ID);
       assertThat(result.name()).isEqualTo(expected.getName());
-      assertThat(result.price()).isEqualTo(expected.getPrice());
+      assertThat(result.price()).isEqualByComparingTo(expected.getPrice());
     }
 
     @Test
@@ -288,7 +290,7 @@ class ProductServiceIT {
       // Assert
       assertThat(result.id()).isNotNull();
       assertThat(result.name()).isEqualTo(request.name());
-      assertThat(result.price()).isEqualTo(request.price());
+      assertThat(result.price()).isEqualByComparingTo(request.price());
       assertThat(result.categories())
           .extracting(CategoryResponse::id)
           .containsExactlyInAnyOrderElementsOf(request.categoryIds());
@@ -315,6 +317,7 @@ class ProductServiceIT {
       assertThat(result.name()).isEqualTo(request.name());
       assertThat(service.findById(EXISTING_ID))
           .extracting(ProductDetailsResponse::name, ProductDetailsResponse::description, ProductDetailsResponse::price)
+          .usingComparatorForType(BigDecimal::compareTo, BigDecimal.class)
           .containsExactly(request.name(), request.description(), request.price());
     }
 

@@ -135,7 +135,7 @@ Ele é um **mapa**: traz só as regras e os fatos que valem para toda tarefa. Os
 5. **Não escreva testes que congelem um comportamento errado** nem testes que dependam de um bug estar corrigido.
 6. **Preserve os finais de linha.** A maioria dos arquivos usa CRLF; o `backend/.gitattributes` fixa `backend/mvnw` em LF e os `*.cmd` em CRLF. Ferramentas como `sed` convertem para LF; confira com `git ls-files --eol`.
 7. **Renomeações e movimentações com `git mv`**, para preservar o histórico. O `git mv` já coloca a renomeação na área de commit, mas as edições de conteúdo não: avise para usar `git add .` na raiz.
-8. **Migrations aplicadas nunca são alteradas** (o Flyway guarda o checksum). Migration nova usa a maior versão existente + 1, qualquer que seja a pasta (hoje a próxima é a V106). Não usar `outOfOrder`.
+8. **Migrations aplicadas nunca são alteradas** (o Flyway guarda o checksum). Migration nova usa a maior versão existente + 1, qualquer que seja a pasta (hoje a próxima é a V107). Não usar `outOfOrder`.
 9. **Não altere as URLs externas** `devsuperior/dscatalog-resources` (imagens do seed) até a #29 ser resolvida, nem os arquivos de `docs/audits/`.
 10. **Ao subir a aplicação**, use uma porta diferente de 8080 e encerre apenas os processos que você iniciou, conferindo a porta antes.
 11. **Arquivos temporários** (corpos de issue, scripts) ficam fora do repositório e são apagados ao final.
@@ -208,9 +208,10 @@ Ele é um **mapa**: traz só as regras e os fatos que valem para toda tarefa. Os
 
 ## 16. Estado atual (atualizar a cada etapa)
 
-Atualizado em 04/11/2026.
+Atualizado em 06/11/2026.
 
-- Branch de trabalho: `chapter-05-jacoco`, criada a partir da `develop`. Nesta data, ela está à frente da `develop` com os commits do CLAUDE.md (`a6597f3`), dos testes do `UserService` (`5711fd0`), da Etapa 2 (`78db253` e `d4cfe94`) e da Etapa 3a.
+- Branch do capítulo: `chapter-05-jacoco`, criada a partir da `develop`, parada em `dc545b6` como registro histórico. **Não reescrever** (sem rebase nem force push): os SHAs citados no README, nos guias e no relatório do Netlify (`48ba709`) dependem dela.
+- Branch de trabalho: `integracao/chapter-05-develop`, criada a partir da `chapter-05-jacoco` para integrar o capítulo na `develop` (seção 9). Ela tem o merge da `develop` com o PR #50 (`5592dcb`). A cópia `backup/chapter-05-jacoco` (`dc545b6`) fica até a integração terminar.
 - **Regra do capítulo 05:** até o fim dos estudos de JaCoCo, nada de correções de bugs nem de melhorias (regra 3 da seção 10). Infraestrutura de testes, como a #20, continua no capítulo.
 - Plano do capítulo 05:
   - Etapa 1: JaCoCo 0.8.15 com relatórios de unidade, integração e consolidado, e exclusões. **Concluída** (`b1cb5cf`). Depois do item 11 da Etapa 3b, o `sessionId` passou a ser fixo (`asjcatalog-unit` no `prepare-agent` e `asjcatalog-it` no `prepare-agent-integration`), para que a página Sessions dos relatórios não mostre o nome da máquina.
@@ -231,22 +232,28 @@ Atualizado em 04/11/2026.
     - item 11: medição final de 0,96 de linhas (1539/1600) e 0,93 de branches (421/454) no consolidado, com 453 testes de unidade e 150 de integração; limites do `check` elevados para 0,93 de linhas e 0,89 de branches (medido menos 0,03, arredondado para baixo), nas mesmas propriedades do `pom.xml`. Demonstração: `-Djacoco.minimum.line.coverage=0.97` e `-Djacoco.minimum.branch.coverage=0.95` fazem o build falhar no `check-merged`. **Concluído.**
     - Decisões: AssertJ nos testes novos e em cada classe retrabalhada, sem misturar estilos na mesma classe e sem migração em massa; o `andExpect` do MockMvc continua nos testes HTTP.
     - Trechos sem teste por terem issue aberta: #4, #5, #9, #13, #14, #25, #28, #36, #39 e #44 (lista por classe na auditoria). O código sem uso encontrado na auditoria (`Token.isValid()`, `ProductMapper.toResponsePage`, construtores com id de `Product` e `Category` e `Category.getProducts()`) foi registrado num [comentário da #25](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/issues/25#issuecomment-6614166933) e não recebe teste: a decisão de remover ou documentar fica para a #25.
-  - Etapa 4: documentação e README do capítulo 05. **Em andamento.** Primeira entrega pronta, aguardando commit:
+  - Etapa 4: documentação e README do capítulo 05. **Concluída** (`dc545b6`):
     - TESTING: nova seção 9 (cobertura com JaCoCo: relatórios, colunas, exclusões, limites, `check` e relatório publicado), "Limitações conhecidas" na seção 10 e contagens atualizadas;
     - DESIGN-DECISIONS: D-20 a D-23 (JaCoCo e limite sobre o consolidado; limites no BUNDLE, exclusões e folga; `MxRecordLookup`; padrão de qualidade), com os motivos informados pelo autor;
     - HOME (capítulo 05 e "Falta um capítulo"), CONVENTIONS (branch do capítulo 05, tipo `ci` e escopos), GETTING-STARTED (`git checkout` do capítulo), REFERENCES (JaCoCo, AssertJ e testes parametrizados, com as versões) e o exemplo de 404 do API-ENDPOINTS com o ponto final da #31;
     - README do capítulo 05, com os prints de `docs/assets/imgs/` (`jacoco-report.png`, `jacoco-class-userservice.png` e `jacoco-class-detail.png`) e o link do relatório publicado em https://asjcatalog-jacoco.netlify.app/ (consolidado, retrato fixo do commit `48ba709`).
     - Medição do início do capítulo, no commit `b1cb5cf` (worktree temporária, já apagada): 301 testes de unidade e 150 de integração; consolidado com 88,7% de linhas (1411/1591) e 71,1% de branches (323/454); unidade com 79,0% e 64,1%; integração com 76,6% e 44,3%; mappers com 2,2% a 4,8% de linhas no relatório de unidade e 81,0% a 89,5% no consolidado. Igual à auditoria do início do capítulo.
+  - Integração na `develop`, na `integracao/chapter-05-develop` (**em andamento**):
+    - merge da `develop` com o PR #50 (`475b07c`, BigDecimal no preço e V106), em `5592dcb`: conflitos em `ProductFactory`, `ProductCreateValidatorTest`, `ProductUpdateValidatorTest`, `ProductControllerTest` e `DOMAIN-MODEL.md`, resolvidos com a versão do capítulo e o `BigDecimal` do PR; `ProductTest` e `ProductControllerIT` adaptados (`comparesEqualTo` no `$.price`);
+    - depois do merge: comparações de preço independentes da escala nos ITs (`isEqualByComparingTo` e `usingComparatorForType`); teste de preço 0 e -1 (422) no `POST` e no `PUT` do `ProductControllerTest`; cenários pendentes da #44 atualizados para o `NOT NULL` da V106; documentação atualizada (V106 e V107 nas regras de migration, trade-off do `Double` removido);
+    - próximos passos: confirmar o comportamento de `POST /products` sem preço depois da V106 e mostrar o rascunho do comentário para a #44; Pull Request da `integracao/chapter-05-develop` para a `develop`, com merge commit.
+  - Depois da integração, numa branch própria a partir da `develop`: as correções de código do preço (o `@NotNull` da #44 e a validação de casas decimais e do limite do `NUMERIC(10,2)` com `@Digits`). Não criar issue nova para casas decimais e limite: decisão do autor.
 - Fora do plano, já na branch:
   - `ea58b16`: torna o `mvnw` executável;
   - `cedeba7` e `dd40232`: pipeline de CI;
   - `f35bfe5`: PR #42, contribuição externa;
   - `d998792`: PR #43, que padronizou as mensagens (#31);
   - `dbc15f4`: PR #49, que corrigiu o parágrafo vazio no e-mail de recuperação de senha (#38);
+  - `475b07c`: PR #50, contribuição externa de `joaoszs`, que trocou o preço para `BigDecimal` e criou a V106 (`NUMERIC(10,2) NOT NULL`), Refs #6 e #45. Chegou à branch de integração pelo merge `5592dcb`;
   - `5711fd0`: amplia a cobertura e corrige os testes do `UserService` (98,8% de linhas e 90,9% de branches na classe). O caso de `roleIds` nulo ou vazio ficou sem teste até a decisão da #14.
 - Issues abertas nesta etapa:
-  - #44 (produto criado sem preço; label `frontend`);
-  - #45 (coluna `price` NOT NULL, a ser feita junto com a #6).
+  - #44 (produto criado sem preço; label `frontend`): **continua aberta**. Desde a V106, o banco recusa o preço nulo, mas o DTO ainda não tem `@NotNull` e a API não responde 422;
+  - #45 (coluna `price` NOT NULL): resolvida pelo PR #50, junto com a #6 (BigDecimal). As duas devem ser fechadas manualmente depois que o PR #50 chegar à `develop` integrada; o critério de frontend da #6 ainda precisa ser verificado.
   - A label `frontend` foi criada e aplicada às issues com impacto no frontend.
 - PUT × PATCH de categoria: o frontend enviava `PUT` para `/api/v1/categories/{id}`, que só aceita `PATCH`. O problema está sendo corrigido diretamente no repositório do frontend, sem issue. No backend, fica o 405 que vira 500, registrado como cenário da #36.
 - Confira no `git log` qual etapa já foi commitada antes de continuar.

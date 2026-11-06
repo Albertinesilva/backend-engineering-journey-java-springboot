@@ -4,6 +4,7 @@ import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.EXISTING_ID;
 import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NAME_FILTER;
 import static com.albertsilva.dev.asjcatalog.factory.ProductFactory.NON_EXISTING_ID;
 import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectNotFound;
+import static com.albertsilva.dev.asjcatalog.utils.ErrorResponseAssertions.expectValidationError;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.mockito.ArgumentMatchers.any;
@@ -11,6 +12,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -29,6 +31,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -107,6 +111,19 @@ class ProductControllerTest {
     return objectMapper.writeValueAsString(object);
   }
 
+  /** Request de criação da fábrica com outro preço. */
+  private static ProductCreateRequest createRequestWithPrice(BigDecimal price) {
+    ProductCreateRequest base = ProductFactory.createProductCreateRequest();
+    return new ProductCreateRequest(base.name(), base.description(), price, base.imgUrl(), base.date(),
+        base.categoryIds());
+  }
+
+  /** Request de atualização da fábrica com outro preço. */
+  private static ProductUpdateRequest updateRequestWithPrice(BigDecimal price) {
+    ProductUpdateRequest base = ProductFactory.createProductUpdateRequest();
+    return new ProductUpdateRequest(base.name(), base.description(), price, base.imgUrl(), base.categoryIds());
+  }
+
   /**
    * Testes de {@code POST /products}.
    *
@@ -114,13 +131,35 @@ class ProductControllerTest {
    * <b>Cenários pendentes:</b>
    * </p>
    * <ul>
-   * <li>{@code price} nulo, ausente ou string vazia: o produto é criado sem
-   * preço, porque o campo não tem {@code @NotNull} (#44).</li>
+   * <li>{@code price} nulo, ausente ou string vazia: o campo não tem
+   * {@code @NotNull}, então a requisição passa pela validação e só é recusada
+   * pelo banco, em que a coluna é {@code NOT NULL} desde a V106; a API ainda não
+   * responde com 422 (#44).</li>
    * </ul>
    */
   @Nested
   @DisplayName("POST /products")
   class CreateOperations {
+
+    @ParameterizedTest(name = "[{0}]")
+    @ValueSource(strings = { "0", "-1" })
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
+    @DisplayName("POST /products should return 422 with error on price when price is not positive")
+    void createShouldReturnUnprocessableEntityWithErrorOnPriceWhenPriceIsNotPositive(String price) throws Exception {
+
+      // Arrange
+      ProductCreateRequest request = createRequestWithPrice(new BigDecimal(price));
+
+      // Act
+      ResultActions result = mockMvc.perform(post(BASE_URL)
+          .content(asJson(request))
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      expectValidationError(result, BASE_URL, "price");
+      verify(productService, never()).create(any());
+    }
 
     @Test
     @WithMockUser(roles = { "ADMIN", "OPERATOR" })
@@ -276,9 +315,40 @@ class ProductControllerTest {
     }
   }
 
+  /**
+   * Testes de {@code PUT /products/{id}}.
+   *
+   * <p>
+   * <b>Cenários pendentes:</b>
+   * </p>
+   * <ul>
+   * <li>{@code price} nulo, ausente ou string vazia: responde 200 e mantém o
+   * preço atual, em vez de 422 (#44).</li>
+   * </ul>
+   */
   @Nested
   @DisplayName("PUT /products/{id}")
   class UpdateOperations {
+
+    @ParameterizedTest(name = "[{0}]")
+    @ValueSource(strings = { "0", "-1" })
+    @WithMockUser(roles = { "ADMIN", "OPERATOR" })
+    @DisplayName("PUT /products/{id} should return 422 with error on price when price is not positive")
+    void updateShouldReturnUnprocessableEntityWithErrorOnPriceWhenPriceIsNotPositive(String price) throws Exception {
+
+      // Arrange
+      ProductUpdateRequest request = updateRequestWithPrice(new BigDecimal(price));
+
+      // Act
+      ResultActions result = mockMvc.perform(put(BASE_URL + "/{id}", EXISTING_ID)
+          .content(asJson(request))
+          .contentType(MediaType.APPLICATION_JSON)
+          .accept(MediaType.APPLICATION_JSON));
+
+      // Assert
+      expectValidationError(result, BASE_URL + "/" + EXISTING_ID, "price");
+      verify(productService, never()).update(anyLong(), any());
+    }
 
     @Test
     @WithMockUser(roles = { "ADMIN", "OPERATOR" })
