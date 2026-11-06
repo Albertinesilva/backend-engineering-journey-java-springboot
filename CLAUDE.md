@@ -241,8 +241,9 @@ Atualizado em 06/11/2026.
   - Integração na `develop`, na `integracao/chapter-05-develop` (**em andamento**):
     - merge da `develop` com o PR #50 (`475b07c`, BigDecimal no preço e V106), em `5592dcb`: conflitos em `ProductFactory`, `ProductCreateValidatorTest`, `ProductUpdateValidatorTest`, `ProductControllerTest` e `DOMAIN-MODEL.md`, resolvidos com a versão do capítulo e o `BigDecimal` do PR; `ProductTest` e `ProductControllerIT` adaptados (`comparesEqualTo` no `$.price`);
     - depois do merge: comparações de preço independentes da escala nos ITs (`isEqualByComparingTo` e `usingComparatorForType`); teste de preço 0 e -1 (422) no `POST` e no `PUT` do `ProductControllerTest`; cenários pendentes da #44 atualizados para o `NOT NULL` da V106; documentação atualizada (V106 e V107 nas regras de migration, trade-off do `Double` removido);
-    - próximos passos: confirmar o comportamento de `POST /products` sem preço depois da V106 e mostrar o rascunho do comentário para a #44; Pull Request da `integracao/chapter-05-develop` para a `develop`, com merge commit.
-  - Depois da integração, numa branch própria a partir da `develop`: as correções de código do preço (o `@NotNull` da #44 e a validação de casas decimais e do limite do `NUMERIC(10,2)` com `@Digits`). Não criar issue nova para casas decimais e limite: decisão do autor.
+    - comportamento de `POST /products` sem preço depois da V106 confirmado: 409 `CONFLICT` genérico, sem gravar nada; na #44, foi publicado um comentário de atualização (tabela antes/depois da V106 e escopo ampliado) e o corpo da issue foi atualizado;
+    - próximo passo: Pull Request da `integracao/chapter-05-develop` para a `develop`, com merge commit.
+  - Depois da integração, numa branch própria a partir da `develop`: as correções de código do preço (o `@NotNull` da #44 e a validação de casas decimais e do limite do `NUMERIC(10,2)` com `@Digits`) e a documentação da V106 no DATABASE-MIGRATIONS, tudo pela #44. Não criar issue nova para casas decimais e limite: decisão do autor.
 - Fora do plano, já na branch:
   - `ea58b16`: torna o `mvnw` executável;
   - `cedeba7` e `dd40232`: pipeline de CI;
@@ -252,8 +253,9 @@ Atualizado em 06/11/2026.
   - `475b07c`: PR #50, contribuição externa de `joaoszs`, que trocou o preço para `BigDecimal` e criou a V106 (`NUMERIC(10,2) NOT NULL`), Refs #6 e #45. Chegou à branch de integração pelo merge `5592dcb`;
   - `5711fd0`: amplia a cobertura e corrige os testes do `UserService` (98,8% de linhas e 90,9% de branches na classe). O caso de `roleIds` nulo ou vazio ficou sem teste até a decisão da #14.
 - Issues abertas nesta etapa:
-  - #44 (produto criado sem preço; label `frontend`): **continua aberta**. Desde a V106, o banco recusa o preço nulo, mas o DTO ainda não tem `@NotNull` e a API não responde 422;
-  - #45 (coluna `price` NOT NULL): resolvida pelo PR #50, junto com a #6 (BigDecimal). As duas devem ser fechadas manualmente depois que o PR #50 chegar à `develop` integrada; o critério de frontend da #6 ainda precisa ser verificado.
+  - #44 (produto criado sem preço; label `frontend`): **continua aberta**. Desde a V106, o banco recusa o preço nulo e a API responde 409 `CONFLICT` genérico, mas o DTO ainda não tem `@NotNull` e a API não responde 422. O corpo foi atualizado e agora inclui o `@Digits` e a documentação da V106;
+  - #45 (coluna `price` NOT NULL): **fechada** em 06/11/2026, resolvida pelo PR #50; a documentação da V106 foi transferida para a #44;
+  - #6 (preço em `BigDecimal`): resolvida no código pelo PR #50, mas **continua aberta** até a verificação do frontend (critério de aceite da issue). Fechar manualmente depois dessa verificação.
   - A label `frontend` foi criada e aplicada às issues com impacto no frontend.
 - PUT × PATCH de categoria: o frontend enviava `PUT` para `/api/v1/categories/{id}`, que só aceita `PATCH`. O problema está sendo corrigido diretamente no repositório do frontend, sem issue. No backend, fica o 405 que vira 500, registrado como cenário da #36.
 - Confira no `git log` qual etapa já foi commitada antes de continuar.
