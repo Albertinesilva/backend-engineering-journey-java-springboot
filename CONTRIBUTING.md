@@ -38,8 +38,9 @@ Capítulos publicados:
 | `chapter-02-tests` | Testes automatizados |
 | `chapter-03-validation-security` | Validação e segurança |
 | `chapter-04-domain-orm` | Domínio, ORM, casos de uso e acesso a dados |
+| `chapter-05-jacoco` | Cobertura de testes com JaCoCo |
 
-Ainda faltam dois capítulos para encerrar a evolução do projeto.
+Falta um capítulo para encerrar a evolução do projeto: Docker e CI/CD.
 
 ---
 

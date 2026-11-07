@@ -35,7 +35,7 @@ O <strong>ASJCatalog</strong> é a API de um catálogo de produtos construída e
 </p>
 
 <p align="center">
-<a href="https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/blob/develop/docs/HOME.md"><strong>📖 Documentação técnica</strong></a> · <a href="https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/blob/develop/docs/guides/GETTING-STARTED.md">🚀 Primeiros Passos</a> · <a href="https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/issues">🗂️ Issues</a> · <a href="https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/milestone/1">🎯 Pronto para produção</a> · <a href="CONTRIBUTING.md">🤝 Contribuir</a>
+<a href="https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/blob/develop/docs/HOME.md"><strong>📖 Documentação técnica</strong></a> · <a href="https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/blob/develop/docs/guides/GETTING-STARTED.md">🚀 Primeiros Passos</a> · <a href="https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/issues">🗂️ Issues</a> · <a href="https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/milestone/1">🎯 Pronto para produção</a> · <a href="CONTRIBUTING.md">🤝 Contribuir</a> · <a href="https://asjcatalog-jacoco.netlify.app/">📊 Relatório JaCoCo</a>
 </p>
 
 ---
@@ -47,6 +47,7 @@ O <strong>ASJCatalog</strong> é a API de um catálogo de produtos construída e
 - **Fluxos de conta com e-mail**: cadastro, ativação, recuperação e redefinição de senha, com e-mails HTML gerados pelo Thymeleaf. → [ACCOUNT-FLOWS](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/blob/develop/docs/guides/ACCOUNT-FLOWS.md)
 - **Internacionalização**: mensagens da API em português do Brasil, inglês e espanhol, escolhidas pelo cabeçalho `Accept-Language`. → [INTERNATIONALIZATION](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/blob/develop/docs/guides/INTERNATIONALIZATION.md)
 - **Suíte de testes em duas fases**: testes de unidade no Surefire e testes de integração (`*IT`) no Failsafe, todos executados com `./mvnw verify`. → [TESTING](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/blob/develop/docs/guides/TESTING.md)
+- **Cobertura medida e exigida no build**: o JaCoCo gera relatórios dos testes de unidade, de integração e dos dois juntos; o consolidado cobre 96% das linhas e 92% dos branches, e o build falha se a cobertura cair abaixo do limite mínimo. → [TESTING](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/blob/develop/docs/guides/TESTING.md#9-cobertura-com-jacoco) · [Relatório publicado](https://asjcatalog-jacoco.netlify.app/)
 - **Decisões técnicas registradas**: contexto, motivo, alternativas e consequências das principais escolhas do projeto. → [DESIGN-DECISIONS](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/blob/develop/docs/guides/DESIGN-DECISIONS.md)
 
 ---
@@ -61,6 +62,7 @@ Cada capítulo fica em uma branch própria, com um README que apresenta o que fo
 | 02 | Testes automatizados no back-end | [`chapter-02-tests`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-02-tests) | Testes de unidade, de repositório e da camada web com JUnit 5, Mockito e MockMvc, usando factories e foco em testabilidade. |
 | 03 | Validação e segurança (OAuth2 \| JWT) | [`chapter-03-validation-security`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-03-validation-security) | Spring Security 6 com Authorization Server e Resource Server, JWT, controle de acesso por roles e Bean Validation. |
 | 04 | Domínio, ORM, casos de uso e acesso a dados | [`chapter-04-domain-orm`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-04-domain-orm) | Ciclo de vida completo da conta com e-mails transacionais, JPQL e SQL nativo, solução do N+1 e domínio em módulos inspirados em DDD. |
+| 05 | Cobertura de testes com JaCoCo | [`chapter-05-jacoco`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/chapter-05-jacoco) | Cobertura dos testes de unidade e de integração com JaCoCo, limite mínimo de cobertura no build e revisão da qualidade de toda a suíte de testes. |
 
 ---
 
@@ -68,7 +70,7 @@ Cada capítulo fica em uma branch própria, com um README que apresenta o que fo
 
 | Branch | O que contém |
 | --- | --- |
-| [`develop`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/develop) | O projeto completo e atualizado (capítulo 04), com a documentação técnica em `docs/`. É nela que o trabalho acontece e para ela que vão os Pull Requests. |
+| [`develop`](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/tree/develop) | O projeto completo e atualizado (capítulo 05), com a documentação técnica em `docs/`. É nela que o trabalho acontece e para ela que vão os Pull Requests. |
 | `main` | Esta página de entrada. Recebe o código do projeto apenas no deploy final; a pasta `backend/` daqui é, por enquanto, só o esqueleto inicial. |
 | `chapter-*` | O registro de cada capítulo, como foi publicado. |
 
@@ -88,7 +90,7 @@ O frontend do ASJCatalog é independente e fica em outro repositório: [asjcatal
 
 ## 🧭 Próximos passos
 
-- Ainda faltam **dois capítulos** para encerrar a evolução do projeto. Eles serão publicados em novas branches.
+- Falta **um capítulo** para encerrar a evolução do projeto: **Docker e CI/CD**. Ele será publicado em uma nova branch.
 - As melhorias pendentes estão registradas como [issues](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/issues). As necessárias para colocar a API em produção estão no milestone [Pronto para produção](https://github.com/Albertinesilva/backend-engineering-journey-java-springboot/milestone/1).
 
 ---
